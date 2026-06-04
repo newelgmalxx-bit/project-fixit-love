@@ -39,6 +39,7 @@ import { useLang } from "@/i18n/LanguageProvider";
 import { ShoppingCart } from "lucide-react";
 import { useFavorite } from "@/hooks/useFavorite";
 import { useAuth } from "@/hooks/useAuth";
+import { reviews as reviewsApi } from "@/lib/api/services";
 
 
 export const Route = createFileRoute("/offers/$offerId")({
@@ -246,19 +247,42 @@ function OfferDetailPage() {
   const [reviewRating, setReviewRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
   const [reviewSubmitted, setReviewSubmitted] = useState(false);
+  const [reviewSubmitting, setReviewSubmitting] = useState(false);
 
-  function submitReview(e: React.FormEvent) {
+  async function submitReview(e: React.FormEvent) {
     e.preventDefault();
-    if (!reviewName.trim() || !reviewText.trim() || reviewRating < 1) return;
-    setUserReviews((prev) => [
-      { name: reviewName.trim(), date: "الآن", rating: reviewRating, text: reviewText.trim() },
-      ...prev,
-    ]);
-    setReviewName("");
-    setReviewText("");
-    setReviewRating(5);
-    setReviewSubmitted(true);
-    setTimeout(() => setReviewSubmitted(false), 2500);
+    if (reviewText.trim().length < 5 || reviewRating < 1) {
+      toast.error("اكتب تقييم لا يقل عن 5 أحرف وحدد عدد النجوم");
+      return;
+    }
+    if (!isAuthenticated) {
+      toast.error("لازم تسجل دخول الأول عشان تضيف تقييم");
+      navigate({ to: "/login" });
+      return;
+    }
+    const offerIdVal = (offer as any)?.id;
+    if (!offerIdVal) {
+      toast.error("تعذّر تحديد العرض");
+      return;
+    }
+    setReviewSubmitting(true);
+    try {
+      await reviewsApi.create(
+        { offerId: String(offerIdVal) },
+        { rating: reviewRating, comment: reviewText.trim() },
+      );
+      toast.success("شكرًا لتقييمك! هيظهر بعد مراجعة الإدارة");
+      setReviewName("");
+      setReviewText("");
+      setReviewRating(0);
+      setReviewSubmitted(true);
+      setTimeout(() => setReviewSubmitted(false), 2500);
+    } catch (err: any) {
+      const msg = err?.message || "تعذّر إرسال التقييم";
+      toast.error(msg);
+    } finally {
+      setReviewSubmitting(false);
+    }
   }
 
   const gallery = useMemo(() => {

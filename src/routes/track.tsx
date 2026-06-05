@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { Search, FolderOpen, Tag, FileText, Calendar, Check, Mail, Phone, CreditCard, Receipt, Sparkles, ShieldCheck, Clock, QrCode, MapPin, Store } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
@@ -85,6 +85,7 @@ function computeStageIndex(order: { status?: string; paymentStatus?: string }): 
 
 function TrackPage() {
   const { t, lang, dir } = useLang();
+  const navigate = useNavigate();
   const [qrCode, setQrCode] = useState("");
   const [verifyCode, setVerifyCode] = useState("");
   const [loading, setLoading] = useState(false);
@@ -202,6 +203,63 @@ function TrackPage() {
   const currency = result?.order.currency || "SAR";
   const locale = lang === "ar" ? "ar-SA" : "en-US";
   const textEnd = dir === "rtl" ? "text-end" : "text-start";
+
+  function openBookingDetails() {
+    if (!result) return;
+    const o = result.order;
+    const total = Number(o.total ?? 0);
+    const depositPaid = Number(o.depositPaid ?? 0);
+    const remaining = Number(o.remaining ?? (total - depositPaid));
+    const depositPct =
+      total > 0 && depositPaid > 0
+        ? Math.round((depositPaid / total) * 100)
+        : undefined;
+    const isPaid =
+      (o.paymentStatus || "").toLowerCase() === "paid" ||
+      (o.paymentStatus || "").toLowerCase() === "deposit_paid";
+
+    // Parse date/time from item planName, formats like:
+    //   "موعد: 2026-05-25 · 16:00"  |  "2026-05-25 16:00"
+    let date = "";
+    let time = "";
+    const planText = result.items[0]?.planName || "";
+    const m = planText.match(/(\d{4}-\d{2}-\d{2})[^\d]*(\d{1,2}[:.]\d{2})?/);
+    if (m) {
+      date = m[1];
+      time = (m[2] || "").replace(".", ":");
+    }
+
+    const booking = {
+      bookingId: o.number,
+      verifyCode: o.verificationCode ?? "",
+      offerId: "",
+      offerTitle: result.items[0]?.title ?? "خدمة",
+      vendorName: result.partner?.name ?? "",
+      vendorCity: "",
+      vendorAddress: result.partner?.address ?? "",
+      vendorPhone: result.partner?.phone ?? "",
+      vendorMapsUrl: result.partner?.mapsUrl ?? undefined,
+      priceAfter: total,
+      date,
+      time,
+      qty: result.items[0]?.qty ?? 1,
+      total,
+      depositAmount: depositPaid,
+      remainingAmount: remaining,
+      depositPct,
+      customerName: "",
+      customerPhone: "",
+      createdAt: o.createdAt ?? new Date().toISOString(),
+      paid: isPaid,
+      paymentStatus: o.paymentStatus,
+      paymentMethod: o.paymentMethod,
+      status: o.status,
+    };
+    try {
+      sessionStorage.setItem(`booking:${o.number}`, JSON.stringify(booking));
+    } catch {}
+    navigate({ to: "/booking/$bookingId", params: { bookingId: o.number } });
+  }
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
@@ -341,13 +399,13 @@ function TrackPage() {
                           <div className="mt-1 text-2xl font-extrabold tracking-widest text-primary" dir="ltr">{result.order.verificationCode}</div>
                         </div>
                       )}
-                      <Link
-                        to="/booking/$bookingId"
-                        params={{ bookingId: result.order.number }}
+                      <button
+                        type="button"
+                        onClick={openBookingDetails}
                         className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-primary/40 bg-primary/5 px-4 py-2.5 text-sm font-bold text-primary transition hover:bg-primary/10"
                       >
                         <FileText className="h-4 w-4" /> عرض تفاصيل الحجز
-                      </Link>
+                      </button>
                     </div>
                     {/* Amounts */}
                     <div className="flex flex-col justify-center gap-4">

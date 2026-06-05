@@ -374,6 +374,21 @@ function normalizeCommissionRequest(r: any): any {
 // =========================================
 export const partnerApi = {
   // Profile
+  getProfile: () =>
+    unwrap<{ partner: PartnerProfile; agreement?: PartnerAgreement | null }>(
+      request(`/partner/profile`),
+    ),
+
+  // Upload (shortcut — uploadFile from adminContent.ts already targets this URL)
+  uploadFile: async (file: File, bucket?: "offer-images" | "partner-logos" | "partner-covers" | "partner-general") => {
+    const fd = new FormData();
+    fd.append("file", file);
+    if (bucket) fd.append("bucket", bucket);
+    return unwrap<{ url: string }>(
+      request(`/partner/upload`, { method: "POST", body: fd as any }),
+    );
+  },
+
   updateProfile: (body: Partial<PartnerProfile>) => {
     const b: any = body;
     const payload: any = {};
@@ -387,7 +402,11 @@ export const partnerApi = {
     if (b.category !== undefined) payload.category = b.category;
     if (b.address !== undefined) payload.address = b.address;
     if (b.mapsUrl !== undefined) payload.mapsUrl = b.mapsUrl;
-    if (b.logoUrl !== undefined || b.logo !== undefined) payload.logoUrl = b.logoUrl ?? b.logo;
+    if (b.logoUrl !== undefined || b.logo !== undefined) {
+      const v = b.logoUrl ?? b.logo;
+      payload.logo = v;
+      payload.logoUrl = v;
+    }
     if (b.coverUrl !== undefined) payload.coverUrl = b.coverUrl;
     if (b.about !== undefined) payload.about = b.about;
     if (b.workingHours !== undefined) payload.workingHours = b.workingHours;
@@ -401,6 +420,7 @@ export const partnerApi = {
     if (b.terms !== undefined) payload.terms = b.terms;
     if (b.termsEn !== undefined) payload.termsEn = b.termsEn;
     if (b.aboutEn !== undefined) payload.aboutEn = b.aboutEn;
+    if (b.highlights !== undefined) payload.highlights = b.highlights;
     if (b.categoryIds !== undefined) {
       payload.categoryIds = b.categoryIds;
       payload.category_ids = b.categoryIds;
@@ -428,15 +448,35 @@ export const partnerApi = {
   payoutsSummary: () => unwrap<any>(request(`/partner/payouts/summary`)),
 
   // Reviews
-  listReviews: async (params?: { page?: number; pageSize?: number }) => {
+  listReviews: async (params?: { page?: number; pageSize?: number; status?: "pending" | "published" | "rejected"; offerId?: string; search?: string }) => {
     const sp = new URLSearchParams();
     if (params?.page) sp.set("page", String(params.page));
     if (params?.pageSize) sp.set("pageSize", String(params.pageSize));
+    if (params?.status) sp.set("status", params.status);
+    if (params?.offerId) sp.set("offerId", params.offerId);
+    if (params?.search) sp.set("search", params.search);
     const qs = sp.toString();
-    return unwrap<{ items: any[]; total?: number; avgRating?: number; breakdown?: Record<string, number> }>(
+    return unwrap<{
+      items: any[];
+      total?: number;
+      page?: number;
+      pageSize?: number;
+      totalPages?: number;
+      counts?: { pending: number; published: number; rejected: number };
+      avgRating?: number;
+      breakdown?: Record<string, number>;
+    }>(
       request(`/partner/reviews${qs ? "?" + qs : ""}`),
     );
   },
+  getReview: (id: string) =>
+    unwrap<{ review: any }>(request(`/partner/reviews/${id}`)),
+  approveReview: (id: string) =>
+    unwrap<any>(request(`/partner/reviews/${id}/approve`, { method: "PUT" })),
+  rejectReview: (id: string) =>
+    unwrap<any>(request(`/partner/reviews/${id}/reject`, { method: "PUT" })),
+  deleteReview: (id: string) =>
+    request<ApiResponse<any>>(`/partner/reviews/${id}`, { method: "DELETE" }),
   replyReview: (id: string, reply: string) =>
     unwrap<{ review: any }>(
       request(`/partner/reviews/${id}/reply`, {
@@ -543,11 +583,13 @@ export const partnerApi = {
     request<ApiResponse<any>>(`/partner/offers/${id}`, { method: "DELETE" }),
 
   // Bookings
-  listBookings: async (params?: { status?: string; page?: number; limit?: number }) => {
+  listBookings: async (params?: { status?: string; page?: number; limit?: number; offerId?: string; search?: string }) => {
     const sp = new URLSearchParams();
     if (params?.status && params.status !== "all") sp.set("status", params.status);
     if (params?.page) sp.set("page", String(params.page));
     if (params?.limit) sp.set("pageSize", String(params.limit));
+    if (params?.offerId) sp.set("offerId", params.offerId);
+    if (params?.search) sp.set("search", params.search);
     const qs = sp.toString();
     const r: any = await unwrap<{ items: any[]; total?: number }>(
       request(`/partner/bookings${qs ? "?" + qs : ""}`),
@@ -556,6 +598,10 @@ export const partnerApi = {
       items: ((r?.items || []) as any[]).map(normalizeBooking) as PartnerBooking[],
       total: r?.total,
     };
+  },
+  getBooking: async (id: string) => {
+    const r: any = await unwrap<{ booking: any }>(request(`/partner/bookings/${id}`));
+    return { booking: normalizeBooking(r?.booking) as PartnerBooking };
   },
   updateBooking: async (id: string, body: Partial<PartnerBooking> & { status?: string }) => {
     const b: any = body;

@@ -535,7 +535,7 @@ function MerchantsPage() {
                             <DropdownMenuItem onClick={async () => {
                               try {
                                 const full: any = await adminPartnersApi.get(m.id);
-                                const catIds: number[] = pickAssignedCategoryIds(full);
+                                const catIds = pickAssignedCategoryIds(full);
                                 setEditing({
                                   ...m,
                                   name: full?.vendorName || full?.nameAr || full?.name || m.name,
@@ -689,7 +689,7 @@ function AddCenterDialog({
     about: "", aboutEn: "",
     workingHours: defaultWorkingHours(),
     password: "",
-    categoryIds: [] as number[],
+    categoryIds: [] as CategoryId[],
   };
   const [f, setF] = useState(empty);
 

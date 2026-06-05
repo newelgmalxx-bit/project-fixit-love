@@ -126,6 +126,17 @@ function MerchantsPage() {
   const [viewing, setViewing] = useState<Merchant | null>(null);
   const [editing, setEditing] = useState<Merchant | null>(null);
   const [addOpen, setAddOpen] = useState(false);
+  const [categories, setCategories] = useState<AdminCategory[]>([]);
+
+  useEffect(() => {
+    adminCategoriesApi.list().then((d) => setCategories(d.items || [])).catch(() => {});
+  }, []);
+
+  const categoryNameById = useMemo(() => {
+    const m = new Map<number, string>();
+    categories.forEach((c) => m.set(Number(c.id), c.nameAr));
+    return m;
+  }, [categories]);
 
   async function load() {
     setLoading(true);

@@ -120,13 +120,19 @@ function toNum(v: number | string | undefined | null): number {
   return isFinite(n) ? n : 0;
 }
 
+function toPct(v: number | string | undefined | null): number | undefined {
+  if (v === undefined || v === null || v === "") return undefined;
+  const n = typeof v === "number" ? v : parseFloat(v);
+  return isFinite(n) && n > 0 ? n : undefined;
+}
+
 function defaultVendor(api: ApiOffer): Vendor {
   const o: any = api;
-  const commission = Number(
+  const commission = toPct(
     o.commissionPctOverride ?? o.commission_pct_override ??
-    o.commissionPct ?? o.commission_pct ?? 10,
+    o.commissionPct ?? o.commission_pct,
   );
-  const deposit = Number(o.depositPct ?? o.deposit_pct ?? commission);
+  const deposit = toPct(o.depositPct ?? o.deposit_pct ?? commission);
   return {
     id: api.partnerId || "—",
     name: "",
@@ -160,12 +166,12 @@ export function normalizeOffer(
         const p: any = partner;
         const o: any = api;
         // Per-offer override wins, then partner value, then fallback.
-        const commission = Number(
+        const commission = toPct(
           o.commissionPctOverride ?? o.commission_pct_override ??
           o.commissionPct ?? o.commission_pct ??
-          p.commissionPct ?? p.commission_pct ?? 10,
+          p.commissionPct ?? p.commission_pct,
         );
-        const deposit = Number(
+        const deposit = toPct(
           o.depositPct ?? o.deposit_pct ??
           p.depositPct ?? p.deposit_pct ?? commission,
         );

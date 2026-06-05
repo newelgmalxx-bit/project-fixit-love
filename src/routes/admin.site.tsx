@@ -222,3 +222,42 @@ function CancellationTermsEditor({ value, onChange, L }: { value: string[]; onCh
   );
 }
 
+type FaqItem = { q: string; a: string };
+function FaqsEditor({ value, onChange, L }: { value: FaqItem[]; onChange: (v: FaqItem[]) => void; L: (a: string, e: string) => string }) {
+  const items: FaqItem[] = value.length ? value : [
+    { q: "هل أحتاج لتأكيد الحجز قبل الذهاب؟", a: "بعد إتمام الحجز ستصلك رسالة تأكيد مع باركود تعرضه عند وصولك للمتجر مباشرةً." },
+    { q: "هل يمكنني تعديل أو إلغاء الحجز؟", a: "نعم، يمكنك إعادة الجدولة أو الإلغاء مجاناً قبل 6 ساعات من الموعد من صفحة حجوزاتك." },
+    { q: "كيف تتم عملية الدفع؟", a: "الدفع آمن عبر مدى، فيزا، ماستر كارد، Apple Pay." },
+  ];
+  const update = (i: number, k: keyof FaqItem, v: string) => onChange(items.map((x, j) => (i === j ? { ...x, [k]: v } : x)));
+  const remove = (i: number) => onChange(items.filter((_, j) => j !== i));
+  const add = () => onChange([...items, { q: "", a: "" }]);
+  const move = (i: number, dir: -1 | 1) => {
+    const j = i + dir; if (j < 0 || j >= items.length) return;
+    const next = items.slice(); [next[i], next[j]] = [next[j], next[i]]; onChange(next);
+  };
+  return (
+    <div className="space-y-3">
+      {items.map((it, i) => (
+        <div key={i} className="rounded-xl border border-border p-3">
+          <div className="flex items-start gap-2">
+            <span className="mt-2 text-xs font-bold text-muted-foreground w-6 text-center">{i + 1}.</span>
+            <div className="flex-1 space-y-2">
+              <input className={ic} placeholder={L("السؤال", "Question")} value={it.q} onChange={e => update(i, "q", e.target.value)} />
+              <textarea rows={2} className={ic} placeholder={L("الإجابة", "Answer")} value={it.a} onChange={e => update(i, "a", e.target.value)} />
+            </div>
+            <div className="flex flex-col gap-1">
+              <button type="button" onClick={() => move(i, -1)} className="rounded-md border border-border p-1.5 text-muted-foreground hover:text-foreground"><ArrowUp className="h-3.5 w-3.5" /></button>
+              <button type="button" onClick={() => move(i, 1)} className="rounded-md border border-border p-1.5 text-muted-foreground hover:text-foreground"><ArrowDown className="h-3.5 w-3.5" /></button>
+              <button type="button" onClick={() => remove(i)} className="rounded-md border border-rose-200 p-1.5 text-rose-600 hover:bg-rose-50"><Trash2 className="h-3.5 w-3.5" /></button>
+            </div>
+          </div>
+        </div>
+      ))}
+      <button type="button" onClick={add} className="inline-flex items-center gap-2 rounded-lg border border-primary/40 bg-primary/5 px-3 py-1.5 text-xs font-bold text-primary hover:bg-primary/10">
+        <Plus className="h-3.5 w-3.5" /> {L("إضافة سؤال", "Add FAQ")}
+      </button>
+    </div>
+  );
+}
+

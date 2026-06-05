@@ -33,7 +33,17 @@ type Booking = {
   customerName: string;
   customerPhone: string;
   createdAt: string;
+  paid?: boolean;
+  paymentStatus?: string;
+  paymentMethod?: string;
 };
+
+// Format money keeping up to 2 decimals, no forced trailing zeros (e.g. 14.9 not 15).
+function fmtMoney(n?: number) {
+  if (n == null || isNaN(Number(n))) return "0";
+  const v = Math.round(Number(n) * 100) / 100;
+  return Number.isInteger(v) ? String(v) : String(v).replace(/\.?0+$/, "");
+}
 
 function BookingConfirmation() {
   const { bookingId } = Route.useParams();
@@ -88,6 +98,25 @@ function BookingConfirmation() {
     },
   };
 
+  // Re-derive deposit/remaining client-side with 2-decimal precision so we
+  // never round 14.9 → 15 just because the backend stored an integer.
+  const totalNum = Number(booking.total ?? 0);
+  const pctNum = Number(booking.depositPct ?? 0);
+  const derivedDeposit = totalNum && pctNum
+    ? Math.round((totalNum * pctNum) / 100 * 100) / 100
+    : Number(booking.depositAmount ?? 0);
+  const derivedRemaining = totalNum
+    ? Math.round((totalNum - derivedDeposit) * 100) / 100
+    : Number(booking.remainingAmount ?? 0);
+
+  // Treat the booking as paid only when we have explicit evidence. COD or a
+  // newly-created booking awaiting gateway redirect is NOT paid.
+  const isPaid =
+    booking.paid === true ||
+    booking.paymentStatus === "paid" ||
+    booking.paymentStatus === "deposit_paid";
+  const hasDeposit = derivedDeposit > 0;
+
   const demoPayload = {
     b: booking.bookingId,
     c: booking.verifyCode ?? "",
@@ -131,7 +160,7 @@ function BookingConfirmation() {
                   <div className="mt-1 text-2xl font-black tracking-wider" dir="ltr">{booking.bookingId}</div>
                 </div>
                 <div className="rounded-full bg-white/20 px-3 py-1 text-[11px] font-bold">
-                  {booking.depositAmount ? "عربون مدفوع" : "مؤكد"}
+                  {hasDeposit ? (isPaid ? "عربون مدفوع" : "بانتظار دفع العربون") : "مؤكد"}
                 </div>
               </div>
             </div>
@@ -180,19 +209,19 @@ function BookingConfirmation() {
                   <div className="text-xs text-muted-foreground" dir="ltr">{booking.customerPhone}</div>
                 </div>
 
-                {booking.depositAmount ? (
+                {hasDeposit ? (
                   <div className="space-y-2 border-t border-dashed border-border pt-4 text-sm">
                     <div className="flex items-center justify-between text-muted-foreground">
                       <span>الإجمالي</span>
-                      <span dir="ltr" className="font-bold text-foreground">{booking.total} ر.س</span>
+                      <span dir="ltr" className="font-bold text-foreground">{fmtMoney(booking.total)} ر.س</span>
                     </div>
-                    <div className="flex items-center justify-between rounded-lg bg-emerald-50 px-3 py-2 font-extrabold text-emerald-700">
-                      <span>العربون المدفوع{booking.depositPct ? ` (${booking.depositPct}%)` : ""}</span>
-                      <span dir="ltr">{booking.depositAmount} ر.س</span>
+                    <div className={`flex items-center justify-between rounded-lg px-3 py-2 font-extrabold ${isPaid ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"}`}>
+                      <span>{isPaid ? "العربون المدفوع" : "العربون المطلوب"}{booking.depositPct ? ` (${booking.depositPct}%)` : ""}</span>
+                      <span dir="ltr">{fmtMoney(derivedDeposit)} ر.س</span>
                     </div>
                     <div className="flex items-center justify-between text-xs text-muted-foreground">
                       <span>يُدفع عند الخدمة</span>
-                      <span dir="ltr">{booking.remainingAmount} ر.س</span>
+                      <span dir="ltr">{fmtMoney(derivedRemaining)} ر.س</span>
                     </div>
                   </div>
                 ) : (

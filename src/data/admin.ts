@@ -100,8 +100,10 @@ export const portfolioCategories = [
 ];
 
 export type AdminUser = {
-  id: string; name: string; email: string; phone: string; role: "owner" | "admin" | "manager" | "support";
+  id: string; name: string; email: string; phone: string;
+  role: "owner" | "admin" | "manager" | "support" | "partner" | "client";
   active: boolean; joinedAt: string;
+  city?: string;
 };
 
 export const adminUsers: AdminUser[] = [];

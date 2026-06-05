@@ -29,7 +29,23 @@ type StoredBooking = {
   depositAmount?: number;
   remainingAmount?: number;
   redeemedAt?: string;
+  paymentStatus?: "paid" | "deposit_paid" | "unpaid";
 };
+
+function getPaymentStatus(b: StoredBooking): { key: "paid" | "deposit_paid" | "unpaid"; label: string; cls: string } {
+  let key: "paid" | "deposit_paid" | "unpaid" = b.paymentStatus ?? "unpaid";
+  if (!b.paymentStatus) {
+    const total = Number(b.total ?? 0);
+    const deposit = Number(b.depositAmount ?? 0);
+    const remaining = Number(b.remainingAmount ?? 0);
+    if (total > 0 && remaining === 0 && (deposit > 0 || total > 0)) key = "paid";
+    else if (deposit > 0) key = "deposit_paid";
+    else key = "unpaid";
+  }
+  if (key === "paid") return { key, label: "مدفوع بالكامل", cls: "bg-emerald-100 text-emerald-800 border-emerald-300" };
+  if (key === "deposit_paid") return { key, label: "عربون مدفوع", cls: "bg-amber-100 text-amber-800 border-amber-300" };
+  return { key, label: "غير مدفوع", cls: "bg-rose-100 text-rose-800 border-rose-300" };
+}
 
 function loadAll(): StoredBooking[] {
   try {
@@ -236,6 +252,12 @@ function VerifyPage() {
                   </div>
                 </div>
                 <div className="space-y-2 p-4 text-sm text-foreground">
+                  {(() => { const ps = getPaymentStatus(result.booking); return (
+                    <div className={`mb-2 flex items-center justify-between rounded-xl border px-3 py-2 ${ps.cls}`}>
+                      <span className="text-xs font-bold">حالة الدفع</span>
+                      <span className="text-sm font-extrabold">{ps.label}</span>
+                    </div>
+                  ); })()}
                   <Row icon={User} label="العميل" value={result.booking.customerName} />
                   <Row icon={Phone} label="الجوال" value={result.booking.customerPhone} ltr />
                   <Row icon={Calendar} label="التاريخ" value={result.booking.date} />
@@ -280,6 +302,7 @@ function VerifyPage() {
 function SuccessHero({ booking }: { booking: StoredBooking }) {
   const offerTitle = booking.offerTitle || "خدمة";
   const redeemedAt = booking.redeemedAt ? new Date(booking.redeemedAt) : new Date();
+  const ps = getPaymentStatus(booking);
   return (
     <div className="mb-6 overflow-hidden rounded-3xl border border-emerald-200 bg-gradient-to-br from-emerald-50 via-white to-emerald-50 shadow-xl">
       <div className="relative bg-gradient-to-r from-emerald-500 to-emerald-600 px-6 py-8 text-white">
@@ -295,6 +318,12 @@ function SuccessHero({ booking }: { booking: StoredBooking }) {
             <h2 className="mt-1 text-2xl font-black">تم تأكيد الخدمة بنجاح</h2>
             <p className="text-xs text-white/90">تم تسجيل استخدام الحجز ووصل التنبيه إلى لوحة المركز والإدارة.</p>
           </div>
+        </div>
+      </div>
+      <div className="px-5 pt-4">
+        <div className={`flex items-center justify-between rounded-2xl border px-4 py-3 ${ps.cls}`}>
+          <span className="text-xs font-bold">حالة الدفع</span>
+          <span className="text-base font-extrabold">{ps.label}</span>
         </div>
       </div>
       <div className="grid gap-3 p-5 sm:grid-cols-2">

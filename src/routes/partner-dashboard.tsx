@@ -1343,7 +1343,7 @@ function ProfileTab({ partner, onUpdate }: { partner: Profile; onUpdate: (p: Pro
     }
     return ids;
   }, [f.category, f.category_ids, categories]);
-  const selectedIds = ((f.category_ids || []).length > 0 ? f.category_ids : derivedFromCategory).map((x) => String(x));
+  const selectedIds = ((f.category_ids || []).length > 0 ? (f.category_ids || []) : derivedFromCategory).map((x) => String(x));
   function toggleCat(c: any) {
     const k = catKey(c);
     if (!k) return;

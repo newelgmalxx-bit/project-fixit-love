@@ -24,7 +24,7 @@ type StoredBooking = {
 };
 
 function AccountHome() {
-  const { dir } = useLang();
+  const { dir, t } = useLang();
   const { user } = useAuth();
   const [items, setItems] = useState<StoredBooking[]>([]);
 
@@ -40,31 +40,31 @@ function AccountHome() {
   const upcoming = items.filter((b) => !b.redeemedAt).length;
   const done = items.filter((b) => b.redeemedAt).length;
   const Arrow = dir === "rtl" ? ArrowLeft : ArrowRight;
-  const firstName = (user?.name || "").split(" ")[0] || "بك";
+  const firstName = (user?.name || "").split(" ")[0] || t("account.home.greetingFallback");
 
   return (
-    <AccountLayout title={`أهلاً ${firstName} 👋`} subtitle="تابع حجوزاتك وأظهر الباركود عند المركز">
+    <AccountLayout title={`${t("account.home.greeting")} ${firstName} 👋`} subtitle={t("account.home.quickSubtitle")}>
       <div className="grid grid-cols-3 gap-3 sm:gap-4">
-        <Stat icon={Ticket} label="إجمالي الحجوزات" value={total.toString()} tone="primary" />
-        <Stat icon={Clock} label="قادمة" value={upcoming.toString()} tone="amber" />
-        <Stat icon={CheckCircle2} label="مُستخدمة" value={done.toString()} tone="emerald" />
+        <Stat icon={Ticket} label={t("account.stat.total")} value={total.toString()} tone="primary" />
+        <Stat icon={Clock} label={t("account.stat.upcoming")} value={upcoming.toString()} tone="amber" />
+        <Stat icon={CheckCircle2} label={t("account.stat.used")} value={done.toString()} tone="emerald" />
       </div>
 
       <section className="rounded-2xl border border-border bg-card p-5 shadow-sm">
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-lg font-bold">آخر الحجوزات</h2>
+          <h2 className="text-lg font-bold">{t("account.recent.title")}</h2>
           <Link to="/account/bookings" className="inline-flex items-center gap-1 text-sm text-primary hover:underline">
-            عرض الكل <Arrow className="h-3.5 w-3.5" />
+            {t("account.viewAll")} <Arrow className="h-3.5 w-3.5" />
           </Link>
         </div>
         {items.length === 0 ? (
           <div className="py-8 text-center">
-            <p className="text-sm text-muted-foreground">لا توجد حجوزات بعد.</p>
+            <p className="text-sm text-muted-foreground">{t("account.home.emptyBookings")}</p>
             <Link
               to="/offers"
               className="mt-4 inline-flex h-10 items-center rounded-full bg-primary px-5 text-sm font-bold text-primary-foreground hover:bg-primary/90"
             >
-              تصفّح العروض
+              {t("account.home.browseOffers")}
             </Link>
           </div>
         ) : (
@@ -82,16 +82,16 @@ function AccountHome() {
                       <QrCode className="h-5 w-5" />
                     </div>
                     <div className="min-w-0">
-                      <div className="text-sm font-bold">{b.offerTitle || "خدمة"}</div>
+                      <div className="text-sm font-bold">{b.offerTitle || t("account.home.serviceFallback")}</div>
                       <div className="flex items-center gap-1 text-xs text-muted-foreground">
                         <Calendar className="h-3 w-3" /> {b.date} • {b.time}
                       </div>
                     </div>
                   </div>
                   {b.redeemedAt ? (
-                    <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-[11px] font-bold text-emerald-700">مُستخدم</span>
+                    <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-[11px] font-bold text-emerald-700">{t("account.home.badge.used")}</span>
                   ) : (
-                    <span className="rounded-full bg-primary/10 px-2.5 py-1 text-[11px] font-bold text-primary">قادم</span>
+                    <span className="rounded-full bg-primary/10 px-2.5 py-1 text-[11px] font-bold text-primary">{t("account.home.badge.upcoming")}</span>
                   )}
                 </Link>
               );
@@ -101,12 +101,12 @@ function AccountHome() {
       </section>
 
       <section className="rounded-2xl border border-border bg-card p-5 shadow-sm">
-        <h2 className="mb-4 text-lg font-bold">روابط سريعة</h2>
+        <h2 className="mb-4 text-lg font-bold">{t("account.home.quickLinks")}</h2>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
           {[
-            { to: "/account/bookings", icon: ShoppingBag, label: "حجوزاتي", tone: "from-primary/10 to-primary/5 text-primary" },
-            { to: "/account/favorites", icon: Heart, label: "المفضلة", tone: "from-rose-100 to-rose-50 text-rose-600" },
-            { to: "/account/tickets", icon: LifeBuoy, label: "الدعم", tone: "from-amber-100 to-amber-50 text-amber-600" },
+            { to: "/account/bookings", icon: ShoppingBag, label: t("account.home.qa.bookings"), tone: "from-primary/10 to-primary/5 text-primary" },
+            { to: "/account/favorites", icon: Heart, label: t("account.home.qa.favorites"), tone: "from-rose-100 to-rose-50 text-rose-600" },
+            { to: "/account/tickets", icon: LifeBuoy, label: t("account.home.qa.support"), tone: "from-amber-100 to-amber-50 text-amber-600" },
           ].map((q) => (
             <Link
               key={q.to}

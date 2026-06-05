@@ -120,6 +120,7 @@ function mapPartner(p: AdminPartner): Merchant {
 }
 
 function MerchantsPage() {
+
   const [items, setItems] = useState<Merchant[]>([]);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<"all" | Status>("all");

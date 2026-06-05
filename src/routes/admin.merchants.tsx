@@ -118,7 +118,7 @@ function categoryKey(value: any): string {
   return normalized === null ? "" : String(normalized);
 }
 
-function pickAssignedCategoryIds(p: any): CategoryId[] {
+function pickAssignedCategoryIds(p: any, opts?: { treatPlainCategoriesAsAssigned?: boolean; masterCategories?: any[] }): CategoryId[] {
   if (Array.isArray(p?.categoryIds)) {
     return p.categoryIds.map(normalizeCategoryId).filter((id: CategoryId | null): id is CategoryId => id !== null);
   }
@@ -131,6 +131,12 @@ function pickAssignedCategoryIds(p: any): CategoryId[] {
     );
     if (assigned.length) {
       return assigned.map(normalizeCategoryId).filter((id: CategoryId | null): id is CategoryId => id !== null);
+    }
+    if (opts?.treatPlainCategoriesAsAssigned) {
+      const ids = p.categories.map(normalizeCategoryId).filter((id: CategoryId | null): id is CategoryId => id !== null);
+      const masterKeys = new Set((opts.masterCategories || []).map(categoryKey).filter(Boolean));
+      const isWholeMasterList = masterKeys.size > 0 && ids.length === masterKeys.size && ids.every((id) => masterKeys.has(categoryKey(id)));
+      return isWholeMasterList ? [] : ids;
     }
     // Backend returned the master list with no assignment marker — treat as none.
     return [];

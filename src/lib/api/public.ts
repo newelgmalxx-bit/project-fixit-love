@@ -135,7 +135,7 @@ export const publicApi = {
     if (params.email) sp.set('email', params.email);
     if (params.phone) sp.set('phone', params.phone);
     return request<ApiResponse<{ order: any; items?: any[]; timeline?: any[]; partner?: any }>>(
-      `/lookup-order?${sp.toString()}`
+      `/lookup-booking?${sp.toString()}`
     );
   },
   submitQuote: (body: Record<string, any>) =>

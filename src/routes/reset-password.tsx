@@ -64,6 +64,7 @@ function ResetPasswordPage() {
             value={value}
             onChange={(e) => onChange(e.target.value)}
             placeholder="••••••••"
+            dir={dir}
             className="w-full rounded-xl border border-border bg-white px-10 py-3 text-start text-sm placeholder:text-muted-foreground/60 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
           />
         </div>

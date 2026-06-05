@@ -355,7 +355,8 @@ function BookingsPage() {
           <table className="w-full min-w-[1000px] text-sm">
             <thead>
               <tr className={`${dir === "rtl" ? "text-right" : "text-left"} text-xs text-muted-foreground border-b border-border whitespace-nowrap`}>
-                <th className="px-3 py-3 font-medium">{L("رقم التأكيد", "Confirmation #")}</th>
+                <th className="px-3 py-3 font-medium">{L("رقم الحجز", "Booking #")}</th>
+                <th className="px-3 py-3 font-medium">{L("رمز التأكيد", "Verify code")}</th>
                 <th className="px-3 py-3 font-medium">{L("المركز", "Center")}</th>
                 <th className="px-3 py-3 font-medium">{L("العميل", "Customer")}</th>
                 <th className="px-3 py-3 font-medium">{L("بيانات التواصل", "Contact")}</th>

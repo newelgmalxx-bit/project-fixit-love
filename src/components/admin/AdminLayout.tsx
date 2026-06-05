@@ -418,10 +418,34 @@ export function AdminLayout({ children, title, subtitle, action }: { children: R
                 </Link>
               </PopoverContent>
             </Popover>
-            <Link to={"/admin/settings/profile" as any} title={L("الملف الشخصي", "Profile")} className="flex items-center gap-2 rounded-lg border border-border px-2 py-1.5 hover:bg-muted transition">
-              <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-bold">{initials}</div>
-              <span className="hidden sm:block text-xs font-bold">{user?.name || L("المستخدم", "User")}</span>
-            </Link>
+            <Popover>
+              <PopoverTrigger asChild>
+                <button className="flex items-center gap-2 rounded-lg border border-border px-2 py-1.5 hover:bg-muted transition">
+                  <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-bold">{initials}</div>
+                  <span className="hidden sm:block text-xs font-bold">{user?.name || L("المستخدم", "User")}</span>
+                  <ChevronDown className="h-3.5 w-3.5 opacity-60" />
+                </button>
+              </PopoverTrigger>
+              <PopoverContent align="end" className="w-56 p-1" dir={dir}>
+                <div className="px-3 py-2 border-b border-border mb-1">
+                  <div className="text-sm font-bold truncate">{user?.name || L("المستخدم", "User")}</div>
+                  {user?.email && <div className="text-[11px] text-muted-foreground truncate" dir="ltr">{user.email}</div>}
+                </div>
+                <Link to={"/admin/settings/profile" as any} className="flex items-center gap-2 rounded-md px-3 py-2 text-sm hover:bg-muted">
+                  <User className="h-4 w-4" />
+                  {L("الملف الشخصي", "Profile")}
+                </Link>
+                <Link to={"/admin/settings/team" as any} className="flex items-center gap-2 rounded-md px-3 py-2 text-sm hover:bg-muted">
+                  <Settings className="h-4 w-4" />
+                  {L("الإعدادات", "Settings")}
+                </Link>
+                <div className="my-1 h-px bg-border" />
+                <button onClick={handleLogout} className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-rose-600 hover:bg-rose-50">
+                  <LogOut className="h-4 w-4" />
+                  {L("تسجيل الخروج", "Sign out")}
+                </button>
+              </PopoverContent>
+            </Popover>
           </div>
           </div>
         </header>

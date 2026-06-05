@@ -156,20 +156,23 @@ function BookingsPage() {
       const normalized = bId.replace(/^bk[-_ ]?/i, "").toUpperCase();
       const localMatches = items.filter((b: any) => {
         const ref = cleanCheckValue(String(pickRef(b) || ""));
+        const refNormalized = ref.replace(/^BK[-_ ]?/i, "");
         const v = cleanCheckValue(String(pickVerifyCode(b) || ""));
-        return ref === bId && v === code;
+        return (ref === bId || refNormalized === normalized) && v === code;
       });
-      const [r1, r2] = await Promise.all([
+      const [r1, r2, r3] = await Promise.all([
         adminBookingsApi.list({ q: bId, limit: 50 }).catch(() => ({ items: [] as any[] })),
         normalized && normalized !== bId
           ? adminBookingsApi.list({ q: normalized, limit: 50 }).catch(() => ({ items: [] as any[] }))
           : Promise.resolve({ items: [] as any[] }),
+        adminBookingsApi.list({ q: code, limit: 50 }).catch(() => ({ items: [] as any[] })),
       ]);
-      const pool: any[] = [...localMatches, ...(r1.items || []), ...(r2.items || [])];
+      const pool: any[] = [...localMatches, ...(r1.items || []), ...(r2.items || []), ...(r3.items || [])];
       const match = pool.find((b: any) => {
         const ref = cleanCheckValue(String(pickRef(b) || ""));
+        const refNormalized = ref.replace(/^BK[-_ ]?/i, "");
         const v = cleanCheckValue(String(pickVerifyCode(b) || ""));
-        return ref === bId && v === code;
+        return (ref === bId || refNormalized === normalized) && v === code;
       });
       if (!match) { toast.error(L("لا يوجد حجز مطابق لرقم الحجز ورمز التأكيد", "No booking matches both booking # and confirmation code")); return; }
       const st = String(match.status || "").toLowerCase();

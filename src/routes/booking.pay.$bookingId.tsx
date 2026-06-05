@@ -147,54 +147,33 @@ function BookingPayPage() {
 
     // Map UI method → backend value. Backend (checkout.php) accepts:
     // "tamara" | "tabby" | "cod" | numeric MyFatoorah PaymentMethodId | "myfatoorah"
-    const mfIdMap: Record<string, string> = { mada: "6", visa: "2", applepay: "11", stcpay: "12" };
-    const backendMethod =
-      method === "cod" ? "cod" :
-      method === "myfatoorah" ? "myfatoorah" :
-      (mfIdMap[method] ?? "myfatoorah");
-
-    let sessionId: string | undefined;
-    try { sessionId = localStorage.getItem("guestSessionId") || undefined; } catch {}
+    const mfIdMap: Record<string, number> = { mada: 6, visa: 2, applepay: 11, stcpay: 12 };
+    const paymentMethodId: number | undefined = mfIdMap[method];
 
     try {
-      const res: any = await checkout.create({
-        paymentMethod: backendMethod,
-        contactName: booking.customerName,
-        contactEmail: booking.customerEmail ?? "",
-        contactPhone: booking.customerPhone,
-        date: booking.date,
-        time: booking.time,
-        sessionId,
-        notes: `Booking ${booking.bookingId} — ${booking.date} ${booking.time}`,
-        items: [
-          {
-            offerId: booking.offerId,
-            offerTitle: booking.offerTitle ?? "حجز",
-            price: booking.depositAmount ?? booking.total ?? 0,
-            qty: booking.qty ?? 1,
-          },
-        ],
-      });
+      // Re-pay existing booking via dedicated backend endpoint.
+      // See docs/BACKEND_PAY_EXISTING_BOOKING.md
+      const res: any = await checkout.payExistingBooking(
+        booking.bookingNumber || booking.serverBookingId || bookingId,
+        paymentMethodId,
+      );
 
       const data = res?.data ?? res ?? {};
       const url: string | undefined = data.paymentUrl;
-      const newBookingId: string | undefined = data.bookingId ?? data.orderId;
-      const bookingNumber: string | undefined = data.bookingNumber ?? data.orderNumber;
+      const bookingNumber: string | undefined = data.bookingNumber;
 
-      if (newBookingId) {
-        try {
-          const merged = { ...booking, paymentMethod: method, serverBookingId: newBookingId, bookingNumber };
-          sessionStorage.setItem(`booking:${bookingId}`, JSON.stringify(merged));
-        } catch {}
-      }
+      try {
+        const merged = { ...booking, paymentMethod: method, bookingNumber: bookingNumber ?? booking.bookingNumber };
+        sessionStorage.setItem(`booking:${bookingId}`, JSON.stringify(merged));
+      } catch {}
 
       if (url) {
         window.location.href = url;
         return;
       }
 
-      // COD or no redirect URL → go to booking summary
-      navigate({ to: "/booking/$bookingId", params: { bookingId: newBookingId ?? bookingId } });
+      // No redirect URL → go back to booking summary
+      navigate({ to: "/booking/$bookingId", params: { bookingId } });
     } catch (e: any) {
       console.error("Pay error", e);
       alert(e?.message || "تعذّر بدء الدفع، حاول مرة أخرى");

@@ -418,6 +418,7 @@ function PartnerDashboard() {
                 {tab === "wallet" && <WalletTab />}
                 {tab === "reviews" && <ReviewsTab />}
                 {tab === "agreement" && <AgreementTab partner={profile} onPartnerUpdate={setProfile} />}
+                {tab === "commission-request" && <CommissionRequestTab partner={profile} />}
                 {tab === "support" && <SupportTab />}
                 {tab === "profile" && <ProfileTab partner={profile} onUpdate={setProfile} />}
               </>

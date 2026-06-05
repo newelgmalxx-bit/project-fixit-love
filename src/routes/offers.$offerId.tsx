@@ -28,6 +28,7 @@ import {
 } from "lucide-react";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
+import { useSiteSettings } from "@/hooks/useSiteSettings";
 import { toast } from "sonner";
 import { useOffer, useOffersByCategory, useCategory } from "@/hooks/useCatalog";
 import { SarIcon } from "@/components/ui/SarIcon";

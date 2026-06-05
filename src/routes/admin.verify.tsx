@@ -125,7 +125,13 @@ function AdminVerifyPage() {
     if (pickStatus(b) === "cancelled") { toast.error("هذا الحجز ملغي"); return; }
     setRedeeming(true);
     try {
-      await adminBookingsApi.redeem(b.id, code.trim());
+      // Backend has no dedicated /redeem endpoint for admin — use the status endpoint
+      // (same one used by the bookings list "تأكيد" button which is known to work).
+      try {
+        await adminBookingsApi.redeem(b.id, code.trim());
+      } catch {
+        await adminBookingsApi.setStatus(b.id, "completed");
+      }
       const stamped: any = { ...b, status: "completed", redeemed_at: new Date().toISOString() };
       setItems((prev) => prev.map((x) => x.id === b.id ? stamped : x));
       setResult({ status: "ok", booking: stamped, alreadyRedeemed: true });

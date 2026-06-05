@@ -1879,7 +1879,7 @@ function WalletTab() {
 
 /* -------------------- Reviews -------------------- */
 function ReviewsTab() {
-  type RV = { id: string; name: string; offer: string; rating: number; date: string; text: string; reply?: string | null };
+  type RV = { id: string; name: string; avatar?: string | null; offer: string; rating: number; date: string; text: string; reply?: string | null };
   const [reviews, setReviews] = useState<RV[]>([]);
   const [loading, setLoading] = useState(true);
   const [replyId, setReplyId] = useState<string | null>(null);
@@ -1889,16 +1889,31 @@ function ReviewsTab() {
   async function load() {
     setLoading(true);
     try {
-      const r: any = await partnerApi.listReviews({ pageSize: 50 });
-      const rows: RV[] = (r?.items || []).map((x: any) => ({
-        id: String(x.id),
-        name: x.customerName || x.customer_name || x.user?.name || "عميل",
-        offer: x.offerTitle || x.offer_title || x.offer?.title || "—",
-        rating: Number(x.rating || 5),
-        date: x.createdAt || x.created_at || "",
-        text: x.comment || x.text || "",
-        reply: x.partnerReply || x.partner_reply || x.reply || null,
-      }));
+      const [revRes, offersRes]: any = await Promise.all([
+        partnerApi.listReviews({ pageSize: 100 }),
+        partnerApi.listOffers({ limit: 200 }).catch(() => ({ items: [] })),
+      ]);
+      const offers: any[] = offersRes?.items || [];
+      const offerTitleById = new Map<string, string>();
+      offers.forEach((o) => offerTitleById.set(String(o.id), o.title || o.title_en || ""));
+      const fmtDate = (s?: string | null) => {
+        if (!s) return "";
+        try { return new Date(s).toLocaleDateString("ar-EG", { year: "numeric", month: "short", day: "numeric" }); }
+        catch { return s; }
+      };
+      const rows: RV[] = (revRes?.items || []).map((x: any) => {
+        const oid = String(x.offerId ?? x.offer_id ?? "");
+        return {
+          id: String(x.id),
+          name: x.userName || x.user_name || x.customerName || x.customer_name || x.user?.name || "عميل",
+          avatar: x.userAvatar || x.user_avatar || null,
+          offer: offerTitleById.get(oid) || x.offerTitle || x.offer_title || "—",
+          rating: Number(x.rating || 5),
+          date: fmtDate(x.createdAt || x.created_at),
+          text: x.comment || x.text || "",
+          reply: x.partnerReply || x.partner_reply || x.reply || null,
+        };
+      });
       setReviews(rows);
     } catch {
       setReviews([]);

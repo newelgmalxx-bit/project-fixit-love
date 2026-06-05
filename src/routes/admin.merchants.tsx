@@ -518,11 +518,7 @@ function MerchantsPage() {
                             <DropdownMenuItem onClick={async () => {
                               try {
                                 const full: any = await adminPartnersApi.get(m.id);
-                                const catIds: number[] = Array.isArray(full?.categoryIds)
-                                  ? full.categoryIds.map((x: any) => Number(x)).filter((n: number) => !isNaN(n))
-                                  : Array.isArray(full?.categories)
-                                    ? full.categories.map((c: any) => Number(c?.id ?? c)).filter((n: number) => !isNaN(n))
-                                    : [];
+                                const catIds: number[] = pickAssignedCategoryIds(full);
                                 setEditing({
                                   ...m,
                                   name: full?.vendorName || full?.nameAr || full?.name || m.name,

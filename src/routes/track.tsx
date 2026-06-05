@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { FeaturedOffers } from "@/components/sections/FeaturedOffers";
-// import { BASE } from "@/lib/api"; // disabled — using demo data
+import { publicApi } from "@/lib/api/public";
 import { useLang } from "@/i18n/LanguageProvider";
 import type { TKey } from "@/i18n/translations";
 
@@ -125,48 +125,75 @@ function TrackPage() {
     setLoading(true);
     setNotFound(false);
     setResult(null);
-    // وضع التجربة: عرض داتا وهمية لأي رقم حجز يُدخل
-    await new Promise((r) => setTimeout(r, 600));
-    const now = new Date();
-    const minus = (d: number) => new Date(now.getTime() - d * 60 * 60 * 1000).toISOString().slice(0, 19).replace("T", " ");
-    const demo: Result = {
-      order: {
-        number: orderNumber.trim().toUpperCase(),
-        status: "confirmed",
-        paymentStatus: "deposit_paid",
-        paymentMethod: "mada",
-        subtotal: 599,
-        vat: 0,
-        total: 599,
-        depositPaid: 60,
-        remaining: 539,
-        verificationCode: "284913",
-        qrData: `https://koswmat.com/verify/${orderNumber.trim().toUpperCase()}`,
-        couponDiscount: 0,
-        currency: "SAR",
-        notes: "العميلة تفضّل خبيرة المكياج منى",
-        createdAt: minus(26),
-        updatedAt: minus(2),
-        confirmedAt: minus(24),
-      },
-      items: [
-        { title: "باقة عروس متكاملة — مركز لمسة جمال", planName: "موعد: 2026-05-25 · 16:00", qty: 1, price: 599 },
-      ],
-      timeline: [
-        { status: "pending", label: "تم استلام طلب الحجز", note: "بانتظار تأكيد المركز", at: minus(26) },
-        { status: "deposit_paid", label: "دفع العربون أونلاين", note: "60 ر.س عبر مدى — والباقي يُحصَّل في المركز", at: minus(25) },
-        { status: "confirmed", label: "تم تأكيد الحجز من المركز", note: "كود التحقق: 284913", at: minus(24) },
-        { status: "in_progress", label: "الموعد قارب", note: "تذكير: يرجى الحضور قبل الموعد بـ 10 دقائق", at: minus(2) },
-      ],
-      partner: {
-        name: "مركز لمسة جمال",
-        address: "طريق الملك فهد، العليا، الرياض",
-        phone: "0501234567",
-        mapsUrl: "https://maps.google.com/?q=24.7136,46.6753",
-      },
-    };
-    setResult(demo);
-    setLoading(false);
+    try {
+      const res: any = await publicApi.lookupOrder({
+        orderNumber: orderNumber.trim(),
+        email: method === "email" ? contact.trim() : undefined,
+        phone: method === "phone" ? contact.trim() : undefined,
+      });
+      const data: any = res?.data ?? res ?? {};
+      const o: any = data.order ?? data;
+      if (!o || (!o.number && !o.order_number && !o.id)) {
+        setNotFound(true);
+        setLoading(false);
+        return;
+      }
+      const items: any[] = data.items ?? o.items ?? [];
+      const timeline: any[] = data.timeline ?? o.timeline ?? [];
+      const p: any = data.partner ?? o.partner ?? null;
+      const mapped: Result = {
+        order: {
+          number: String(o.number ?? o.order_number ?? o.id ?? ""),
+          status: String(o.status ?? ""),
+          paymentStatus: o.paymentStatus ?? o.payment_status,
+          paymentMethod: o.paymentMethod ?? o.payment_method,
+          subtotal: Number(o.subtotal ?? 0),
+          vat: Number(o.vat ?? 0),
+          total: Number(o.total ?? 0),
+          depositPaid: Number(o.depositPaid ?? o.deposit_paid ?? 0),
+          remaining: Number(o.remaining ?? o.remaining_amount ?? 0),
+          verificationCode: o.verificationCode ?? o.verification_code ?? undefined,
+          qrData: o.qrData ?? o.qr_data ?? undefined,
+          couponDiscount: Number(o.couponDiscount ?? o.coupon_discount ?? 0),
+          currency: o.currency ?? "SAR",
+          notes: o.notes ?? undefined,
+          createdAt: o.createdAt ?? o.created_at ?? undefined,
+          updatedAt: o.updatedAt ?? o.updated_at ?? undefined,
+          confirmedAt: o.confirmedAt ?? o.confirmed_at ?? undefined,
+        },
+        items: items.map((it: any) => ({
+          title: String(it.title ?? it.offer_title ?? it.service_title ?? ""),
+          planName: it.planName ?? it.plan_name ?? it.booking_label ?? null,
+          qty: Number(it.qty ?? 1),
+          price: Number(it.price ?? 0),
+          originalPrice: it.originalPrice ?? it.original_price ?? null,
+        })),
+        timeline: timeline.map((ev: any) => ({
+          status: ev.status,
+          label: ev.label,
+          note: ev.note,
+          at: ev.at ?? ev.created_at,
+        })),
+        partner: p
+          ? {
+              name: String(p.name ?? p.title ?? ""),
+              address: String(p.address ?? p.city ?? ""),
+              phone: String(p.phone ?? p.mobile ?? ""),
+              mapsUrl: p.mapsUrl ?? p.maps_url ?? null,
+            }
+          : { name: "", address: "", phone: "", mapsUrl: null },
+      };
+      setResult(mapped);
+    } catch (err: any) {
+      const status = err?.status;
+      if (status === 404 || status === 403) {
+        setNotFound(true);
+      } else {
+        toast.error(err?.message || (lang === "ar" ? "تعذّر جلب بيانات الحجز" : "Could not fetch booking"));
+      }
+    } finally {
+      setLoading(false);
+    }
   }
 
   const currentIndex = result ? computeStageIndex(result.order) : -1;

@@ -44,11 +44,11 @@ function VerifyOtpPage() {
     e.preventDefault();
     setError(null);
     if (!/^\S+@\S+\.\S+$/.test(email.trim())) {
-      setError(lang === "ar" ? "أدخل بريدًا صحيحًا" : "Enter a valid email");
+      setError(t("auth.err.validEmail"));
       return;
     }
     if (!/^\d{4,8}$/.test(otp.trim())) {
-      setError(lang === "ar" ? "أدخل الرمز المرسل إلى بريدك" : "Enter the code sent to your email");
+      setError(t("auth.err.enterCode"));
       return;
     }
     setSubmitting(true);
@@ -63,11 +63,11 @@ function VerifyOtpPage() {
       if (u) setStoredUser(u);
       await refresh();
       toast.success(mode === "login"
-        ? (lang === "ar" ? "تم تسجيل الدخول" : "Logged in")
-        : (lang === "ar" ? "تم تفعيل الحساب" : "Account verified"));
+        ? t("auth.loggedIn")
+        : t("auth.accountVerified"));
       navigate({ to: destinationFor(u?.role) as any });
     } catch (err: any) {
-      setError(err?.message || (lang === "ar" ? "رمز غير صحيح أو منتهي" : "Invalid or expired code"));
+      setError(err?.message || t("auth.err.invalidExpiredCode"));
     } finally {
       setSubmitting(false);
     }
@@ -77,7 +77,7 @@ function VerifyOtpPage() {
     setError(null);
     setInfo(null);
     if (!/^\S+@\S+\.\S+$/.test(email.trim())) {
-      setError(lang === "ar" ? "أدخل بريدًا صحيحًا" : "Enter a valid email");
+      setError(t("auth.err.validEmail"));
       return;
     }
     setResending(true);
@@ -87,10 +87,10 @@ function VerifyOtpPage() {
       } else {
         await authApi.resendRegisterOtp({ email: email.trim() });
       }
-      setInfo(lang === "ar" ? "تم إرسال رمز جديد إلى بريدك" : "A new code has been sent to your email");
+      setInfo(t("auth.info.newCodeSent"));
       setCooldown(60);
     } catch (err: any) {
-      setError(err?.message || (lang === "ar" ? "تعذر إعادة الإرسال" : "Failed to resend"));
+      setError(err?.message || t("auth.err.resendFailed"));
     } finally {
       setResending(false);
     }
@@ -109,12 +109,10 @@ function VerifyOtpPage() {
             </div>
           </div>
           <h1 className="text-center text-2xl font-extrabold text-foreground">
-            {lang === "ar" ? "تأكيد البريد الإلكتروني" : "Verify your email"}
+            {t("auth.verify.title")}
           </h1>
           <p className="mt-2 text-center text-sm text-muted-foreground">
-            {lang === "ar"
-              ? "أدخل الرمز المرسل إلى بريدك لإتمام التسجيل"
-              : "Enter the code we sent to your inbox to finish signing up"}
+            {t("auth.verify.subtitle")}
           </p>
 
           {error && (
@@ -133,7 +131,7 @@ function VerifyOtpPage() {
           <form className="mt-6 space-y-5" onSubmit={onSubmit}>
             <div className="text-start">
               <label className="mb-1.5 block text-xs font-bold text-foreground">
-                {lang === "ar" ? "البريد الإلكتروني" : "Email"}
+                {t("auth.email")}
               </label>
               <div className="relative">
                 <span className={`pointer-events-none absolute inset-y-0 ${dir === "rtl" ? "left-3" : "right-3"} flex items-center text-muted-foreground`}>
@@ -151,7 +149,7 @@ function VerifyOtpPage() {
 
             <div className="text-start">
               <label className="mb-1.5 block text-xs font-bold text-foreground">
-                {lang === "ar" ? "رمز التحقق" : "Verification code"}
+                {t("auth.codeLabel")}
               </label>
               <input
                 type="text"
@@ -170,8 +168,8 @@ function VerifyOtpPage() {
                 className="mt-2 text-xs font-bold text-primary hover:underline disabled:opacity-60"
               >
                 {cooldown > 0
-                  ? (lang === "ar" ? `إعادة الإرسال خلال ${cooldown}ث` : `Resend in ${cooldown}s`)
-                  : (lang === "ar" ? "إعادة إرسال الرمز" : "Resend code")}
+                  ? `${t("auth.resendIn")} ${cooldown}${t("auth.seconds")}`
+                  : t("auth.resendCode")}
               </button>
             </div>
 
@@ -182,14 +180,14 @@ function VerifyOtpPage() {
             >
               {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
               {submitting
-                ? (lang === "ar" ? "جارٍ التحقق..." : "Verifying...")
-                : (lang === "ar" ? "تأكيد" : "Verify")}
+                ? t("auth.verifying")
+                : t("auth.verify")}
             </button>
           </form>
 
           <p className="mt-6 text-center text-xs text-muted-foreground">
             <Link to="/login" className="font-bold text-primary hover:underline">
-              {lang === "ar" ? "العودة لتسجيل الدخول" : "Back to sign in"}
+              {t("auth.backToLogin")}
             </Link>
           </p>
         </div>

@@ -8,7 +8,7 @@ import { LangSwitch } from "@/components/layout/SiteHeader";
 import { AuthHero } from "@/components/auth/AuthHero";
 
 function ResetPasswordPage() {
-  const { dir, lang, toggle } = useLang();
+  const { dir, lang, toggle, t } = useLang();
   const navigate = useNavigate();
   const search = useSearch({ from: "/reset-password" }) as { token?: string };
   const token = search?.token || "";
@@ -20,24 +20,24 @@ function ResetPasswordPage() {
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!token) {
-      toast.error(lang === "ar" ? "رمز الاستعادة غير صالح" : "Invalid reset token");
+      toast.error(t("auth.err.invalidResetToken"));
       return;
     }
     if (password.length < 8) {
-      toast.error(lang === "ar" ? "كلمة المرور 8 أحرف على الأقل" : "Password must be at least 8 characters");
+      toast.error(t("auth.err.pwdMin8"));
       return;
     }
     if (password !== confirm) {
-      toast.error(lang === "ar" ? "كلمتا المرور غير متطابقتين" : "Passwords do not match");
+      toast.error(t("auth.err.pwdMismatch"));
       return;
     }
     setSubmitting(true);
     try {
       await (api as any).auth.reset(token, password);
-      toast.success(lang === "ar" ? "تم تحديث كلمة المرور" : "Password updated");
+      toast.success(t("auth.reset.updated"));
       navigate({ to: "/login", search: { redirect: undefined } });
     } catch (err) {
-      const msg = err instanceof ApiError ? err.message : (lang === "ar" ? "فشل تحديث كلمة المرور" : "Failed to reset password");
+      const msg = err instanceof ApiError ? err.message : t("auth.err.resetFailed");
       toast.error(msg);
     } finally {
       setSubmitting(false);
@@ -84,41 +84,37 @@ function ResetPasswordPage() {
           <div className="mx-auto w-full max-w-md">
             <div className="text-start">
               <h1 className="text-3xl font-extrabold text-foreground">
-                {lang === "ar" ? "تعيين كلمة مرور جديدة" : "Set a new password"}
+                {t("auth.reset.title")}
               </h1>
               <p className="mt-2 text-sm text-muted-foreground">
-                {lang === "ar"
-                  ? "أدخل كلمة المرور الجديدة لحسابك."
-                  : "Enter the new password for your account."}
+                {t("auth.reset.subtitle")}
               </p>
               <div className={`mt-3 h-0.5 w-16 rounded-full bg-primary ${dir === "rtl" ? "mr-0 ml-auto" : "ml-0 mr-auto"}`} />
             </div>
 
             {!token && (
               <div className="mt-6 rounded-xl border border-amber-200 bg-amber-50 p-4 text-xs text-amber-800 text-start">
-                {lang === "ar"
-                  ? "الرابط غير صالح أو منتهي. اطلب رابطًا جديدًا."
-                  : "Invalid or expired link. Please request a new one."}
+                {t("auth.reset.invalidLink")}
               </div>
             )}
 
             <form className="mt-6 w-full space-y-5" onSubmit={onSubmit}>
-              <PwdField value={password} onChange={setPassword} label={lang === "ar" ? "كلمة المرور الجديدة" : "New password"} />
-              <PwdField value={confirm} onChange={setConfirm} label={lang === "ar" ? "تأكيد كلمة المرور" : "Confirm password"} />
+              <PwdField value={password} onChange={setPassword} label={t("auth.reset.newPassword")} />
+              <PwdField value={confirm} onChange={setConfirm} label={t("auth.reset.confirm")} />
               <button
                 type="submit"
                 disabled={submitting || !token}
                 className="block w-full rounded-xl bg-primary py-3.5 text-sm font-bold text-white shadow-md transition hover:bg-primary-dark disabled:opacity-60"
               >
                 {submitting
-                  ? (lang === "ar" ? "جاري الحفظ..." : "Saving...")
-                  : (lang === "ar" ? "حفظ كلمة المرور" : "Save password")}
+                  ? t("auth.saving")
+                  : t("auth.reset.save")}
               </button>
             </form>
 
             <p className="mt-7 text-center text-xs text-muted-foreground">
               <Link to="/login" search={{ redirect: undefined }} className="font-bold text-primary hover:underline">
-                {lang === "ar" ? "العودة لتسجيل الدخول" : "Back to sign in"}
+                {t("auth.backToLogin")}
               </Link>
             </p>
           </div>

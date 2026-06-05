@@ -54,7 +54,7 @@ function LoginPage() {
   }, [user, navigate, redirectTo]);
 
   function goAfterLogin(u?: any) {
-    toast.success(lang === "ar" ? "تم تسجيل الدخول" : "Logged in");
+    toast.success(t("auth.loggedIn"));
     navigate({ to: destinationFor(u || user) as any });
   }
 
@@ -62,15 +62,15 @@ function LoginPage() {
     e.preventDefault();
     setError(null);
     if (!identifier || !password) {
-      setError(lang === "ar" ? "يرجى تعبئة جميع الحقول" : "Please fill all fields");
+      setError(t("auth.err.fillFields"));
       return;
     }
     if (tab === "email" && !emailRe.test(identifier.trim())) {
-      setError(lang === "ar" ? "أدخل بريدًا إلكترونيًا صحيحًا" : "Enter a valid email");
+      setError(t("auth.err.validEmail"));
       return;
     }
     if (tab === "phone" && !phoneRe.test(identifier.trim())) {
-      setError(lang === "ar" ? "أدخل رقم جوال صحيح" : "Enter a valid phone number");
+      setError(t("auth.err.validPhone"));
       return;
     }
     setSubmitting(true);
@@ -86,7 +86,7 @@ function LoginPage() {
       }
       goAfterLogin(res?.user);
     } catch (err: any) {
-      setError(err?.message || (lang === "ar" ? "البريد أو كلمة المرور غير صحيحة." : "Invalid email or password."));
+      setError(err?.message || t("auth.err.invalidCreds"));
     } finally {
       setSubmitting(false);
     }
@@ -96,16 +96,16 @@ function LoginPage() {
     setError(null);
     setOtpInfo(null);
     if (!emailRe.test(otpEmail.trim())) {
-      setError(lang === "ar" ? "أدخل بريدًا إلكترونيًا صحيحًا" : "Enter a valid email");
+      setError(t("auth.err.validEmail"));
       return;
     }
     setSubmitting(true);
     try {
       await authApi.requestEmailOtp({ email: otpEmail.trim() });
       setOtpSent(true);
-      setOtpInfo(lang === "ar" ? "تم إرسال رمز التحقق إلى بريدك الإلكتروني" : "Verification code sent to your email");
+      setOtpInfo(t("auth.info.codeSent"));
     } catch (err: any) {
-      setError(err?.message || (lang === "ar" ? "تعذر إرسال الرمز" : "Failed to send code"));
+      setError(err?.message || t("auth.err.sendCodeFailed"));
     } finally {
       setSubmitting(false);
     }
@@ -114,7 +114,7 @@ function LoginPage() {
   async function verifyOtp() {
     setError(null);
     if (!/^\d{4,8}$/.test(otpCode.trim())) {
-      setError(lang === "ar" ? "أدخل الرمز المرسل" : "Enter the code");
+      setError(t("auth.err.enterCode"));
       return;
     }
     setSubmitting(true);
@@ -124,7 +124,7 @@ function LoginPage() {
       if (res.data?.user) setStoredUser(res.data.user);
       goAfterLogin(res.data?.user);
     } catch (err: any) {
-      setError(err?.message || (lang === "ar" ? "رمز غير صحيح" : "Invalid code"));
+      setError(err?.message || t("auth.err.invalidCode"));
     } finally {
       setSubmitting(false);
     }
@@ -141,13 +141,13 @@ function LoginPage() {
         if (res.data?.user) setStoredUser(res.data.user);
         goAfterLogin(res.data?.user);
       } catch (err: any) {
-        setError(err?.message || (lang === "ar" ? "فشل تسجيل الدخول بجوجل" : "Google sign-in failed"));
+        setError(err?.message || t("auth.err.googleSignIn"));
       } finally {
         setSubmitting(false);
       }
     },
     onError: () => {
-      setError(lang === "ar" ? "فشل تسجيل الدخول بجوجل" : "Google sign-in failed");
+      setError(t("auth.err.googleSignIn"));
     },
   });
 
@@ -274,7 +274,7 @@ function LoginPage() {
                   className="relative z-20 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3.5 text-sm font-bold text-white shadow-md transition hover:bg-primary-dark disabled:opacity-70"
                 >
                   {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
-                  {submitting ? (lang === "ar" ? "جاري الدخول..." : "Signing in...") : t("auth.signIn")}
+                  {submitting ? t("auth.signingIn") : t("auth.signIn")}
                 </button>
               </form>
             ) : (
@@ -299,7 +299,7 @@ function LoginPage() {
                 {otpSent && (
                   <div className="text-start">
                     <label className="mb-1.5 block text-xs font-bold text-foreground">
-                      {lang === "ar" ? "رمز التحقق" : "Verification code"}
+                      {t("auth.codeLabel")}
                     </label>
                     <input
                       type="text"
@@ -317,7 +317,7 @@ function LoginPage() {
                       disabled={submitting}
                       className="mt-2 text-xs font-bold text-primary hover:underline disabled:opacity-60"
                     >
-                      {lang === "ar" ? "إعادة إرسال الرمز" : "Resend code"}
+                      {t("auth.resendCode")}
                     </button>
                   </div>
                 )}
@@ -328,10 +328,10 @@ function LoginPage() {
                 >
                   {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
                   {submitting
-                    ? (lang === "ar" ? "جارٍ..." : "Working...")
+                    ? t("auth.working")
                     : otpSent
-                      ? (lang === "ar" ? "تأكيد الرمز" : "Verify code")
-                      : (lang === "ar" ? "إرسال الرمز" : "Send code")}
+                      ? t("auth.verifyCode")
+                      : t("auth.sendCode")}
                 </button>
               </form>
             )}
@@ -349,7 +349,7 @@ function LoginPage() {
               className="inline-flex w-full items-center justify-center gap-3 rounded-xl border border-border bg-white py-3 text-sm font-bold text-foreground shadow-sm transition hover:border-primary hover:bg-secondary/40 disabled:opacity-60"
             >
               <GoogleIcon className="h-5 w-5" />
-              {lang === "ar" ? "تسجيل الدخول بحساب Google" : "Sign in with Google"}
+              {t("auth.googleSignIn")}
             </button>
 
             <Link
@@ -358,7 +358,7 @@ function LoginPage() {
               className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-primary/30 bg-primary/5 py-3 text-sm font-bold text-primary transition hover:bg-primary/10"
             >
               <Store className="h-4 w-4" />
-              {lang === "ar" ? "تسجيل الدخول كشريك أو مركز" : "Sign in as partner / merchant"}
+              {t("auth.partnerSignIn")}
             </Link>
 
             <p className="mt-7 text-center text-xs text-muted-foreground">

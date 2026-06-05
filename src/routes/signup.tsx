@@ -32,41 +32,39 @@ function SignupPage() {
     setError(null);
     setInfo(null);
     if (!name || !phone || !email || !pwd) {
-      setError(lang === "ar" ? "يرجى تعبئة جميع الحقول" : "Please fill all fields");
+      setError(t("auth.err.fillFields"));
       return;
     }
     if (pwd.length < 6) {
-      setError(lang === "ar" ? "كلمة المرور يجب أن تكون 6 أحرف على الأقل" : "Password must be at least 6 characters");
+      setError(t("auth.err.pwdMin6"));
       return;
     }
     if (pwd !== pwd2) {
-      setError(lang === "ar" ? "كلمتا المرور غير متطابقتين" : "Passwords do not match");
+      setError(t("auth.err.pwdMismatch"));
       return;
     }
     if (!agree) {
-      setError(lang === "ar" ? "يجب الموافقة على الشروط" : "You must accept the terms");
+      setError(t("auth.err.mustAgree"));
       return;
     }
     setSubmitting(true);
     try {
       const result = await signup({ name, email: email.trim(), phone, password: pwd, city } as any);
       if ((result as any).requiresOtp) {
-        setInfo(lang === "ar"
-          ? "تم إنشاء الحساب، تحقق من بريدك لإدخال رمز التفعيل."
-          : "Account created. Check your email for the verification code.");
+        setInfo(t("auth.info.signupCheckEmail"));
         navigate({ to: "/verify-otp", search: { email: email.trim() } as any } as any);
         return;
       }
-      toast.success(lang === "ar" ? "تم إنشاء الحساب" : "Account created");
+      toast.success(t("auth.accountCreated"));
       const role = (result as any)?.user?.role;
       const dest = role === "admin" ? "/admin" : role === "partner" ? "/partner-dashboard" : "/account";
       navigate({ to: dest as any });
     } catch (err: any) {
       const msg = err?.message || "";
       if (/registered|already|مستخدم|موجود/i.test(msg)) {
-        setError(lang === "ar" ? "البريد الإلكتروني مستخدم بالفعل." : "This email is already registered.");
+        setError(t("auth.err.emailUsed"));
       } else {
-        setError(msg || (lang === "ar" ? "فشل إنشاء الحساب" : "Signup failed"));
+        setError(msg || t("auth.err.signupFailed"));
       }
     } finally {
       setSubmitting(false);
@@ -82,18 +80,18 @@ function SignupPage() {
         const res = await authApi.google((tokenResponse as any).access_token);
         if (res.data?.token) setToken(res.data.token);
         if (res.data?.user) setStoredUser(res.data.user);
-        toast.success(lang === "ar" ? "تم تسجيل الدخول" : "Signed in");
+        toast.success(t("auth.signedIn"));
         const role = (res.data?.user as any)?.role;
         if (role === "admin") navigate({ to: "/admin" as any });
         else if (role === "partner") navigate({ to: "/partner-dashboard" as any });
         else navigate({ to: "/account" });
       } catch (err: any) {
-        setError(err?.message || (lang === "ar" ? "فشل التسجيل بجوجل" : "Google sign-up failed"));
+        setError(err?.message || t("auth.err.googleSignUp"));
       } finally {
         setSubmitting(false);
       }
     },
-    onError: () => setError(lang === "ar" ? "فشل التسجيل بجوجل" : "Google sign-up failed"),
+    onError: () => setError(t("auth.err.googleSignUp")),
   });
 
   function signUpWithGoogle() {
@@ -168,7 +166,7 @@ function SignupPage() {
 
               <button type="submit" disabled={submitting} className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3.5 text-sm font-bold text-white shadow-md transition hover:bg-primary-dark disabled:opacity-70">
                 {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
-                {submitting ? (lang === "ar" ? "جاري الإنشاء..." : "Creating...") : t("auth.signupBtn")}
+                {submitting ? t("auth.creating") : t("auth.signupBtn")}
               </button>
             </form>
 
@@ -185,7 +183,7 @@ function SignupPage() {
               className="inline-flex w-full items-center justify-center gap-3 rounded-xl border border-border bg-white py-3 text-sm font-bold text-foreground shadow-sm transition hover:border-primary hover:bg-secondary/40 disabled:opacity-60"
             >
               <GoogleIcon className="h-5 w-5" />
-              {lang === "ar" ? "التسجيل بحساب Google" : "Sign up with Google"}
+              {t("auth.googleSignUp")}
             </button>
 
             <p className="mt-7 text-center text-xs text-muted-foreground">

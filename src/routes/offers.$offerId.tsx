@@ -242,12 +242,46 @@ function OfferDetailPage() {
   // User reviews (local-only for now)
   type UserReview = { name: string; date: string; rating: number; text: string };
   const [userReviews, setUserReviews] = useState<UserReview[]>([]);
+  const [reviewStats, setReviewStats] = useState<{ avg: number; count: number; dist: Record<number, number> }>({ avg: 0, count: 0, dist: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 } });
   const [reviewName, setReviewName] = useState("");
   const [reviewText, setReviewText] = useState("");
   const [reviewRating, setReviewRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
   const [reviewSubmitted, setReviewSubmitted] = useState(false);
   const [reviewSubmitting, setReviewSubmitting] = useState(false);
+
+  async function loadReviews() {
+    const oid = (offer as any)?.id;
+    if (!oid) return;
+    try {
+      const res: any = await reviewsApi.list({ offerId: String(oid), limit: 100 });
+      const data = res?.data ?? res;
+      const itemsRaw: any[] = Array.isArray(data?.items) ? data.items : (Array.isArray(data) ? data : []);
+      // Only show approved/published reviews
+      const items = itemsRaw.filter((r) => {
+        const s = String(r.status ?? "published").toLowerCase();
+        return s === "published" || s === "approved" || s === "active" || s === "";
+      });
+      const mapped: UserReview[] = items.map((r) => ({
+        name: r.userName || r.user_name || r.name || "مستخدم",
+        date: String(r.created_at || r.createdAt || "").slice(0, 10),
+        rating: Number(r.rating) || 0,
+        text: r.comment || r.text || "",
+      }));
+      setUserReviews(mapped);
+      const count = mapped.length;
+      const sum = mapped.reduce((a, b) => a + (b.rating || 0), 0);
+      const avg = typeof data?.average === "number" ? Number(data.average) : (count ? sum / count : 0);
+      const dist: Record<number, number> = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+      mapped.forEach((m) => { const k = Math.round(m.rating); if (dist[k] != null) dist[k] += 1; });
+      setReviewStats({ avg: Math.round(avg * 10) / 10, count: Number(data?.total ?? count), dist });
+    } catch { /* ignore */ }
+  }
+
+  useEffect(() => {
+    loadReviews();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [(offer as any)?.id]);
 
   async function submitReview(e: React.FormEvent) {
     e.preventDefault();
@@ -277,6 +311,8 @@ function OfferDetailPage() {
       setReviewRating(0);
       setReviewSubmitted(true);
       setTimeout(() => setReviewSubmitted(false), 2500);
+      // Refresh list — newly approved reviews will appear after admin moderation
+      loadReviews();
     } catch (err: any) {
       const msg = err?.message || "تعذّر إرسال التقييم";
       toast.error(msg);

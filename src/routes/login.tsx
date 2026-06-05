@@ -37,15 +37,28 @@ function LoginPage() {
   const phoneRe = /^\+?\d[\d\s-]{6,}$/;
 
   function destinationFor(u: any): string {
-    if (redirectTo) return redirectTo;
     const role = String(u?.role ?? u?.user_role ?? u?.type ?? u?.account_type ?? "").toLowerCase();
     if (typeof window !== "undefined") {
       // eslint-disable-next-line no-console
       console.log("[login] user role detected:", role, "from user:", u);
     }
-    if (role === "admin") return "/admin";
-    if (role === "partner") return "/partner-dashboard";
-    return "/account";
+    const defaultDest =
+      role === "admin" ? "/admin" :
+      role === "partner" ? "/partner-dashboard" :
+      "/account";
+    // Only honor the redirect if it's compatible with the user's role.
+    // A client logging in must never be sent to partner/admin areas.
+    if (redirectTo) {
+      const path = redirectTo.split("?")[0].split("#")[0];
+      const isPartnerArea = path.startsWith("/partner") || path === "/partner-dashboard";
+      const isAdminArea = path.startsWith("/admin");
+      if (isPartnerArea && role !== "partner" && role !== "admin") return defaultDest;
+      if (isAdminArea && role !== "admin") return defaultDest;
+      // Avoid loops back to auth pages
+      if (path === "/login" || path === "/partner-login") return defaultDest;
+      return redirectTo;
+    }
+    return defaultDest;
   }
 
   // Redirect if already logged in

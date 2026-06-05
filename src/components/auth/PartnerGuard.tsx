@@ -40,8 +40,13 @@ export function PartnerGuard({ children }: { children: ReactNode }) {
   }
 
   if (state === "denied") {
-    const redirect = encodeURIComponent(location.href);
-    return <Navigate to="/partner-login" search={{ redirect } as any} replace />;
+    // Use pathname only (not href) to avoid stacking encoded redirect params,
+    // and skip the redirect entirely if we're already on the partner-login page.
+    const path = location.pathname;
+    if (path === "/partner-login") {
+      return <Navigate to="/partner-login" replace />;
+    }
+    return <Navigate to="/partner-login" search={{ redirect: path } as any} replace />;
   }
 
   return <>{children}</>;

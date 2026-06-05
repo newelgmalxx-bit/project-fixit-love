@@ -4,6 +4,7 @@ import { Send, Lock, MessageSquare } from "lucide-react";
 import { AccountLayout } from "@/components/account/AccountLayout";
 import { demoMessages } from "@/data/demoMessages";
 import { useAuth } from "@/hooks/useAuth";
+import { useLang } from "@/i18n/LanguageProvider";
 
 export const Route = createFileRoute("/account/messages")({
   head: () => ({ meta: [{ title: "الرسائل | حسابي" }] }),
@@ -11,6 +12,7 @@ export const Route = createFileRoute("/account/messages")({
 });
 
 function AccountMessagesPage() {
+  const { t } = useLang();
   const { user } = useAuth();
   const [, force] = useState(0);
   useEffect(() => demoMessages.subscribe(() => force((n) => n + 1)), []);
@@ -38,13 +40,13 @@ function AccountMessagesPage() {
   };
 
   return (
-    <AccountLayout title="الرسائل" subtitle="محادثاتك مع مراكز الخدمات">
+    <AccountLayout title={t("account.messages.title")} subtitle={t("account.messages.subtitle")}>
       <div className="grid gap-4 md:grid-cols-[280px_1fr] md:h-[560px]">
         <div className="overflow-hidden rounded-3xl border border-border bg-card">
-          <div className="border-b border-border p-4 text-sm font-extrabold">المحادثات</div>
+          <div className="border-b border-border p-4 text-sm font-extrabold">{t("account.messages.conversations")}</div>
           <div className="max-h-[500px] overflow-y-auto">
             {list.length === 0 && (
-              <div className="p-6 text-center text-sm text-muted-foreground">لا توجد محادثات بعد</div>
+              <div className="p-6 text-center text-sm text-muted-foreground">{t("account.messages.empty")}</div>
             )}
             {list.map((c) => (
               <button
@@ -72,7 +74,7 @@ function AccountMessagesPage() {
                   </div>
                   {c.closed && (
                     <div className="mt-1 inline-flex items-center gap-1 text-[10px] text-rose-600">
-                      <Lock className="h-3 w-3" /> مغلقة
+                      <Lock className="h-3 w-3" /> {t("account.messages.closed")}
                     </div>
                   )}
                 </div>
@@ -85,7 +87,7 @@ function AccountMessagesPage() {
           {!active ? (
             <div className="flex flex-1 flex-col items-center justify-center gap-2 p-8 text-center text-muted-foreground">
               <MessageSquare className="h-10 w-10" />
-              <p className="text-sm">اختر محادثة لبدء المراسلة</p>
+              <p className="text-sm">{t("account.messages.selectConversation")}</p>
             </div>
           ) : (
             <>
@@ -101,7 +103,7 @@ function AccountMessagesPage() {
                 </div>
                 {active.closed && (
                   <span className="inline-flex items-center gap-1 rounded-full bg-rose-50 px-3 py-1 text-[11px] font-bold text-rose-600">
-                    <Lock className="h-3 w-3" /> أُغلقت بواسطة الإدارة
+                    <Lock className="h-3 w-3" /> {t("account.messages.closedByAdmin")}
                   </span>
                 )}
               </div>
@@ -126,7 +128,7 @@ function AccountMessagesPage() {
               {active.closed ? (
                 <div className="border-t border-border bg-rose-50/40 p-3 text-center text-xs text-rose-600">
                   <Lock className="me-1 inline h-3 w-3" />
-                  هذه المحادثة مغلقة{active.closedReason ? ` — ${active.closedReason}` : ""}
+                  {t("account.messages.closedHint")}{active.closedReason ? ` — ${active.closedReason}` : ""}
                 </div>
               ) : (
                 <div className="flex items-center gap-2 border-t border-border p-3">
@@ -134,7 +136,7 @@ function AccountMessagesPage() {
                     value={text}
                     onChange={(e) => setText(e.target.value)}
                     onKeyDown={(e) => { if (e.key === "Enter") send(); }}
-                    placeholder="اكتب رسالتك…"
+                    placeholder={t("account.messages.typeHere")}
                     className="h-11 flex-1 rounded-full border border-border bg-background px-4 text-sm outline-none focus:border-primary"
                   />
                   <button

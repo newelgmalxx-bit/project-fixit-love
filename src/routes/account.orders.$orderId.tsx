@@ -65,9 +65,9 @@ function OrderDetail() {
       const res: any = await account.payOrder(order.id, { paymentMethod: selectedGateway });
       const url = res?.data?.paymentUrl || res?.paymentUrl;
       if (url) { window.location.href = url; return; }
-      setPayError(lang === "ar" ? "تعذّر الحصول على رابط الدفع. اختر بوابة دفع أخرى أو حاول لاحقًا." : "Could not get payment URL. Choose another gateway or try later.");
+      setPayError(t("account.order.payUrlFailLong"));
     } catch (e: any) {
-      setPayError(e?.message || (lang === "ar" ? "تعذّر بدء عملية الدفع" : "Could not start payment"));
+      setPayError(e?.message || t("account.order.payStartFail"));
     } finally {
       setPaying(false);
     }
@@ -256,7 +256,7 @@ function OrderDetail() {
                 <span>{t("account.order.total")}</span>
                 <span className="text-primary" data-ltr-number>{formatCurrency(order.total, lang)}</span>
               </div>
-              <p className="text-[11px] text-muted-foreground text-end">السعر شامل ضريبة القيمة المضافة</p>
+              <p className="text-[11px] text-muted-foreground text-end">{t("account.order.priceVat")}</p>
             </div>
           </div>
           <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
@@ -276,12 +276,12 @@ function OrderDetail() {
                 className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-primary to-primary-dark px-4 py-2.5 text-sm font-bold text-primary-foreground shadow-sm hover:opacity-95"
               >
                 <Wallet className="h-4 w-4" />
-                {lang === "ar" ? "ادفع الآن" : "Pay now"}
+                {t("account.order.payNow")}
               </button>
             )}
             {!order.paid && order.status !== "cancelled" && showGateways && (
               <div className="mt-3 space-y-3">
-                <div className="text-xs font-bold text-muted-foreground">{lang === "ar" ? "اختر بوابة الدفع" : "Choose a payment gateway"}</div>
+                <div className="text-xs font-bold text-muted-foreground">{t("account.order.chooseGateway")}</div>
                 <div className="grid gap-2">
                   {paymentMethods.filter((m) => GATEWAY_METHODS.includes(m.id)).map((m) => {
                     const Icon = m.icon;
@@ -307,7 +307,7 @@ function OrderDetail() {
                   className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-primary to-primary-dark px-4 py-2.5 text-sm font-bold text-primary-foreground shadow-sm hover:opacity-95 disabled:opacity-60"
                 >
                   {paying ? <Loader2 className="h-4 w-4 animate-spin" /> : <Wallet className="h-4 w-4" />}
-                  {lang === "ar" ? "المتابعة للدفع" : "Continue to payment"}
+                  {t("account.order.continue")}
                 </button>
               </div>
             )}

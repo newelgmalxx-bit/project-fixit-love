@@ -19,7 +19,7 @@ type FavItem = {
 function FavoritesPage() {
   const [items, setItems] = useState<FavItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const { dir } = useLang();
+  const { dir, t, lang } = useLang();
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -54,14 +54,14 @@ function FavoritesPage() {
       await favApi.remove(offerId);
       setItems((prev) => prev.filter((it) => it.offerId !== offerId));
       window.dispatchEvent(new Event("saba:favorites"));
-      toast.success("تمت الإزالة من المفضلة");
+      toast.success(t("account.favorites.removed"));
     } catch (e: any) {
-      toast.error(e?.message || "تعذر الحذف");
+      toast.error(e?.message || t("account.favorites.removeFail"));
     }
   }
 
   return (
-    <AccountLayout title="المفضلة" subtitle="العروض اللي حفظتها">
+    <AccountLayout title={t("account.favorites.title")} subtitle={t("account.favorites.subtitle")}>
       {loading ? (
         <div className="flex justify-center py-12">
           <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
@@ -69,9 +69,9 @@ function FavoritesPage() {
       ) : items.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-border bg-white p-12 text-center">
           <Heart className="mx-auto h-10 w-10 text-muted-foreground" />
-          <p className="mt-3 text-sm text-muted-foreground">لا توجد عروض في المفضلة بعد.</p>
+          <p className="mt-3 text-sm text-muted-foreground">{t("account.favorites.empty")}</p>
           <Link to="/offers" className="mt-4 inline-flex h-10 items-center gap-2 rounded-full bg-primary px-5 text-xs font-bold text-primary-foreground">
-            تصفح العروض <ArrowLeft className={`h-4 w-4 ${dir === "ltr" ? "rotate-180" : ""}`} />
+            {t("account.favorites.browse")} <ArrowLeft className={`h-4 w-4 ${dir === "ltr" ? "rotate-180" : ""}`} />
           </Link>
         </div>
       ) : (
@@ -80,11 +80,13 @@ function FavoritesPage() {
             <FavCard
               key={o.id}
               offerId={o.offerId}
-              title={(o.titleAr || o.titleEn || "") as string}
+              title={((lang === "en" ? (o.titleEn || o.titleAr) : (o.titleAr || o.titleEn)) || "") as string}
               banner={(o.image || "") as string}
               priceAfter={o.priceAfter}
               priceBefore={o.priceBefore}
               onRemove={() => handleRemove(o.offerId)}
+              currency={t("account.favorites.currency")}
+              viewLabel={t("account.favorites.view")}
             />
           ))}
         </div>
@@ -94,10 +96,11 @@ function FavoritesPage() {
 }
 
 function FavCard({
-  offerId, title, banner, priceAfter, priceBefore, onRemove,
+  offerId, title, banner, priceAfter, priceBefore, onRemove, currency, viewLabel,
 }: {
   offerId: string; title: string; banner: string;
   priceAfter?: number; priceBefore?: number; onRemove: () => void;
+  currency: string; viewLabel: string;
 }) {
   return (
     <article className="group flex flex-col overflow-hidden rounded-2xl border border-border bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-md">
@@ -115,7 +118,7 @@ function FavCard({
         <h3 className="text-base font-extrabold text-foreground line-clamp-2">{title}</h3>
         {priceAfter ? (
           <div className="mt-2 flex items-baseline gap-2" dir="ltr">
-            <span className="text-lg font-black text-primary">{priceAfter} ر.س</span>
+            <span className="text-lg font-black text-primary">{priceAfter} {currency}</span>
             {priceBefore && priceBefore > priceAfter ? (
               <span className="text-xs text-muted-foreground line-through">{priceBefore}</span>
             ) : null}
@@ -123,7 +126,7 @@ function FavCard({
         ) : null}
         <div className="mt-4 flex justify-end">
           <Link to="/offers/$offerId" params={{ offerId }} className="inline-flex h-9 items-center gap-1 rounded-full bg-primary px-4 text-[11px] font-bold text-white">
-            عرض العرض
+            {viewLabel}
           </Link>
         </div>
       </div>

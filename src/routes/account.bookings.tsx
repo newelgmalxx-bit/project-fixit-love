@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { Calendar, Clock, MapPin, QrCode, CheckCircle2, Ticket, X, Pencil } from "lucide-react";
 import { toast } from "sonner";
 import { AccountLayout } from "@/components/account/AccountLayout";
+import { useLang } from "@/i18n/LanguageProvider";
 
 
 export const Route = createFileRoute("/account/bookings")({
@@ -42,6 +43,7 @@ function saveAll(list: StoredBooking[]) {
 }
 
 function MyBookings() {
+  const { t } = useLang();
   const [items, setItems] = useState<StoredBooking[]>([]);
   const [edit, setEdit] = useState<StoredBooking | null>(null);
   const [editDate, setEditDate] = useState("");
@@ -55,10 +57,10 @@ function MyBookings() {
   useEffect(() => { refresh(); }, []);
 
   function cancelBooking(id: string) {
-    if (!confirm("هل أنت متأكد من إلغاء هذا الحجز؟")) return;
+    if (!confirm(t("account.bookings.confirmCancel"))) return;
     const list = loadAll().map((b) => b.bookingId === id ? { ...b, cancelledAt: new Date().toISOString() } : b);
     saveAll(list);
-    toast.success("تم إلغاء الحجز");
+    toast.success(t("account.bookings.toast.cancelled"));
     refresh();
   }
 
@@ -70,31 +72,31 @@ function MyBookings() {
 
   function saveEdit() {
     if (!edit) return;
-    if (!editDate || !editTime) { toast.error("اختر تاريخ ووقت"); return; }
+    if (!editDate || !editTime) { toast.error(t("account.bookings.toast.pickDate")); return; }
     const list = loadAll().map((b) => b.bookingId === edit.bookingId ? { ...b, date: editDate, time: editTime } : b);
     saveAll(list);
-    toast.success("تم تعديل الموعد");
+    toast.success(t("account.bookings.toast.modified"));
     setEdit(null);
     refresh();
   }
 
   return (
-    <AccountLayout title="حجوزاتي" subtitle="كل حجوزاتك في مكان واحد — أظهر الباركود أو الرمز عند المركز">
+    <AccountLayout title={t("account.bookings.title")} subtitle={t("account.bookings.subtitle")}>
       {items.length === 0 ? (
         <div className="rounded-3xl border border-dashed border-border bg-card p-10 text-center">
           <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary">
             <Ticket className="h-7 w-7" />
           </div>
-          <h3 className="mt-4 text-lg font-extrabold">لا توجد حجوزات بعد</h3>
-          <p className="mt-1 text-sm text-muted-foreground">تصفّح العروض واحجز خدمتك المفضلة الآن.</p>
+          <h3 className="mt-4 text-lg font-extrabold">{t("account.bookings.empty.title")}</h3>
+          <p className="mt-1 text-sm text-muted-foreground">{t("account.bookings.empty.desc")}</p>
           <Link to="/offers" className="mt-5 inline-flex h-10 items-center rounded-full bg-primary px-5 text-sm font-bold text-primary-foreground hover:bg-primary/90">
-            تصفّح العروض
+            {t("account.bookings.empty.cta")}
           </Link>
         </div>
       ) : (
         <div className="grid gap-3">
           {items.map((b) => {
-            const offerTitle = b.offerTitle || "خدمة";
+            const offerTitle = b.offerTitle || t("account.home.serviceFallback");
             const venue = b.vendorName ? `${b.vendorName}${b.vendorCity ? ` — ${b.vendorCity}` : ""}` : "";
             const isPast = b.date && new Date(b.date) < new Date(new Date().toDateString());
             const canModify = !b.redeemedAt && !b.cancelledAt && !isPast;
@@ -102,17 +104,17 @@ function MyBookings() {
               <div key={b.bookingId} className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition hover:border-primary/40 hover:shadow-md">
                 <div className="flex items-start justify-between gap-3 border-b border-border bg-muted/30 px-5 py-3">
                   <div>
-                    <div className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">رقم الحجز</div>
+                    <div className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">{t("account.bookings.bookingNumber")}</div>
                     <div dir="ltr" className="text-base font-black tracking-wider text-foreground">{b.bookingId}</div>
                   </div>
                   {b.cancelledAt ? (
-                    <span className="rounded-full bg-rose-100 px-2.5 py-1 text-[11px] font-bold text-rose-700">ملغي</span>
+                    <span className="rounded-full bg-rose-100 px-2.5 py-1 text-[11px] font-bold text-rose-700">{t("account.bookings.status.cancelled")}</span>
                   ) : b.redeemedAt ? (
                     <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2.5 py-1 text-[11px] font-bold text-emerald-700">
-                      <CheckCircle2 className="h-3 w-3" /> تم الاستخدام
+                      <CheckCircle2 className="h-3 w-3" /> {t("account.bookings.status.used")}
                     </span>
                   ) : (
-                    <span className="rounded-full bg-primary/10 px-2.5 py-1 text-[11px] font-bold text-primary">مؤكد</span>
+                    <span className="rounded-full bg-primary/10 px-2.5 py-1 text-[11px] font-bold text-primary">{t("account.bookings.status.confirmed")}</span>
                   )}
                 </div>
                 <div className="grid gap-3 p-5 sm:grid-cols-[1fr,auto] sm:items-center">
@@ -128,7 +130,7 @@ function MyBookings() {
                       <span className="inline-flex items-center gap-1"><Clock className="h-3.5 w-3.5" /> {b.time}</span>
                     </div>
                     <div className="mt-2 inline-flex items-center gap-2 rounded-xl bg-amber-50 px-3 py-1.5 text-amber-800">
-                      <span className="text-[11px] font-bold">رمز التأكيد</span>
+                      <span className="text-[11px] font-bold">{t("account.bookings.confirmCode")}</span>
                       <span dir="ltr" className="font-black tracking-[0.3em]">{b.verifyCode}</span>
                     </div>
                   </div>
@@ -138,7 +140,7 @@ function MyBookings() {
                       params={{ bookingId: b.bookingId }}
                       className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-primary bg-primary/5 px-4 py-2.5 text-xs font-bold text-primary hover:bg-primary/10"
                     >
-                      <QrCode className="h-4 w-4" /> عرض الباركود
+                      <QrCode className="h-4 w-4" /> {t("account.bookings.actions.qr")}
                     </Link>
                     {canModify && (
                       <>
@@ -146,13 +148,13 @@ function MyBookings() {
                           onClick={() => openEdit(b)}
                           className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-border bg-card px-3 py-2.5 text-xs font-bold text-foreground hover:border-primary hover:text-primary"
                         >
-                          <Pencil className="h-3.5 w-3.5" /> تعديل
+                          <Pencil className="h-3.5 w-3.5" /> {t("account.bookings.actions.edit")}
                         </button>
                         <button
                           onClick={() => cancelBooking(b.bookingId)}
                           className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2.5 text-xs font-bold text-rose-700 hover:bg-rose-100"
                         >
-                          <X className="h-3.5 w-3.5" /> إلغاء
+                          <X className="h-3.5 w-3.5" /> {t("account.bookings.actions.cancel")}
                         </button>
                       </>
                     )}
@@ -168,30 +170,30 @@ function MyBookings() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => setEdit(null)}>
           <div className="w-full max-w-md rounded-3xl bg-card p-6 shadow-2xl" onClick={(e) => e.stopPropagation()}>
             <div className="mb-4 flex items-center justify-between">
-              <h3 className="text-lg font-extrabold">تعديل موعد الحجز</h3>
+              <h3 className="text-lg font-extrabold">{t("account.bookings.editModal.title")}</h3>
               <button onClick={() => setEdit(null)} className="rounded-full p-1 text-muted-foreground hover:bg-muted">
                 <X className="h-4 w-4" />
               </button>
             </div>
             <div className="space-y-3">
               <div>
-                <label className="mb-1.5 block text-xs font-bold">التاريخ</label>
+                <label className="mb-1.5 block text-xs font-bold">{t("account.bookings.editModal.dateLabel")}</label>
                 <input type="date" value={editDate} onChange={(e) => setEditDate(e.target.value)} className="h-11 w-full rounded-xl border border-border bg-background px-3 text-sm" />
               </div>
               <div>
-                <label className="mb-1.5 block text-xs font-bold">الوقت</label>
+                <label className="mb-1.5 block text-xs font-bold">{t("account.bookings.editModal.timeLabel")}</label>
                 <input type="time" value={editTime} onChange={(e) => setEditTime(e.target.value)} className="h-11 w-full rounded-xl border border-border bg-background px-3 text-sm" />
               </div>
             </div>
             <div className="mt-5 flex gap-2">
               <button onClick={saveEdit} className="flex-1 rounded-xl bg-primary py-2.5 text-sm font-bold text-primary-foreground hover:bg-primary/90">
-                حفظ التغييرات
+                {t("account.bookings.editModal.save")}
               </button>
               <button onClick={() => setEdit(null)} className="rounded-xl border border-border bg-card px-4 py-2.5 text-sm font-bold">
-                إلغاء
+                {t("account.bookings.editModal.cancel")}
               </button>
             </div>
-            <p className="mt-3 text-[11px] text-muted-foreground">* قد يحتاج المركز للتأكيد على الموعد الجديد</p>
+            <p className="mt-3 text-[11px] text-muted-foreground">{t("account.bookings.editModal.note")}</p>
           </div>
         </div>
       )}

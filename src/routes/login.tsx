@@ -7,7 +7,7 @@ import { useLang } from "@/i18n/LanguageProvider";
 import { useAuth } from "@/hooks/useAuth";
 import { auth as authApi } from "@/lib/api/auth";
 import { setToken, setUser as setStoredUser } from "@/lib/api/client";
-import { useGoogleLogin } from "@react-oauth/google";
+import { useGoogleLogin, GoogleLogin } from "@react-oauth/google";
 import { toast } from "sonner";
 
 type Tab = "email" | "phone" | "otp";
@@ -136,7 +136,8 @@ function LoginPage() {
       setError(null);
       setSubmitting(true);
       try {
-        const res = await authApi.google((tokenResponse as any).access_token);
+        const token = (tokenResponse as any).access_token;
+        const res = await authApi.google(token);
         if (res.data?.token) setToken(res.data.token);
         if (res.data?.user) setStoredUser(res.data.user);
         goAfterLogin(res.data?.user);
@@ -342,14 +343,36 @@ function LoginPage() {
               <div className="h-px flex-1 bg-border" />
             </div>
 
+            <div className="w-full flex justify-center">
+              <GoogleLogin
+                onSuccess={async (cred) => {
+                  setError(null);
+                  setSubmitting(true);
+                  try {
+                    const idToken = cred.credential!;
+                    const res = await authApi.google(idToken);
+                    if (res.data?.token) setToken(res.data.token);
+                    if (res.data?.user) setStoredUser(res.data.user);
+                    goAfterLogin(res.data?.user);
+                  } catch (err: any) {
+                    setError(err?.message || t("auth.err.googleSignIn"));
+                  } finally {
+                    setSubmitting(false);
+                  }
+                }}
+                onError={() => setError(t("auth.err.googleSignIn"))}
+                useOneTap
+                width="380"
+              />
+            </div>
             <button
               type="button"
               onClick={signInWithGoogle}
               disabled={submitting}
-              className="inline-flex w-full items-center justify-center gap-3 rounded-xl border border-border bg-white py-3 text-sm font-bold text-foreground shadow-sm transition hover:border-primary hover:bg-secondary/40 disabled:opacity-60"
+              className="mt-3 inline-flex w-full items-center justify-center gap-3 rounded-xl border border-border bg-white py-3 text-sm font-bold text-foreground shadow-sm transition hover:border-primary hover:bg-secondary/40 disabled:opacity-60"
             >
               <GoogleIcon className="h-5 w-5" />
-              {t("auth.googleSignIn")}
+              {t("auth.googleSignIn")} (بديل)
             </button>
 
             <Link

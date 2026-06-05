@@ -4,6 +4,59 @@
 
 ---
 
+## 0) حفظ نسبة الاتفاقية تلقائياً على جدول `partners`
+
+**المشكلة الحالية:** لما الأدمن يكتب نسبة العمولة/العربون/الديبوست أثناء إصدار أو تعديل اتفاقية مركز، النسبة بتتحفظ في جدول الاتفاقيات فقط، ومش بتتخزن في جدول `partners` داخل أعمدة `commission_pct` و `deposit_pct`.
+
+**المطلوب:** في ملف admin backend، عند أي endpoint يستقبل `commissionPct` أو `depositPct` لاتفاقية مركز، لازم تعمل تحديث لنفس المركز في جدول `partners`.
+
+Endpoints المقصودة:
+- `POST /api/admin/partners/{partnerId}/agreements`
+- `PUT /api/admin/partners/{partnerId}/agreements/{agreementId}`
+- وأي endpoint تاني بيصدر/يعدل اتفاقية وفيه النسب دي.
+
+القواعد:
+- عندنا في السيستم `commissionPct` و `depositPct` نفس المعنى/نفس الرقم غالباً: نسبة العربون/الديبوست/الكوميشن.
+- لو الأدمن بعت رقم واحد فقط، خزّنه في العمودين: `partners.commission_pct` و `partners.deposit_pct`.
+- ممنوع fallback لـ `0` أو `10` وقت الحفظ. لو القيمة مش مبعوتة متغيرش القيم القديمة.
+- لو القيمة مبعوتة لازم تكون `> 0` و `<= 100`.
+
+مثال PHP مطلوب بعد حفظ الاتفاقية بنجاح:
+
+```php
+$commissionPct = $input['commissionPct'] ?? $input['commission_pct'] ?? null;
+$depositPct    = $input['depositPct'] ?? $input['deposit_pct'] ?? $commissionPct;
+
+if ($commissionPct !== null || $depositPct !== null) {
+    $rate = $depositPct ?? $commissionPct;
+    $rate = (float) $rate;
+
+    if ($rate <= 0 || $rate > 100) {
+        return response()->json([
+            'error' => 'invalid_partner_rate',
+            'message' => 'نسبة العمولة/العربون غير صحيحة',
+        ], 422);
+    }
+
+    $stmt = $pdo->prepare(
+        "UPDATE partners
+         SET commission_pct = ?, deposit_pct = ?, updated_at = NOW()
+         WHERE id = ?"
+    );
+    $stmt->execute([$rate, $rate, $partnerId]);
+}
+```
+
+بعد التعديل، اختبر:
+1. الأدمن يصدر اتفاقية بنسبة `13`.
+2. اعمل Query:
+   ```sql
+   SELECT commission_pct, deposit_pct FROM partners WHERE id = 'PARTNER_ID';
+   ```
+3. لازم الاتنين يبقوا `13.00`.
+
+---
+
 ## 1) دالة `transformPublicPartnerRow` (حوالي السطر 1608)
 
 **المشكلة الحالية:** بترجّع `commission_pct` و `deposit_pct` بقيمة `0.0` لما تكون مش موجودة في الداتابيز. ده بيخلي الفرونت يحسبها صفر بالغلط.

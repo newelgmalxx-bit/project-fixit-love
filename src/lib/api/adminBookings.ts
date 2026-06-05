@@ -82,4 +82,9 @@ export const adminBookingsApi = {
       method: "PUT",
       body: JSON.stringify({ status: "refunded" }),
     }),
+  redeem: (id: string, code: string) =>
+    request<ApiResponse<any>>(`/admin/bookings/${id}/redeem`, {
+      method: "POST",
+      body: JSON.stringify({ verify_code: code, code }),
+    }),
 };

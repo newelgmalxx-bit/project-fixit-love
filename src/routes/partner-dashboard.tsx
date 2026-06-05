@@ -450,7 +450,7 @@ function OverviewTab({ partner, onNavigate }: { partner: Profile; onNavigate: (t
         setStats({
           offers: DEMO_OFFERS.length,
           bookings: list.length,
-          revenue: list.filter((b) => b.status === "completed").reduce((s, b) => s + Number(b.amount || 0), 0),
+          revenue: list.filter(isCountedBooking).reduce((s, b) => s + bookingTotalValue(b), 0),
           pendingBookings: list.filter((b) => b.status === "pending").length,
         });
         setRecentBookings(list.slice(0, 4));
@@ -2530,7 +2530,7 @@ function AnalyticsTab() {
   const totalRevenue = safeAmount(stats?.calculatedRevenue || stats?.totalRevenue || dailyRevenue);
   const totalCommission = safeAmount(stats?.calculatedCommission || stats?.totalCommission || dailyCommission);
   const totalBookings = safeAmount(stats?.calculatedBookings || stats?.totalBookings || daily.reduce((sum, d) => sum + safeAmount(d.bookings), 0));
-  const netRevenue = Number(stats?.netRevenue ?? (totalRevenue - totalCommission));
+  const netRevenue = totalRevenue - totalCommission;
   const avgValue = totalBookings > 0 ? (totalRevenue / totalBookings) : 0;
 
   const kpis = [

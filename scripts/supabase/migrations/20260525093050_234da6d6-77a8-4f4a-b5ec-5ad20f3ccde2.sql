@@ -1,1 +1,0 @@
-ALTER TABLE public.partner_profiles ADD COLUMN IF NOT EXISTS maps_url text;

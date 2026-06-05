@@ -1,1 +1,0 @@
-ALTER TABLE public.partner_offers ADD COLUMN IF NOT EXISTS image_urls jsonb NOT NULL DEFAULT '[]'::jsonb;

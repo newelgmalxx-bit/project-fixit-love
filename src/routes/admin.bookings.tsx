@@ -107,6 +107,10 @@ function pickRef(b: any): string | undefined {
   return b?.qrCode || b?.qr_code || b?.reference || b?.referenceCode || b?.reference_code || b?.confirmationCode || b?.confirmation_code || b?.code;
 }
 
+function pickVerifyCode(b: any): string | undefined {
+  return b?.verifyCode || b?.verify_code || b?.confirmCode || b?.confirm_code || b?.pin || b?.otp;
+}
+
 const PAGE_SIZE = 20;
 
 function BookingsPage() {
@@ -351,7 +355,8 @@ function BookingsPage() {
           <table className="w-full min-w-[1000px] text-sm">
             <thead>
               <tr className={`${dir === "rtl" ? "text-right" : "text-left"} text-xs text-muted-foreground border-b border-border whitespace-nowrap`}>
-                <th className="px-3 py-3 font-medium">{L("رقم التأكيد", "Confirmation #")}</th>
+                <th className="px-3 py-3 font-medium">{L("رقم الحجز", "Booking #")}</th>
+                <th className="px-3 py-3 font-medium">{L("رمز التأكيد", "Verify code")}</th>
                 <th className="px-3 py-3 font-medium">{L("المركز", "Center")}</th>
                 <th className="px-3 py-3 font-medium">{L("العميل", "Customer")}</th>
                 <th className="px-3 py-3 font-medium">{L("بيانات التواصل", "Contact")}</th>
@@ -366,23 +371,31 @@ function BookingsPage() {
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan={11} className="px-3 py-10 text-center">
+                <tr><td colSpan={12} className="px-3 py-10 text-center">
                   <Loader2 className="mx-auto h-5 w-5 animate-spin text-muted-foreground" />
                 </td></tr>
               ) : items.length === 0 ? (
-                <tr><td colSpan={11} className="px-3 py-10 text-center text-xs text-muted-foreground">
+                <tr><td colSpan={12} className="px-3 py-10 text-center text-xs text-muted-foreground">
                   <CalendarCheck className="mx-auto mb-2 h-8 w-8 opacity-40" />
                   {L("لا توجد حجوزات", "No bookings")}
                 </td></tr>
               ) : items.map((b) => {
                 const shortId = String(b.id).slice(-6).toUpperCase();
                 const ref = pickRef(b);
+                const vcode = pickVerifyCode(b);
                 const isPending = String(b.status || "").toLowerCase() === "pending";
                 return (
                 <tr key={b.id} className="border-b border-border hover:bg-muted/40">
                   <td className="px-3 py-3 font-mono text-xs" title={String(b.id)}>
                     <div className="font-bold text-primary">{ref || `#${shortId}`}</div>
                     {ref && <div className="text-[10px] text-muted-foreground">#{shortId}</div>}
+                  </td>
+                  <td className="px-3 py-3">
+                    {vcode ? (
+                      <span dir="ltr" className="inline-block rounded-lg bg-amber-50 px-2 py-1 text-xs font-black tracking-[0.2em] text-amber-800">{vcode}</span>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">—</span>
+                    )}
                   </td>
                   <td className="px-3 py-3 text-xs font-bold">{pickPartnerName(b) || "—"}</td>
                   <td className="px-3 py-3 text-xs font-bold">{b.customerName || "—"}</td>
@@ -456,8 +469,15 @@ function BookingsPage() {
           {viewing && (
             <div className="space-y-4 text-sm">
               <div className="grid gap-3 sm:grid-cols-2">
-                <Info label={L("رقم التأكيد", "Confirmation #")}>
+                <Info label={L("رقم الحجز", "Booking #")}>
                   <span className="font-mono font-bold text-primary" dir="ltr">{pickRef(viewing) || `#${String(viewing.id).slice(-6).toUpperCase()}`}</span>
+                </Info>
+                <Info label={L("رمز التأكيد", "Verify code")}>
+                  {pickVerifyCode(viewing) ? (
+                    <span dir="ltr" className="inline-block rounded-lg bg-amber-50 px-2 py-1 text-sm font-black tracking-[0.25em] text-amber-800">{pickVerifyCode(viewing)}</span>
+                  ) : (
+                    <span className="text-muted-foreground">—</span>
+                  )}
                 </Info>
                 <Info label={L("الحالة", "Status")}>
                   <Pill tone={statusTone(viewing.status)}>{statusLabel(viewing.status, lang)}</Pill>

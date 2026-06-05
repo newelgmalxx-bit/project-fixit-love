@@ -35,7 +35,6 @@ const navGroups: (NavItem | "sep")[] = [
 
   { to: "/admin/merchants", ar: "إدارة المراكز", en: "Merchants", icon: Store },
   { to: "/admin/offers", ar: "إدارة العروض", en: "Offers management", icon: ClipboardCheck },
-  { to: "/admin/commission-requests", ar: "طلبات تعديل العمولة", en: "Commission requests", icon: Percent },
   { to: "/admin/agreements", ar: "اتفاقيات الشركاء", en: "Partner agreements", icon: ScrollText },
   { to: "/admin/partner-packages", ar: "باقات الشركاء", en: "Partner packages", icon: Tag },
   { to: "/admin/payouts", ar: "المدفوعات والسحوبات", en: "Payouts", icon: Wallet, disabled: true } as any,
@@ -48,6 +47,8 @@ const navGroups: (NavItem | "sep")[] = [
   { to: "/admin/sponsored-ads", ar: "الإعلانات الممولة", en: "Sponsored ads", icon: Megaphone },
   { to: "/admin/analytics", ar: "التحليلات", en: "Analytics", icon: BarChart3 },
   { to: "/admin/reports", ar: "التقارير", en: "Reports", icon: FileSpreadsheet },
+  "sep",
+  { to: "/admin/commission-requests", ar: "طلبات تعديل العمولة", en: "Commission requests", icon: Percent },
   "sep",
   { to: "/admin/site", ar: "إعدادات الموقع", en: "Site settings", icon: Building2 },
   { to: "/admin/seo", ar: "إعدادات SEO", en: "SEO settings", icon: Search },

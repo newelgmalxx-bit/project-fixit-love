@@ -734,6 +734,35 @@ function AddCenterDialog({
             <input dir="ltr" value={f.mapsUrl} onChange={(e) => up("mapsUrl", e.target.value)} placeholder="https://maps.app.goo.gl/..." className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm" />
           </div>
 
+          <div className="sm:col-span-2">
+            <label className="text-xs font-bold">تصنيفات المركز</label>
+            <div className="mt-1 flex flex-wrap gap-2 rounded-xl border border-border bg-background p-2">
+              {(categories || []).length === 0 && (
+                <span className="text-xs text-muted-foreground">لا توجد تصنيفات — أضفها من صفحة التصنيفات أولاً.</span>
+              )}
+              {(categories || []).map((c) => {
+                const selected = (f.categoryIds || []).includes(Number(c.id));
+                return (
+                  <button
+                    type="button"
+                    key={c.id}
+                    onClick={() => {
+                      const cur = new Set<number>((f.categoryIds || []).map((n) => Number(n)));
+                      if (selected) cur.delete(Number(c.id)); else cur.add(Number(c.id));
+                      up("categoryIds", Array.from(cur));
+                    }}
+                    className={[
+                      "rounded-full border px-3 py-1 text-xs font-bold transition",
+                      selected ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card text-foreground hover:bg-muted",
+                    ].join(" ")}
+                  >
+                    {c.nameAr}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
           {/* Description AR/EN */}
           <div>
             <label className="text-xs font-bold">وصف المركز (عربي)</label>

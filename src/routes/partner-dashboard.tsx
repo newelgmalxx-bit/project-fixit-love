@@ -1459,6 +1459,7 @@ function WalletTab() {
   const [stats, setStats] = useState<any>(null);
   const [bookings, setBookings] = useState<Booking[]>([]);
 
+
   useEffect(() => {
     (async () => {
       setLoading(true);

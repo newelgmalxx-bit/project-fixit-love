@@ -941,7 +941,7 @@ function OfferDetailPage() {
               <div className="rounded-3xl border border-border bg-card p-6 shadow-sm">
                 <h3 className="mb-4 text-lg font-extrabold text-foreground">أسئلة شائعة</h3>
                 <div className="space-y-2">
-                  {FAQ.map((f, i) => (
+                  {((Array.isArray((site as any)?.faqs) && (site as any).faqs.length) ? (site as any).faqs : FAQ).map((f: { q: string; a: string }, i: number) => (
                     <div key={i} className="rounded-2xl border border-border bg-muted/20">
                       <button
                         type="button"

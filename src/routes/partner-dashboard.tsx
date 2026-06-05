@@ -6,7 +6,7 @@ import {
   Wallet, Star, Bell, ArrowDownToLine, MessageSquare, LineChart,
   CalendarDays, UserCog, Crown, LifeBuoy, Send, Phone, Mail, Shield,
   Sparkles, ChevronLeft, ChevronRight, Zap, Menu, ExternalLink, Percent, FileText, Eye,
-  ShieldCheck, CheckCircle2, XCircle, Search, User as UserIcon,
+  ShieldCheck, CheckCircle2, XCircle, Search, User as UserIcon, Power, PowerOff,
 } from "lucide-react";
 import { toast } from "sonner";
 import { partnerApi, partnerAuth, getStoredPartner, setStoredPartner, type PartnerProfile as ApiPartnerProfile } from "@/lib/api/partner";
@@ -625,6 +625,7 @@ function OffersTab({ partner }: { partner: Profile }) {
   const [items, setItems] = useState<Offer[]>([]);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<Partial<Offer> | null>(null);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
   const selectedCategoryId = editing?.category
     ? apiCategories.find((c: any) => c.id === editing.category || c.slug === editing.category)?.id || ""
     : "";
@@ -709,16 +710,71 @@ function OffersTab({ partner }: { partner: Profile }) {
     }
   }
 
+  async function toggleStatus(o: Offer) {
+    const next = o.status === "active" ? "paused" : "active";
+    try {
+      await partnerApi.updateOffer(o.id, { status: next } as any);
+      setItems((prev) => prev.map((x) => x.id === o.id ? { ...x, status: next } : x));
+      toast.success(next === "active" ? "تم تفعيل العرض" : "تم إيقاف العرض");
+    } catch (e: any) {
+      toast.error(e?.message || "فشل تحديث الحالة");
+    }
+  }
+
+  function toggleSelect(id: string) {
+    setSelected((prev) => {
+      const n = new Set(prev);
+      if (n.has(id)) n.delete(id); else n.add(id);
+      return n;
+    });
+  }
+
+  function toggleSelectAll() {
+    setSelected((prev) => prev.size === items.length ? new Set() : new Set(items.map((o) => o.id)));
+  }
+
+  async function bulkDelete() {
+    if (selected.size === 0) return;
+    if (!confirm(`حذف ${selected.size} عرض نهائياً؟ لا يمكن التراجع.`)) return;
+    const ids = Array.from(selected);
+    let failed = 0;
+    await Promise.all(ids.map((id) => partnerApi.deleteOffer(id).catch(() => { failed++; })));
+    if (failed) toast.error(`فشل حذف ${failed} من ${ids.length}`);
+    else toast.success(`تم حذف ${ids.length} عرض`);
+    setSelected(new Set());
+    load();
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-extrabold text-foreground">العروض ({items.length})</h2>
-        <button
-          onClick={() => setEditing({ title: "", price: 0, status: "draft", category: "" })}
-          className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#3F2A6B] to-[#E0254D] px-5 py-2.5 text-sm font-bold text-white shadow"
-        >
-          <Plus className="h-4 w-4" /> أضف عرض
-        </button>
+        <div className="flex items-center gap-2">
+          {items.length > 0 && (
+            <>
+              <button
+                onClick={toggleSelectAll}
+                className="inline-flex items-center gap-2 rounded-full border border-border px-4 py-2 text-xs font-bold hover:bg-muted"
+              >
+                {selected.size === items.length && items.length > 0 ? "إلغاء التحديد" : "تحديد الكل"}
+              </button>
+              {selected.size > 0 && (
+                <button
+                  onClick={bulkDelete}
+                  className="inline-flex items-center gap-2 rounded-full border border-rose-200 bg-rose-50 px-4 py-2 text-xs font-bold text-rose-700 hover:bg-rose-100"
+                >
+                  <Trash2 className="h-3.5 w-3.5" /> حذف المحدد ({selected.size})
+                </button>
+              )}
+            </>
+          )}
+          <button
+            onClick={() => setEditing({ title: "", price: 0, status: "draft", category: "" })}
+            className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#3F2A6B] to-[#E0254D] px-5 py-2.5 text-sm font-bold text-white shadow"
+          >
+            <Plus className="h-4 w-4" /> أضف عرض
+          </button>
+        </div>
       </div>
 
       {loading ? (
@@ -730,7 +786,15 @@ function OffersTab({ partner }: { partner: Profile }) {
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {items.map((o) => (
-            <div key={o.id} className="overflow-hidden rounded-3xl border border-border bg-card">
+            <div key={o.id} className={`relative overflow-hidden rounded-3xl border bg-card transition ${selected.has(o.id) ? "border-primary ring-2 ring-primary/30" : "border-border"}`}>
+              <label className="absolute top-3 right-3 z-10 flex h-6 w-6 cursor-pointer items-center justify-center rounded-md border border-border bg-white/90 shadow-sm">
+                <input
+                  type="checkbox"
+                  checked={selected.has(o.id)}
+                  onChange={() => toggleSelect(o.id)}
+                  className="h-4 w-4 accent-primary cursor-pointer"
+                />
+              </label>
               {o.image_url && <img src={o.image_url} alt={o.title} className="h-40 w-full object-cover" loading="lazy" />}
               <div className="p-4">
                 <div className="flex items-start justify-between gap-2">
@@ -748,6 +812,13 @@ function OffersTab({ partner }: { partner: Profile }) {
                   <Link to="/offers/$offerId" params={{ offerId: o.id }} target="_blank" className="inline-flex items-center justify-center rounded-xl border border-border px-3 py-2 text-xs font-bold hover:bg-muted" title="عرض">
                     <Eye className="h-3.5 w-3.5" />
                   </Link>
+                  <button
+                    onClick={() => toggleStatus(o)}
+                    title={o.status === "active" ? "إيقاف" : "تفعيل"}
+                    className={`inline-flex items-center justify-center rounded-xl border px-3 py-2 text-xs font-bold ${o.status === "active" ? "border-amber-200 text-amber-700 hover:bg-amber-50" : "border-emerald-200 text-emerald-700 hover:bg-emerald-50"}`}
+                  >
+                    {o.status === "active" ? <PowerOff className="h-3.5 w-3.5" /> : <Power className="h-3.5 w-3.5" />}
+                  </button>
                   <button onClick={() => setEditing({ ...o, terms_text: (o.terms || []).join("\n"), terms_text_en: (o.terms_en || []).join("\n"), bullets_text: (o.overview_bullets || []).join("\n"), bullets_text_en: (o.overview_bullets_en || []).join("\n") } as any)} className="inline-flex flex-1 items-center justify-center gap-1 rounded-xl border border-border px-3 py-2 text-xs font-bold hover:bg-muted">
                     <Edit3 className="h-3.5 w-3.5" /> تعديل
                   </button>

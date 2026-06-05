@@ -302,6 +302,7 @@ function VerifyPage() {
 function SuccessHero({ booking }: { booking: StoredBooking }) {
   const offerTitle = booking.offerTitle || "خدمة";
   const redeemedAt = booking.redeemedAt ? new Date(booking.redeemedAt) : new Date();
+  const ps = getPaymentStatus(booking);
   return (
     <div className="mb-6 overflow-hidden rounded-3xl border border-emerald-200 bg-gradient-to-br from-emerald-50 via-white to-emerald-50 shadow-xl">
       <div className="relative bg-gradient-to-r from-emerald-500 to-emerald-600 px-6 py-8 text-white">
@@ -317,6 +318,12 @@ function SuccessHero({ booking }: { booking: StoredBooking }) {
             <h2 className="mt-1 text-2xl font-black">تم تأكيد الخدمة بنجاح</h2>
             <p className="text-xs text-white/90">تم تسجيل استخدام الحجز ووصل التنبيه إلى لوحة المركز والإدارة.</p>
           </div>
+        </div>
+      </div>
+      <div className="px-5 pt-4">
+        <div className={`flex items-center justify-between rounded-2xl border px-4 py-3 ${ps.cls}`}>
+          <span className="text-xs font-bold">حالة الدفع</span>
+          <span className="text-base font-extrabold">{ps.label}</span>
         </div>
       </div>
       <div className="grid gap-3 p-5 sm:grid-cols-2">

@@ -7,6 +7,7 @@ import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuIte
 import { toast } from "sonner";
 import { adminPartnersApi, partnerLabel, type AdminPartner } from "@/lib/api/adminPartners";
 import { adminCategoriesApi, type AdminCategory } from "@/lib/api/adminContent";
+import { adminPartnerPackagesApi, type PartnerPackage } from "@/lib/api/partnerPackages";
 
 export const Route = createFileRoute("/admin/merchants")({
   head: () => ({ meta: [{ title: "إدارة المراكز | Admin" }] }),
@@ -43,6 +44,7 @@ type Merchant = {
   workingHours?: WorkingHour[];
   password?: string;
   packageName?: string;
+  packageId?: string;
 };
 
 const WEEK_DAYS: { key: string; ar: string }[] = [
@@ -171,6 +173,7 @@ function mapPartner(p: AdminPartner): Merchant {
     joined: (p.createdAt || (p as any).created_at || "").slice(0, 10),
     mapsUrl: (p as any).mapsUrl || (p as any).maps_url || "",
     packageName: p.package?.name || (p as any).package_name || (p as any).packageName || "—",
+    packageId: (p as any).packageId ? String((p as any).packageId) : (p as any).package_id ? String((p as any).package_id) : (p.package?.id ? String(p.package.id) : ""),
     categoryIds: pickAssignedCategoryIds(p),
   };
 }
@@ -185,9 +188,11 @@ function MerchantsPage() {
   const [editing, setEditing] = useState<Merchant | null>(null);
   const [addOpen, setAddOpen] = useState(false);
   const [categories, setCategories] = useState<AdminCategory[]>([]);
+  const [packages, setPackages] = useState<PartnerPackage[]>([]);
 
   useEffect(() => {
     adminCategoriesApi.list().then((d) => setCategories(d.items || [])).catch(() => {});
+    adminPartnerPackagesApi.list().then((items) => setPackages(items || [])).catch(() => {});
   }, []);
 
   const categoryNameById = useMemo(() => {
@@ -313,6 +318,8 @@ function MerchantsPage() {
           password: data.password || undefined,
           categoryIds: data.categoryIds || [],
           category_ids: data.categoryIds || [],
+          packageId: data.packageId || null,
+          package_id: data.packageId || null,
         } as any),
       });
       const tempPwd = res?.data?.partner?.tempPassword || res?.partner?.tempPassword;
@@ -358,6 +365,8 @@ function MerchantsPage() {
           ...(data.password ? { password: data.password } : {}),
           categoryIds: data.categoryIds || [],
           category_ids: data.categoryIds || [],
+          packageId: data.packageId || null,
+          package_id: data.packageId || null,
         } as any),
       });
       if (data.password) {
@@ -571,6 +580,8 @@ function MerchantsPage() {
                                   aboutEn: full?.aboutEn || full?.about_en || "",
                                   workingHours: parseWorkingHours(full?.workingHours ?? full?.working_hours),
                                   categoryIds: catIds,
+                                  packageId: full?.packageId ? String(full.packageId) : (full?.package_id ? String(full.package_id) : (full?.package?.id ? String(full.package.id) : "")),
+                                  packageName: full?.package?.name || full?.package_name || full?.packageName || m.packageName,
                                 });
 
                               } catch {
@@ -678,26 +689,28 @@ function MerchantsPage() {
         </DialogContent>
       </Dialog>
 
-      <AddCenterDialog open={addOpen} onClose={() => setAddOpen(false)} onSave={addCenter} categories={categories} />
+      <AddCenterDialog open={addOpen} onClose={() => setAddOpen(false)} onSave={addCenter} categories={categories} packages={packages} />
       <AddCenterDialog
         open={!!editing}
         onClose={() => setEditing(null)}
         initial={editing || undefined}
         onSave={(data) => editing && updateCenter(editing.id, data)}
         categories={categories}
+        packages={packages}
       />
     </AdminLayout>
   );
 }
 
 function AddCenterDialog({
-  open, onClose, onSave, initial, categories,
+  open, onClose, onSave, initial, categories, packages,
 }: {
   open: boolean;
   onClose: () => void;
   onSave: (m: Omit<Merchant, "id" | "rating" | "offers" | "bookings" | "revenue" | "joined">) => void;
   initial?: Merchant;
   categories?: AdminCategory[];
+  packages?: PartnerPackage[];
 }) {
   const empty = {
     name: "", nameEn: "", owner: "", city: "", phone: "", email: "",
@@ -707,6 +720,7 @@ function AddCenterDialog({
     workingHours: defaultWorkingHours(),
     password: "",
     categoryIds: [] as CategoryId[],
+    packageId: "" as string,
   };
   const [f, setF] = useState(empty);
 
@@ -726,6 +740,7 @@ function AddCenterDialog({
       workingHours: initial.workingHours && initial.workingHours.length ? initial.workingHours : defaultWorkingHours(),
       password: "",
       categoryIds: initial.categoryIds || [],
+      packageId: initial.packageId || "",
     } : empty);
   }, [open, initial]);
 
@@ -948,6 +963,28 @@ function AddCenterDialog({
               <option value="pending">قيد المراجعة</option>
               <option value="suspended">موقوف</option>
             </select>
+          </div>
+
+          <div className="sm:col-span-2">
+            <label className="text-xs font-bold flex items-center gap-2">
+              <Tag className="h-3.5 w-3.5" />
+              اشتراك المركز (الباقة)
+            </label>
+            <select
+              value={f.packageId || ""}
+              onChange={(e) => up("packageId", e.target.value)}
+              className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm"
+            >
+              <option value="">— بدون اشتراك —</option>
+              {(packages || []).map((p) => (
+                <option key={p.id} value={p.id}>
+                  {(p.nameAr || p.name || p.nameEn)} {p.price ? `· ${p.price.toLocaleString()} ر.س` : ""}
+                </option>
+              ))}
+            </select>
+            {(packages || []).length === 0 && (
+              <p className="mt-1 text-[11px] text-muted-foreground">لا توجد باقات — أضفها من صفحة باقات الشركاء أولاً.</p>
+            )}
           </div>
           <DialogFooter className="sm:col-span-2">
             <button type="button" onClick={() => { reset(); onClose(); }} className="rounded-xl border border-border px-4 py-2 text-sm font-bold">إلغاء</button>

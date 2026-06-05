@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { AdminLayout, PanelCard, Pill, PrimaryButton, GhostButton } from "@/components/admin/AdminLayout";
 import {
   CalendarCheck, Loader2, Search, Eye, RefreshCw,
-  ChevronLeft, ChevronRight, X,
+  ChevronLeft, ChevronRight, X, CheckCircle2,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
@@ -101,6 +101,10 @@ function pickMapsUrl(b: any): string | undefined {
 }
 function pickOfferTitle(b: any): string | undefined {
   return b?.offerTitle || b?.offer_title || b?.offer?.title || b?.offer?.titleAr || b?.offerName || b?.offer_name;
+}
+
+function pickRef(b: any): string | undefined {
+  return b?.qrCode || b?.qr_code || b?.reference || b?.referenceCode || b?.reference_code || b?.confirmationCode || b?.confirmation_code || b?.code;
 }
 
 const PAGE_SIZE = 20;
@@ -261,7 +265,7 @@ function BookingsPage() {
           <table className="w-full min-w-[1000px] text-sm">
             <thead>
               <tr className={`${dir === "rtl" ? "text-right" : "text-left"} text-xs text-muted-foreground border-b border-border whitespace-nowrap`}>
-                <th className="px-3 py-3 font-medium">{L("الرقم", "ID")}</th>
+                <th className="px-3 py-3 font-medium">{L("رقم التأكيد", "Confirmation #")}</th>
                 <th className="px-3 py-3 font-medium">{L("المركز", "Center")}</th>
                 <th className="px-3 py-3 font-medium">{L("العميل", "Customer")}</th>
                 <th className="px-3 py-3 font-medium">{L("بيانات التواصل", "Contact")}</th>
@@ -286,11 +290,12 @@ function BookingsPage() {
                 </td></tr>
               ) : items.map((b) => {
                 const shortId = String(b.id).slice(-6).toUpperCase();
-                const ref = (b as any).qrCode || (b as any).reference;
+                const ref = pickRef(b);
+                const isPending = String(b.status || "").toLowerCase() === "pending";
                 return (
                 <tr key={b.id} className="border-b border-border hover:bg-muted/40">
                   <td className="px-3 py-3 font-mono text-xs" title={String(b.id)}>
-                    <div className="font-bold">{ref || `#${shortId}`}</div>
+                    <div className="font-bold text-primary">{ref || `#${shortId}`}</div>
                     {ref && <div className="text-[10px] text-muted-foreground">#{shortId}</div>}
                   </td>
                   <td className="px-3 py-3 text-xs font-bold">{pickPartnerName(b) || "—"}</td>
@@ -310,10 +315,20 @@ function BookingsPage() {
                   </td>
                   <td className="px-3 py-3"><Pill tone={statusTone(b.status)}>{statusLabel(b.status, lang)}</Pill></td>
                   <td className="px-3 py-3">
-                    <button onClick={() => openDetails(b)}
-                      className="inline-flex h-8 w-8 items-center justify-center rounded-lg hover:bg-muted text-primary">
-                      <Eye className="h-4 w-4" />
-                    </button>
+                    <div className="flex items-center gap-1">
+                      {isPending && (
+                        <button onClick={() => changeStatus(b, "confirmed")}
+                          title={L("تأكيد الحجز", "Confirm booking")}
+                          className="inline-flex h-8 items-center gap-1 rounded-lg bg-emerald-500 px-2 text-[11px] font-bold text-white hover:bg-emerald-600">
+                          <CheckCircle2 className="h-3.5 w-3.5" />
+                          {L("تأكيد", "Confirm")}
+                        </button>
+                      )}
+                      <button onClick={() => openDetails(b)}
+                        className="inline-flex h-8 w-8 items-center justify-center rounded-lg hover:bg-muted text-primary">
+                        <Eye className="h-4 w-4" />
+                      </button>
+                    </div>
                   </td>
                 </tr>
                 );
@@ -355,6 +370,9 @@ function BookingsPage() {
           {viewing && (
             <div className="space-y-4 text-sm">
               <div className="grid gap-3 sm:grid-cols-2">
+                <Info label={L("رقم التأكيد", "Confirmation #")}>
+                  <span className="font-mono font-bold text-primary" dir="ltr">{pickRef(viewing) || `#${String(viewing.id).slice(-6).toUpperCase()}`}</span>
+                </Info>
                 <Info label={L("الحالة", "Status")}>
                   <Pill tone={statusTone(viewing.status)}>{statusLabel(viewing.status, lang)}</Pill>
                 </Info>
@@ -407,9 +425,18 @@ function BookingsPage() {
           <DialogFooter className="gap-2">
             <GhostButton onClick={() => setViewing(null)}>{L("إغلاق", "Close")}</GhostButton>
             {viewing && (
-              <PrimaryButton onClick={() => setRefundFor(viewing)}>
-                {L("استرجاع المبلغ", "Refund")}
-              </PrimaryButton>
+              <>
+                {String(viewing.status || "").toLowerCase() === "pending" && (
+                  <button
+                    onClick={() => changeStatus(viewing, "confirmed")}
+                    className="inline-flex h-10 items-center gap-2 rounded-xl bg-emerald-500 px-5 text-sm font-bold text-white shadow-sm hover:bg-emerald-600">
+                    <CheckCircle2 className="h-4 w-4" /> {L("تأكيد الحجز", "Confirm booking")}
+                  </button>
+                )}
+                <PrimaryButton onClick={() => setRefundFor(viewing)}>
+                  {L("استرجاع المبلغ", "Refund")}
+                </PrimaryButton>
+              </>
             )}
           </DialogFooter>
         </DialogContent>

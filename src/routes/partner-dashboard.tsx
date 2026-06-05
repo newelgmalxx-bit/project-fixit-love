@@ -1631,27 +1631,40 @@ function VerifyTab({ partner }: { partner: Profile }) {
   }
   useEffect(() => { load(); }, [partner.id]);
 
-  function findBooking(idQ: string): Booking | undefined {
-    const q = idQ.toLowerCase();
-    return items.find((x) => {
-      const short = `#${x.id.replace(/-/g, "").slice(-6)}`.toLowerCase();
-      return (
-        x.id.toLowerCase() === q ||
-        x.id.toLowerCase().endsWith(q) ||
-        short === q ||
-        short.replace("#", "") === q.replace("#", "") ||
-        (x.customer_phone || "").endsWith(idQ)
-      );
-    });
+  function matchBooking(x: any, rawIdQ: string, idQ: string): boolean {
+    const id = String(x.id || "").toUpperCase();
+    const idShort = id.replace(/-/g, "").slice(-6);
+    const bn = String((x as any).booking_number || (x as any).qr_code || "")
+      .replace(/\s+/g, "").replace(/^#/, "").replace(/^BK[-_ ]?/i, "").toUpperCase();
+    const phone = String(x.customer_phone || "");
+    return (
+      id === idQ ||
+      id.endsWith(idQ) ||
+      idShort === idQ ||
+      (bn !== "" && (bn === idQ || bn.endsWith(idQ))) ||
+      (phone !== "" && phone.endsWith(rawIdQ))
+    );
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    const idQ = bookingId.trim();
+    const rawIdQ = bookingId.trim();
     const codeQ = code.trim();
+    const idQ = rawIdQ.replace(/\s+/g, "").replace(/^#/, "").replace(/^bk[-_ ]?/i, "").toUpperCase();
     if (!idQ || codeQ.length < 4) { toast.error("أدخل رقم الحجز ورمز التحقق"); return; }
     setSubmitting(true);
-    const b = findBooking(idQ);
+    let b = items.find((x) => matchBooking(x, rawIdQ, idQ));
+    if (!b && !(items[0]?.id?.startsWith?.("demo-"))) {
+      try {
+        const r1 = await partnerApi.listBookings({ search: rawIdQ, limit: 50 }).catch(() => ({ items: [] as any[] }));
+        const r2 = rawIdQ !== idQ
+          ? await partnerApi.listBookings({ search: idQ, limit: 50 }).catch(() => ({ items: [] as any[] }))
+          : { items: [] as any[] };
+        const r3 = await partnerApi.listBookings({ search: codeQ, limit: 50 }).catch(() => ({ items: [] as any[] }));
+        const pool = [...(r1.items || []), ...(r2.items || []), ...(r3.items || [])] as any[];
+        b = pool.find((x) => matchBooking(x, rawIdQ, idQ)) as any;
+      } catch { /* ignore */ }
+    }
     if (!b) { setResult({ status: "notfound" }); setSubmitting(false); return; }
     if ((b.verify_code || "") !== codeQ) { setResult({ status: "wrong" }); setSubmitting(false); return; }
     const already = !!b.redeemed_at || b.status === "completed";

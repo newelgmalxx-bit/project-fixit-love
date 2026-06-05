@@ -248,7 +248,6 @@ function PartnerDashboard() {
     { id: "bookings", label: "الحجوزات", icon: Calendar },
     { id: "verify", label: "التحقق من الحجز", icon: ShieldCheck },
     { id: "schedule", label: "الجدول", icon: CalendarDays },
-    { id: "messages", label: "الرسائل", icon: MessageSquare },
     { id: "analytics", label: "التحليلات", icon: LineChart },
     { id: "wallet", label: "نتائج المبيعات", icon: Wallet },
     { id: "reviews", label: "التقييمات", icon: Star },

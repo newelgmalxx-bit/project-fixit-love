@@ -104,7 +104,7 @@ function normalizeStatus(s: any): Status {
 // we must NOT treat that as "all selected".
 function normalizeCategoryId(value: any): CategoryId | null {
   const raw = typeof value === "object" && value !== null
-    ? value.id ?? value.categoryId ?? value.category_id
+    ? value.id ?? value.categoryId ?? value.category_id ?? value.catId ?? value.cat_id ?? value.value ?? value.slug
     : value;
   if (raw === undefined || raw === null) return null;
   const text = String(raw).trim();
@@ -782,7 +782,8 @@ function AddCenterDialog({
                 return (
                   <button
                     type="button"
-                    key={c.id}
+                    key={idKey || ((c as any).nameAr || (c as any).name_ar || (c as any).name || c.nameEn)}
+                    disabled={!idKey}
                     onClick={() => {
                       const cur = new Map<string, CategoryId>((f.categoryIds || []).map((id) => [categoryKey(id), id]));
                       const normalizedId = normalizeCategoryId(c);

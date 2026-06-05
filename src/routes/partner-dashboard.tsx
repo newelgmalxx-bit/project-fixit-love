@@ -1431,6 +1431,102 @@ function ProfileTab({ partner, onUpdate }: { partner: Profile; onUpdate: (p: Pro
           {saving && <Loader2 className="h-4 w-4 animate-spin" />} حفظ التغييرات
         </button>
       </div>
+
+      {/* Change password */}
+      <ChangePasswordSection />
+    </div>
+  );
+}
+
+function ChangePasswordSection() {
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [show, setShow] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  async function submit() {
+    if (newPassword.length < 6) {
+      toast.error("كلمة المرور الجديدة يجب ألا تقل عن 6 أحرف");
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      toast.error("كلمة المرور وتأكيدها غير متطابقين");
+      return;
+    }
+    setSaving(true);
+    try {
+      await partnerApi.changePassword({ currentPassword: currentPassword || undefined, newPassword });
+      toast.success("تم تغيير كلمة المرور بنجاح");
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+    } catch (e: any) {
+      toast.error(e?.message || "فشل تغيير كلمة المرور");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  const inputClass =
+    "h-10 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20";
+
+  return (
+    <div className="rounded-3xl border border-border bg-card p-6">
+      <div className="mb-4 flex items-center justify-between">
+        <h3 className="text-sm font-extrabold">تغيير كلمة المرور</h3>
+        <button
+          type="button"
+          onClick={() => setShow((s) => !s)}
+          className="rounded-lg border border-border px-2 py-1 text-[11px] font-bold hover:bg-muted"
+        >
+          {show ? "إخفاء" : "إظهار"}
+        </button>
+      </div>
+      <div className="grid gap-4 sm:grid-cols-3">
+        <div>
+          <label className="mb-1.5 block text-xs font-bold">كلمة المرور الحالية</label>
+          <input
+            type={show ? "text" : "password"}
+            value={currentPassword}
+            onChange={(e) => setCurrentPassword(e.target.value)}
+            autoComplete="current-password"
+            className={inputClass}
+          />
+        </div>
+        <div>
+          <label className="mb-1.5 block text-xs font-bold">كلمة المرور الجديدة</label>
+          <input
+            type={show ? "text" : "password"}
+            value={newPassword}
+            onChange={(e) => setNewPassword(e.target.value)}
+            autoComplete="new-password"
+            className={inputClass}
+          />
+        </div>
+        <div>
+          <label className="mb-1.5 block text-xs font-bold">تأكيد كلمة المرور</label>
+          <input
+            type={show ? "text" : "password"}
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            autoComplete="new-password"
+            className={inputClass}
+          />
+        </div>
+      </div>
+      <p className="mt-2 text-[11px] text-muted-foreground">
+        يجب أن تكون كلمة المرور 6 أحرف على الأقل. بعد التغيير قد يُطلب منك تسجيل الدخول مجدداً.
+      </p>
+      <div className="mt-4">
+        <button
+          onClick={submit}
+          disabled={saving || !newPassword || !confirmPassword}
+          className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#3F2A6B] to-[#E0254D] px-6 py-2.5 text-sm font-extrabold text-white shadow disabled:opacity-60"
+        >
+          {saving && <Loader2 className="h-4 w-4 animate-spin" />} تحديث كلمة المرور
+        </button>
+      </div>
     </div>
   );
 }

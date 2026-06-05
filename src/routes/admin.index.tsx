@@ -227,7 +227,12 @@ function AdminDashboard() {
         const monthly = Array.from(monthMap.entries())
           .sort(([a], [b]) => a.localeCompare(b))
           .map(([m, v]) => ({ m, v: v.v, total: v.total }));
-        if (monthly.length) setRevenue(monthly);
+        // Fallback: if no commission/deposit recorded, use totalAmount so the chart isn't empty
+        const sumDeposit = monthly.reduce((s, x) => s + (x.v || 0), 0);
+        const normalized = sumDeposit > 0
+          ? monthly
+          : monthly.map((x) => ({ ...x, v: x.total }));
+        if (normalized.length) setRevenue(normalized);
 
         // Sales by category — using offer.category if available
         const offerCategoryById = new Map<string, string>();

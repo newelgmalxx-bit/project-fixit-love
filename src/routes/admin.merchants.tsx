@@ -120,17 +120,17 @@ function categoryKey(value: any): string {
 
 function pickAssignedCategoryIds(p: any): CategoryId[] {
   if (Array.isArray(p?.categoryIds)) {
-    return p.categoryIds.map(normalizeCategoryId).filter((id): id is CategoryId => id !== null);
+    return p.categoryIds.map(normalizeCategoryId).filter((id: CategoryId | null): id is CategoryId => id !== null);
   }
   if (Array.isArray(p?.category_ids)) {
-    return p.category_ids.map(normalizeCategoryId).filter((id): id is CategoryId => id !== null);
+    return p.category_ids.map(normalizeCategoryId).filter((id: CategoryId | null): id is CategoryId => id !== null);
   }
   if (Array.isArray(p?.categories)) {
     const assigned = p.categories.filter((c: any) =>
       c && (c.pivot || c.assigned === true || c.selected === true || c.isAssigned === true || c.partner_id != null || c.partnerId != null)
     );
     if (assigned.length) {
-      return assigned.map(normalizeCategoryId).filter((id): id is CategoryId => id !== null);
+      return assigned.map(normalizeCategoryId).filter((id: CategoryId | null): id is CategoryId => id !== null);
     }
     // Backend returned the master list with no assignment marker — treat as none.
     return [];

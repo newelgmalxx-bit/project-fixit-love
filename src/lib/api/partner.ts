@@ -342,23 +342,27 @@ function normalizeBooking(b: any): any {
 
 function normalizeCommissionRequest(r: any): any {
   if (!r) return r;
-  const requested = r.requestedPct ?? r.requested_pct ?? r.requestedCommissionPct ?? null;
-  const current = r.currentPct ?? r.current_pct ?? r.currentCommissionPct ?? null;
-  const reqNum = requested != null ? Number(requested) : 0;
-  const curNum = current != null ? Number(current) : null;
+  const requestedCom = r.requestedPct ?? r.requested_pct ?? r.requestedCommissionPct ?? null;
+  const currentCom = r.currentPct ?? r.current_pct ?? r.currentCommissionPct ?? null;
+  const requestedDep = r.requestedDepositPct ?? r.requested_deposit_pct ?? null;
+  const currentDep = r.currentDepositPct ?? r.current_deposit_pct ?? null;
+  const reqCom = requestedCom != null ? Number(requestedCom) : 0;
+  const curCom = currentCom != null ? Number(currentCom) : null;
+  const reqDep = requestedDep != null ? Number(requestedDep) : 0;
+  const curDep = currentDep != null ? Number(currentDep) : null;
   const adminNote = r.adminNote ?? r.admin_note ?? r.adminNotes ?? null;
   const createdAt = r.createdAt ?? r.created_at ?? null;
   return {
     id: r.id,
     partnerId: r.partnerId ?? r.partner_id,
-    requestedCommissionPct: reqNum,
-    requestedDepositPct: reqNum,
-    currentCommissionPct: curNum,
-    currentDepositPct: curNum,
-    requested_commission_pct: reqNum,
-    requested_deposit_pct: reqNum,
-    current_commission_pct: curNum,
-    current_deposit_pct: curNum,
+    requestedCommissionPct: reqCom,
+    requestedDepositPct: reqDep,
+    currentCommissionPct: curCom,
+    currentDepositPct: curDep,
+    requested_commission_pct: reqCom,
+    requested_deposit_pct: reqDep,
+    current_commission_pct: curCom,
+    current_deposit_pct: curDep,
     reason: r.reason ?? null,
     status: r.status ?? "pending",
     adminNotes: adminNote,

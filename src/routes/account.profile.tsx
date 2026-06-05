@@ -4,7 +4,7 @@ import { User, Mail, Phone, MapPin, Save, Lock, Loader2 } from "lucide-react";
 import { AccountLayout } from "@/components/account/AccountLayout";
 import { useLang } from "@/i18n/LanguageProvider";
 import { useAuth } from "@/hooks/useAuth";
-import { account } from "@/lib/api";
+import api, { account } from "@/lib/api";
 import { toast } from "sonner";
 import { uploadImage } from "@/lib/image";
 
@@ -29,6 +29,8 @@ function Profile() {
   });
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [pwdLoading, setPwdLoading] = useState(false);
+  const [pwdSent, setPwdSent] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -57,6 +59,27 @@ function Profile() {
       toast.error(err?.message || "Failed");
     } finally {
       setSaving(false);
+    }
+  };
+
+  const requestPasswordReset = async () => {
+    if (!form.email) {
+      toast.error(dir === "rtl" ? "لا يوجد بريد إلكتروني مرتبط بالحساب" : "No email on this account");
+      return;
+    }
+    setPwdLoading(true);
+    try {
+      await (api as any).auth.forgot(form.email.trim());
+      setPwdSent(true);
+      toast.success(
+        dir === "rtl"
+          ? `تم إرسال رابط تغيير كلمة المرور إلى ${form.email}`
+          : `Password reset link sent to ${form.email}`
+      );
+    } catch (err: any) {
+      toast.error(err?.message || (dir === "rtl" ? "تعذّر إرسال الرابط" : "Failed to send reset link"));
+    } finally {
+      setPwdLoading(false);
     }
   };
 
@@ -133,14 +156,33 @@ function Profile() {
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary-light text-primary">
             <Lock className="h-5 w-5" />
           </div>
-          <div>
+          <div className="min-w-0">
             <h3 className="text-base font-bold">{t("account.profile.password")}</h3>
-            <p className="text-xs text-muted-foreground">{t("account.profile.passwordMeta")}</p>
+            <p className="text-xs text-muted-foreground">
+              {dir === "rtl"
+                ? "سنرسل رابط تغيير كلمة المرور إلى بريدك الإلكتروني"
+                : "We'll email you a secure link to change your password"}
+            </p>
           </div>
-          <button type="button" className="ms-auto rounded-full border border-border px-4 py-2 text-xs font-bold hover:bg-muted">
-            {t("account.profile.changePassword")}
+          <button
+            type="button"
+            onClick={requestPasswordReset}
+            disabled={pwdLoading}
+            className="ms-auto inline-flex items-center gap-2 rounded-full border border-border px-4 py-2 text-xs font-bold hover:bg-muted disabled:opacity-60"
+          >
+            {pwdLoading && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+            {pwdLoading
+              ? (dir === "rtl" ? "جاري الإرسال..." : "Sending...")
+              : t("account.profile.changePassword")}
           </button>
         </div>
+        {pwdSent && (
+          <div className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-xs text-emerald-800">
+            {dir === "rtl"
+              ? `تم إرسال رابط إعادة تعيين كلمة المرور إلى ${form.email}. افتح بريدك الإلكتروني واتبع الرابط لتغيير كلمة المرور.`
+              : `A password reset link has been sent to ${form.email}. Open your inbox and follow the link to change your password.`}
+          </div>
+        )}
       </div>
     </AccountLayout>
   );

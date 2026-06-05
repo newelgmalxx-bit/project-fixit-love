@@ -258,6 +258,7 @@ function MerchantsPage() {
           nameEn: data.nameEn || "",
           workingHours: data.workingHours || [],
           password: data.password || undefined,
+          categoryIds: data.categoryIds || [],
         } as any),
       });
       const tempPwd = res?.data?.partner?.tempPassword || res?.partner?.tempPassword;
@@ -301,6 +302,7 @@ function MerchantsPage() {
           nameEn: data.nameEn || "",
           workingHours: data.workingHours || [],
           ...(data.password ? { password: data.password } : {}),
+          categoryIds: data.categoryIds || [],
         } as any),
       });
       if (data.password) {

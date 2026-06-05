@@ -975,138 +975,109 @@ function BookingsTab({ partner }: { partner: Profile }) {
         <div className="rounded-3xl border border-dashed border-border bg-muted/30 p-10 text-center text-sm text-muted-foreground">لا توجد حجوزات</div>
       ) : (
         <div className="overflow-hidden rounded-3xl border border-border bg-card">
-          <div className="hidden grid-cols-12 gap-3 border-b border-border bg-muted/40 p-4 text-xs font-bold text-muted-foreground sm:grid">
-            <div className="col-span-3">العميل</div>
-            <div className="col-span-2">الجوال</div>
-            <div className="col-span-2">التاريخ</div>
-            <div className="col-span-2">رمز التحقق</div>
-            <div className="col-span-1">المبلغ</div>
-            <div className="col-span-2 text-end">الحالة</div>
-          </div>
           {filtered.map((b) => {
             const offer = b.offer_id ? offerMap.get(b.offer_id) : undefined;
-            const offerTitle = offer?.title || "خدمة";
+            const uuidRe = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+            const rawTitle = (b as any).offer_title || offer?.title || (offer as any)?.titleAr || "";
+            const offerTitle = rawTitle && !uuidRe.test(String(rawTitle).trim()) ? String(rawTitle) : "خدمة";
             const offerCategory = offer?.category
               ? (categories.find((c: any) => c.id === offer.category || c.slug === offer.category)?.nameAr || offer.category)
               : null;
-            const shortId = `#${b.id.replace(/-/g, "").slice(-6).toUpperCase()}`;
-            const servicesCount = 1;
+            const bookingNumber = (b as any).booking_number || (b as any).qr_code || `#${b.id.replace(/-/g, "").slice(-6).toUpperCase()}`;
+            const servicesCount = b.qty ?? 1;
             return (
-              <div key={b.id} className="border-b border-border p-4 last:border-b-0">
-                {/* Top strip — booking number, service, count, status */}
-                <div className="mb-3 flex flex-wrap items-center gap-2 border-b border-dashed border-border/60 pb-3">
-                  <span dir="ltr" className="rounded-lg bg-primary/10 px-2.5 py-1 text-[11px] font-black tracking-wider text-primary">
-                    {shortId}
-                  </span>
+              <div key={b.id} className="border-b border-border p-5 last:border-b-0 hover:bg-muted/20 transition">
+                {/* Header: customer + status */}
+                <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary text-sm font-black">
+                      {(b.customer_name || "?").slice(0, 1).toUpperCase()}
+                    </div>
+                    <div>
+                      <div className="text-sm font-extrabold text-foreground">{b.customer_name || "—"}</div>
+                      <div className="text-xs text-muted-foreground" dir="ltr">{b.customer_phone || "—"}</div>
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <BookingStatusBadge status={b.status} redeemed={!!b.redeemed_at} />
+                    {b.status === "pending" && (
+                      <>
+                        <button onClick={() => updateStatus(b.id, "confirmed")} className="inline-flex items-center gap-1 rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-emerald-700"><Check className="h-3.5 w-3.5" /> تأكيد</button>
+                        <button onClick={() => updateStatus(b.id, "cancelled")} className="inline-flex items-center gap-1 rounded-lg border border-rose-300 px-3 py-1.5 text-xs font-bold text-rose-700 hover:bg-rose-50"><X className="h-3.5 w-3.5" /> إلغاء</button>
+                      </>
+                    )}
+                    {b.status === "confirmed" && (
+                      <button onClick={() => updateStatus(b.id, "completed", { redeemed_at: new Date().toISOString() })} className="rounded-lg bg-violet-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-violet-700">إنهاء</button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Service + identifiers */}
+                <div className="mb-3 flex flex-wrap items-center gap-2">
                   <span className="inline-flex items-center gap-1 rounded-lg bg-violet-50 px-2.5 py-1 text-[11px] font-bold text-violet-700">
                     <Tag className="h-3 w-3" /> {offerTitle}
                   </span>
                   {offerCategory && (
-                    <span className="rounded-lg bg-sky-50 px-2.5 py-1 text-[11px] font-bold text-sky-700">
-                      {offerCategory}
-                    </span>
+                    <span className="rounded-lg bg-sky-50 px-2.5 py-1 text-[11px] font-bold text-sky-700">{offerCategory}</span>
                   )}
-                  <span className="rounded-lg bg-muted px-2.5 py-1 text-[11px] font-bold text-foreground">
-                    {servicesCount} خدمة
-                  </span>
-                  <div className="ms-auto">
-                    <BookingStatusBadge status={b.status} redeemed={!!b.redeemed_at} />
-                  </div>
+                  <span className="rounded-lg bg-muted px-2.5 py-1 text-[11px] font-bold text-foreground">× {servicesCount}</span>
                 </div>
 
-                <div className="grid grid-cols-1 gap-2 sm:grid-cols-12 sm:items-center sm:gap-3">
-                  <div className="flex items-center justify-between gap-2 sm:col-span-3 sm:block">
-                    <div className="text-[11px] font-bold text-muted-foreground sm:hidden">العميل</div>
-                    <div className="text-end sm:text-start">
-                      <div className="text-sm font-bold text-foreground">{b.customer_name}</div>
-                      {b.customer_email && <div className="text-xs text-muted-foreground">{b.customer_email}</div>}
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-between gap-2 sm:col-span-2 sm:block">
-                    <div className="text-[11px] font-bold text-muted-foreground sm:hidden">الجوال</div>
-                    <div className="text-sm font-semibold" dir="ltr">{b.customer_phone}</div>
-                  </div>
-                  <div className="flex items-center justify-between gap-2 sm:col-span-2 sm:block">
-                    <div className="text-[11px] font-bold text-muted-foreground sm:hidden">موعد الحجز</div>
-                    <div className="text-sm font-semibold" dir="ltr">{b.booking_date || "—"} {b.booking_time || ""}</div>
-                  </div>
-                  <div className="flex items-center justify-between gap-2 sm:col-span-2 sm:block">
-                    <div className="text-[11px] font-bold text-muted-foreground sm:hidden">رمز التحقق</div>
+                {/* Quick info row: booking #, verify code, schedule */}
+                <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                  <InfoBox label="رقم الحجز">
+                    <span dir="ltr" className="font-mono text-xs font-black tracking-wider text-primary">{bookingNumber}</span>
+                  </InfoBox>
+                  <InfoBox label="رمز التحقق">
                     {b.verify_code ? (
-                      <span dir="ltr" className="inline-block rounded-lg bg-amber-50 px-2 py-1 text-xs font-black tracking-[0.2em] text-amber-800">{b.verify_code}</span>
+                      <span dir="ltr" className="font-mono text-xs font-black tracking-[0.2em] text-amber-700">{b.verify_code}</span>
                     ) : <span className="text-xs text-muted-foreground">—</span>}
-                  </div>
-                  <div className="flex items-center justify-between gap-2 sm:col-span-1 sm:block">
-                    <div className="text-[11px] font-bold text-muted-foreground sm:hidden">المبلغ</div>
-                    <div className="text-sm font-bold">{b.amount ? `${b.amount} ر.س` : "—"}</div>
-                  </div>
-                  <div className="flex flex-wrap items-center gap-2 sm:col-span-2 sm:justify-end">
-                    {b.status === "pending" && (
-                      <>
-                        <button onClick={() => updateStatus(b.id, "confirmed")} className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-3 py-1.5 text-xs font-bold text-emerald-700 hover:bg-emerald-200"><Check className="h-3.5 w-3.5" /> تأكيد</button>
-                        <button onClick={() => updateStatus(b.id, "cancelled")} className="inline-flex items-center gap-1 rounded-full bg-rose-100 px-3 py-1.5 text-xs font-bold text-rose-700 hover:bg-rose-200"><X className="h-3.5 w-3.5" /> إلغاء</button>
-                      </>
-                    )}
-                    {b.status === "confirmed" && (
-                      <button onClick={() => updateStatus(b.id, "completed", { redeemed_at: new Date().toISOString() })} className="rounded-full bg-violet-100 px-3 py-1 text-xs font-bold text-violet-700 hover:bg-violet-200">إنهاء</button>
-                    )}
-                  </div>
+                  </InfoBox>
+                  <InfoBox label="موعد الحجز">
+                    <span dir="ltr" className="text-xs font-bold">{b.booking_date || "—"} {b.booking_time || ""}</span>
+                  </InfoBox>
+                  <InfoBox label="تاريخ الإنشاء">
+                    <span dir="ltr" className="text-xs font-semibold">{b.created_at ? new Date(b.created_at).toLocaleString("en-GB", { year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hour12: false }) : "—"}</span>
+                  </InfoBox>
                 </div>
 
-                {/* Extra info strip */}
-                <div className="mt-3 grid grid-cols-2 gap-2 rounded-xl border border-border bg-muted/30 p-3 text-[11px] sm:grid-cols-4">
-                  <div>
-                    <div className="font-bold text-muted-foreground">تاريخ الحجز</div>
-                    <div dir="ltr" className="font-semibold">{new Date(b.created_at).toLocaleString("en-GB", { year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hour12: false })}</div>
-                  </div>
-                  <div>
-                    <div className="font-bold text-muted-foreground">تاريخ التأكيد</div>
-                    <div dir="ltr" className={`font-semibold ${b.confirmed_at ? "text-emerald-700" : "text-muted-foreground"}`}>
-                      {b.confirmed_at ? new Date(b.confirmed_at).toLocaleString("en-GB", { year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hour12: false }) : "—"}
+                {/* Money + meta strip */}
+                {(() => {
+                  const totalWithVat = b.amount != null
+                    ? Number(b.amount)
+                    : (offer?.price != null ? +(Number(offer.price) * 1.15).toFixed(2) : null);
+                  const paidOnline = Number(b.deposit_amount ?? b.commission ?? 0);
+                  const remaining = totalWithVat != null ? Math.max(0, +(totalWithVat - paidOnline).toFixed(2)) : null;
+                  return (
+                    <div className="mt-3 grid grid-cols-2 gap-2 rounded-xl border border-border bg-muted/20 p-3 text-[11px] sm:grid-cols-4">
+                      <div>
+                        <div className="font-bold text-muted-foreground">الإجمالي</div>
+                        <div className="text-sm font-extrabold" dir="ltr">{totalWithVat != null ? `${totalWithVat} ر.س` : "—"}</div>
+                        <div className="text-[10px] text-muted-foreground">شامل 15% ضريبة</div>
+                      </div>
+                      <div>
+                        <div className="font-bold text-muted-foreground">العربون أونلاين</div>
+                        <div className="text-sm font-extrabold text-emerald-700" dir="ltr">{paidOnline ? `${paidOnline} ر.س` : "—"}</div>
+                        {b.payment_method && <div className="text-[10px] text-muted-foreground">{PAY_METHOD_LABEL[b.payment_method]}</div>}
+                      </div>
+                      <div>
+                        <div className="font-bold text-muted-foreground">المتبقي في المركز</div>
+                        <div className="text-sm font-extrabold text-amber-700" dir="ltr">{remaining != null ? `${remaining} ر.س` : "—"}</div>
+                      </div>
+                      <div>
+                        <div className="font-bold text-muted-foreground">المصدر</div>
+                        <div className="text-sm font-bold">{b.source ? (SOURCE_LABEL[b.source] || b.source) : "—"}</div>
+                        {b.customer_email && <div className="truncate text-[10px] text-muted-foreground" dir="ltr">{b.customer_email}</div>}
+                      </div>
                     </div>
-                  </div>
-                  {(() => {
-                    const VAT_PCT = 15;
-                    // Prefer offer's priceAfter (raw, no VAT) from offers endpoint.
-                    // Fall back to booking.amount (already VAT-inclusive from backend).
-                    const offerPrice = offer?.price != null ? Number(offer.price) : null;
-                    const totalWithVat = offerPrice != null
-                      ? +(offerPrice * (1 + VAT_PCT / 100)).toFixed(2)
-                      : Number(b.amount ?? 0);
-                    const paidOnline = Number(b.deposit_amount ?? b.commission ?? 0);
-                    const remaining = Math.max(0, +(totalWithVat - paidOnline).toFixed(2));
-                    const hasTotal = offerPrice != null || b.amount != null;
-                    return (
-                      <>
-                        <div>
-                          <div className="font-bold text-muted-foreground">العربون (أونلاين)</div>
-                          <div className="font-semibold text-emerald-700" dir="ltr">{paidOnline ? `${paidOnline} ر.س` : "—"}</div>
-                          <div className="text-[11px] text-muted-foreground">عبر {b.payment_method ? PAY_METHOD_LABEL[b.payment_method] : "—"} · مدفوع</div>
-                        </div>
-                        <div>
-                          <div className="font-bold text-muted-foreground">المتبقي (في المركز)</div>
-                          <div className="font-semibold text-amber-700" dir="ltr">{hasTotal ? `${remaining} ر.س` : "—"}</div>
-                          <div className="text-[11px] text-muted-foreground">سعر العرض شامل {VAT_PCT}% ضريبة − المدفوع أونلاين</div>
-                        </div>
-                      </>
-                    );
-                  })()}
+                  );
+                })()}
 
-                  <div>
-                    <div className="font-bold text-muted-foreground">عدد الخدمات</div>
-                    <div className="font-semibold" dir="ltr">× {b.qty ?? 1}</div>
+                {b.confirmed_at && (
+                  <div className="mt-2 text-[11px] text-emerald-700" dir="ltr">
+                    ✓ تم التأكيد: {new Date(b.confirmed_at).toLocaleString("en-GB", { year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hour12: false })}
                   </div>
-                  <div>
-                    <div className="font-bold text-muted-foreground">المصدر</div>
-                    <div className="font-semibold">{b.source ? SOURCE_LABEL[b.source] : "—"}</div>
-                  </div>
-                  {b.customer_email && (
-                    <div className="col-span-2">
-                      <div className="font-bold text-muted-foreground">بريد العميل</div>
-                      <div dir="ltr" className="truncate font-semibold">{b.customer_email}</div>
-                    </div>
-                  )}
-                </div>
+                )}
 
                 {b.redeemed_at && (
                   <div className="mt-3 flex items-center justify-between gap-2 rounded-xl border border-emerald-200/70 bg-emerald-50/70 px-3 py-2">
@@ -1122,6 +1093,15 @@ function BookingsTab({ partner }: { partner: Profile }) {
 
         </div>
       )}
+    </div>
+  );
+}
+
+function InfoBox({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="rounded-xl border border-border bg-card px-3 py-2">
+      <div className="text-[10px] font-bold text-muted-foreground">{label}</div>
+      <div className="mt-1">{children}</div>
     </div>
   );
 }

@@ -2777,12 +2777,19 @@ function AgreementTab({ partner, onPartnerUpdate }: { partner: Profile; onPartne
     } else {
       tpl = adminTemplate;
     }
-    const rawBody =
-      tpl?.resolvedBody ??
-      tpl?.body ??
-      adminAgreement?.custom_body ??
-      adminAgreement?.body ??
-      "";
+    const pick = (...vals: any[]) => {
+      for (const v of vals) {
+        if (typeof v === "string" && v.trim()) return v;
+      }
+      return "";
+    };
+    const rawBody = pick(
+      tpl?.resolvedBody,
+      tpl?.body,
+      adminAgreement?.custom_body,
+      adminAgreement?.customBody,
+      adminAgreement?.body,
+    );
     const safeBody = typeof rawBody === "string" ? rawBody : String(rawBody ?? "");
     const renderedBody = safeBody
       .replace(/\{commission_pct\}/g, String(adminAgreement?.commission_pct ?? ""))

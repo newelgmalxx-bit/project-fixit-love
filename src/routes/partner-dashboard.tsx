@@ -1184,26 +1184,20 @@ function BookingsTab({ partner }: { partner: Profile }) {
                   const paidOnline = Number(b.deposit_amount ?? b.commission ?? 0);
                   const remaining = totalWithVat != null ? Math.max(0, +(totalWithVat - paidOnline).toFixed(2)) : null;
                   return (
-                    <div className="mt-3 grid grid-cols-2 gap-2 rounded-xl border border-border bg-muted/20 p-3 text-[11px] sm:grid-cols-4">
-                      <div>
-                        <div className="font-bold text-muted-foreground">الإجمالي</div>
-                        <div className="text-sm font-extrabold" dir="ltr">{totalWithVat != null ? `${totalWithVat} ر.س` : "—"}</div>
-                        <div className="text-[10px] text-muted-foreground">شامل 15% ضريبة</div>
-                      </div>
-                      <div>
-                        <div className="font-bold text-muted-foreground">العربون أونلاين</div>
-                        <div className="text-sm font-extrabold text-emerald-700" dir="ltr">{paidOnline ? `${paidOnline} ر.س` : "—"}</div>
-                        {b.payment_method && <div className="text-[10px] text-muted-foreground">{PAY_METHOD_LABEL[b.payment_method]}</div>}
-                      </div>
-                      <div>
-                        <div className="font-bold text-muted-foreground">المتبقي في المركز</div>
-                        <div className="text-sm font-extrabold text-amber-700" dir="ltr">{remaining != null ? `${remaining} ر.س` : "—"}</div>
-                      </div>
-                      <div>
-                        <div className="font-bold text-muted-foreground">المصدر</div>
-                        <div className="text-sm font-bold">{b.source ? (SOURCE_LABEL[b.source] || b.source) : "—"}</div>
-                        {b.customer_email && <div className="truncate text-[10px] text-muted-foreground" dir="ltr">{b.customer_email}</div>}
-                      </div>
+                    <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
+                      <InfoBox label="الإجمالي">
+                        <span dir="ltr" className="text-xs font-black text-primary">{totalWithVat != null ? `${totalWithVat} ر.س` : "—"}</span>
+                        <div className="mt-0.5 text-[10px] text-muted-foreground">شامل 15% ضريبة</div>
+                      </InfoBox>
+                      <InfoBox label="العربون أونلاين">
+                        <span dir="ltr" className="text-xs font-black text-emerald-700">{paidOnline ? `${paidOnline} ر.س` : "—"}</span>
+                      </InfoBox>
+                      <InfoBox label="المتبقي في المركز">
+                        <span dir="ltr" className="text-xs font-black text-amber-700">{remaining != null ? `${remaining} ر.س` : "—"}</span>
+                      </InfoBox>
+                      <InfoBox label="طريقة الدفع">
+                        <span className="text-xs font-bold text-foreground">{b.payment_method ? (PAY_METHOD_LABEL[b.payment_method] || b.payment_method) : "—"}</span>
+                      </InfoBox>
                     </div>
                   );
                 })()}

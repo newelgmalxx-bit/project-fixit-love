@@ -2529,9 +2529,16 @@ function AnalyticsTab() {
           dailyMap[day].commission += bookingCommissionValue(bk);
         }
         const calculatedDaily = Object.values(dailyMap).sort((a, b) => a.day.localeCompare(b.day));
+        const fullDaily: { day: string; bookings: number; revenue: number; commission: number }[] = [];
+        for (let i = 0; i < days; i++) {
+          const d = new Date(cutoff);
+          d.setDate(cutoff.getDate() + i);
+          const key = d.toISOString().slice(0, 10);
+          fullDaily.push(dailyMap[key] || { day: key, bookings: 0, revenue: 0, commission: 0 });
+        }
         const calculatedRevenue = countedBookings.reduce((sum, bk) => sum + bookingTotalValue(bk), 0);
         const calculatedCommission = countedBookings.reduce((sum, bk) => sum + bookingCommissionValue(bk), 0);
-        setStats({ ...(s || {}), calculatedDaily, calculatedRevenue, calculatedCommission, calculatedBookings: countedBookings.length });
+        setStats({ ...(s || {}), calculatedDaily: fullDaily, calculatedRevenue, calculatedCommission, calculatedBookings: countedBookings.length });
         const grouped: Record<string, { name: string; bookings: number; revenue: number }> = {};
         for (const bk of countedBookings) {
           const key = bk.offer_id || bk.offer_title || "—";

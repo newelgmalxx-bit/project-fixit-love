@@ -6,6 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
 import { adminPartnersApi, partnerLabel, type AdminPartner } from "@/lib/api/adminPartners";
+import { adminCategoriesApi, type AdminCategory } from "@/lib/api/adminContent";
 
 export const Route = createFileRoute("/admin/merchants")({
   head: () => ({ meta: [{ title: "إدارة المراكز | Admin" }] }),

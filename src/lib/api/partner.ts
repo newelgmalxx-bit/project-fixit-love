@@ -296,7 +296,7 @@ function denormalizeOfferPayload(b: any): any {
 function normalizeBooking(b: any): any {
   if (!b) return b;
   const uuidRe = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-  const rawTitle = b.offerTitle ?? b.offer?.title ?? b.offer?.titleAr ?? b.offer_title ?? null;
+  const rawTitle = b.offerTitleAr ?? b.offerTitle ?? b.offer?.title ?? b.offer?.titleAr ?? b.offer_title ?? null;
   const offer_title = rawTitle && !uuidRe.test(String(rawTitle).trim()) ? rawTitle : null;
   const booking_number = b.qrCode ?? b.qr_code ?? b.bookingNumber ?? b.booking_number ?? b.reference ?? b.referenceCode ?? b.reference_code ?? null;
   const verify_code = b.verifyCode ?? b.verify_code ?? b.confirmCode ?? b.confirm_code ?? b.pin ?? b.otp ?? null;
@@ -304,9 +304,16 @@ function normalizeBooking(b: any): any {
     id: b.id,
     partner_id: b.partnerId ?? null,
     offer_id: b.offerId ?? null,
+    service_id: b.serviceId ?? b.service_id ?? null,
+    order_id: b.orderId ?? b.order_id ?? null,
+    user_id: b.userId ?? b.user_id ?? null,
+    invoice_id: b.invoiceId ?? b.invoice_id ?? null,
     offer_title,
+    offer_title_en: b.offerTitleEn ?? b.offer_title_en ?? null,
+    offer_image: b.offerImage ?? b.offer_image ?? b.offer?.image ?? null,
     booking_number,
     qr_code: booking_number,
+    scheduled_at: b.scheduledAt ?? b.scheduled_at ?? null,
     customer_name: b.customerName ?? "",
     customer_phone: b.customerPhone ?? "",
     customer_email: b.customerEmail ?? null,
@@ -314,6 +321,7 @@ function normalizeBooking(b: any): any {
     booking_time: b.time ?? null,
     amount: b.totalAmount != null ? Number(b.totalAmount) : null,
     deposit_amount: b.depositAmount != null ? Number(b.depositAmount) : null,
+    deposit_pct: b.depositPct != null ? Number(b.depositPct) : null,
     commission: b.commissionAmount != null ? Number(b.commissionAmount) : null,
     commission_pct: b.commissionPct != null ? Number(b.commissionPct) : null,
     partner_amount: b.partnerAmount != null ? Number(b.partnerAmount) : null,
@@ -323,6 +331,7 @@ function normalizeBooking(b: any): any {
     qty: b.qty ?? 1,
     payment_method: b.paymentMethod ?? null,
     payment_status: b.paymentStatus ?? null,
+    paid_at: b.paidAt ?? b.paid_at ?? null,
     source: b.source ?? null,
     confirmed_at: b.confirmedAt ?? b.confirmed_at ?? null,
     redeemed_at: b.redeemedAt ?? b.redeemed_at ?? null,

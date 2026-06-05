@@ -495,12 +495,14 @@ function OverviewTab({ partner, onNavigate }: { partner: Profile; onNavigate: (t
     })();
   }, [partner.id, isDemo]);
 
+  const commissionPct = Number(partner.commission_pct ?? 10);
+  const netProfit = Math.max(0, stats.revenue * (1 - commissionPct / 100));
   const cards = [
     { label: "إجمالي العروض", value: stats.offers, icon: Tag, color: "from-violet-500 to-purple-600" },
     { label: "إجمالي الحجوزات", value: stats.bookings, icon: Calendar, color: "from-pink-500 to-rose-600" },
-    { label: "حجوزات بانتظار", value: stats.pendingBookings, icon: Users, color: "from-amber-500 to-orange-600" },
     { label: "الإيرادات (ر.س)", value: stats.revenue.toFixed(2), icon: DollarSign, color: "from-emerald-500 to-teal-600" },
-  ];
+    { label: "صافي الربح بعد خصم العربون", value: `ر.س ${netProfit.toLocaleString(undefined, { maximumFractionDigits: 0 })}`, icon: Percent, color: "from-emerald-500 to-teal-600", note: `تم تطبيق ${commissionPct}% عمولة` },
+  ] as { label: string; value: any; icon: any; color: string; note?: string }[];
 
 
   const statusMap: Record<string, { label: string; cls: string }> = {
@@ -520,6 +522,7 @@ function OverviewTab({ partner, onNavigate }: { partner: Profile; onNavigate: (t
             </div>
             <div className="mt-4 text-3xl font-black text-foreground">{c.value}</div>
             <div className="mt-1 text-xs font-bold text-muted-foreground">{c.label}</div>
+            {c.note && <div className="mt-1 text-[10px] font-bold text-emerald-600">{c.note}</div>}
           </div>
         ))}
       </div>

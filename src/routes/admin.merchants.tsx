@@ -115,11 +115,7 @@ function mapPartner(p: AdminPartner): Merchant {
     joined: (p.createdAt || (p as any).created_at || "").slice(0, 10),
     mapsUrl: (p as any).mapsUrl || (p as any).maps_url || "",
     packageName: p.package?.name || (p as any).package_name || (p as any).packageName || "—",
-    categoryIds: Array.isArray((p as any).categoryIds)
-      ? (p as any).categoryIds.map((x: any) => Number(x)).filter((n: number) => !isNaN(n))
-      : Array.isArray((p as any).categories)
-        ? (p as any).categories.map((c: any) => Number(c?.id ?? c)).filter((n: number) => !isNaN(n))
-        : [],
+    categoryIds: pickAssignedCategoryIds(p),
   };
 }
 

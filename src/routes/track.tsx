@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { Search, FolderOpen, Tag, FileText, Calendar, Check, Mail, Phone, CreditCard, Receipt, Sparkles, ShieldCheck, Clock, QrCode, MapPin, Store } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";

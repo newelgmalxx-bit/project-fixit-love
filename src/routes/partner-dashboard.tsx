@@ -1465,7 +1465,11 @@ function ChangePasswordSection() {
       setNewPassword("");
       setConfirmPassword("");
     } catch (e: any) {
-      toast.error(e?.message || "فشل تغيير كلمة المرور");
+      const errs = e?.errors as Record<string, any> | undefined;
+      const firstField =
+        errs?.currentPassword ?? errs?.current_password ?? errs?.newPassword ?? errs?.new_password ?? errs?.password;
+      const msg = Array.isArray(firstField) ? firstField[0] : (firstField || e?.message || "فشل تغيير كلمة المرور");
+      toast.error(String(msg));
     } finally {
       setSaving(false);
     }

@@ -1445,6 +1445,10 @@ function ChangePasswordSection() {
   const [saving, setSaving] = useState(false);
 
   async function submit() {
+    if (!currentPassword) {
+      toast.error("أدخل كلمة المرور الحالية");
+      return;
+    }
     if (newPassword.length < 6) {
       toast.error("كلمة المرور الجديدة يجب ألا تقل عن 6 أحرف");
       return;

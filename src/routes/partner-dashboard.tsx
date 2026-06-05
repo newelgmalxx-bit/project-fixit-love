@@ -278,7 +278,6 @@ function PartnerDashboard() {
     { id: "reviews", label: "التقييمات", icon: Star },
     { id: "agreement", label: "الاتفاقية والعمولة", icon: Percent },
     
-    { id: "notifications", label: "الإشعارات", icon: Bell },
     { id: "support", label: "الدعم", icon: LifeBuoy },
     { id: "profile", label: "ملف المركز", icon: Store },
   ];
@@ -373,13 +372,6 @@ function PartnerDashboard() {
                 <ExternalLink className="h-3.5 w-3.5" />
                 <span>عرض الموقع</span>
               </Link>
-              <button
-                onClick={() => setTab("notifications")}
-                className="relative flex h-9 w-9 items-center justify-center rounded-lg border border-border hover:bg-muted"
-                aria-label="الإشعارات"
-              >
-                <Bell className="h-4 w-4" />
-              </button>
             </div>
           </div>
         </header>
@@ -426,7 +418,6 @@ function PartnerDashboard() {
                 {tab === "wallet" && <WalletTab />}
                 {tab === "reviews" && <ReviewsTab />}
                 {tab === "agreement" && <AgreementTab partner={profile} onPartnerUpdate={setProfile} />}
-                {tab === "notifications" && <NotificationsTab />}
                 {tab === "support" && <SupportTab />}
                 {tab === "profile" && <ProfileTab partner={profile} onUpdate={setProfile} />}
               </>

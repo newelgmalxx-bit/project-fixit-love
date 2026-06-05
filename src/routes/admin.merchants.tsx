@@ -97,6 +97,30 @@ function normalizeStatus(s: any): Status {
   return "pending";
 }
 
+// Only treat a category as assigned if backend explicitly marks it via
+// `categoryIds` or via items in `categories` that carry a pivot/assigned flag.
+// Some backends return the full master category list under `categories` —
+// we must NOT treat that as "all selected".
+function pickAssignedCategoryIds(p: any): number[] {
+  if (Array.isArray(p?.categoryIds)) {
+    return p.categoryIds.map((x: any) => Number(x)).filter((n: number) => !isNaN(n));
+  }
+  if (Array.isArray(p?.category_ids)) {
+    return p.category_ids.map((x: any) => Number(x)).filter((n: number) => !isNaN(n));
+  }
+  if (Array.isArray(p?.categories)) {
+    const assigned = p.categories.filter((c: any) =>
+      c && (c.pivot || c.assigned === true || c.selected === true || c.isAssigned === true || c.partner_id != null || c.partnerId != null)
+    );
+    if (assigned.length) {
+      return assigned.map((c: any) => Number(c?.id ?? c)).filter((n: number) => !isNaN(n));
+    }
+    // Backend returned the master list with no assignment marker — treat as none.
+    return [];
+  }
+  return [];
+}
+
 function mapPartner(p: AdminPartner): Merchant {
   return {
     id: String(p.id),
@@ -115,15 +139,12 @@ function mapPartner(p: AdminPartner): Merchant {
     joined: (p.createdAt || (p as any).created_at || "").slice(0, 10),
     mapsUrl: (p as any).mapsUrl || (p as any).maps_url || "",
     packageName: p.package?.name || (p as any).package_name || (p as any).packageName || "—",
-    categoryIds: Array.isArray((p as any).categoryIds)
-      ? (p as any).categoryIds.map((x: any) => Number(x)).filter((n: number) => !isNaN(n))
-      : Array.isArray((p as any).categories)
-        ? (p as any).categories.map((c: any) => Number(c?.id ?? c)).filter((n: number) => !isNaN(n))
-        : [],
+    categoryIds: pickAssignedCategoryIds(p),
   };
 }
 
 function MerchantsPage() {
+
   const [items, setItems] = useState<Merchant[]>([]);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<"all" | Status>("all");
@@ -497,11 +518,7 @@ function MerchantsPage() {
                             <DropdownMenuItem onClick={async () => {
                               try {
                                 const full: any = await adminPartnersApi.get(m.id);
-                                const catIds: number[] = Array.isArray(full?.categoryIds)
-                                  ? full.categoryIds.map((x: any) => Number(x)).filter((n: number) => !isNaN(n))
-                                  : Array.isArray(full?.categories)
-                                    ? full.categories.map((c: any) => Number(c?.id ?? c)).filter((n: number) => !isNaN(n))
-                                    : [];
+                                const catIds: number[] = pickAssignedCategoryIds(full);
                                 setEditing({
                                   ...m,
                                   name: full?.vendorName || full?.nameAr || full?.name || m.name,

@@ -147,6 +147,14 @@ function SiteSettingsPage() {
           />
         </PanelCard>
 
+        <PanelCard title={L("الأسئلة الشائعة (تظهر في صفحة العرض)", "FAQs (shown on offer page)")} className="lg:col-span-3">
+          <FaqsEditor
+            value={Array.isArray(s.faqs) ? s.faqs : []}
+            onChange={(next) => setS({ ...s, faqs: next })}
+            L={L}
+          />
+        </PanelCard>
+
         <PanelCard title={L("وضع الصيانة", "Maintenance Mode")} className="lg:col-span-3">
           <label className="flex items-center gap-3">
             <input type="checkbox" className="h-4 w-4" checked={s.maintenanceMode} onChange={e => setS({ ...s, maintenanceMode: e.target.checked })} />

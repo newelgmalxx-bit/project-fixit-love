@@ -17,16 +17,16 @@ function ForgotPasswordPage() {
     e.preventDefault();
     const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRe.test(email.trim())) {
-      toast.error(lang === "ar" ? "أدخل بريدًا إلكترونيًا صحيحًا" : "Enter a valid email");
+      toast.error(t("auth.err.validEmail"));
       return;
     }
     setSubmitting(true);
     try {
       await (api as any).auth.forgot(email.trim());
       setSent(true);
-      toast.success(lang === "ar" ? "تم إرسال رابط الاستعادة إلى بريدك" : "Recovery link sent to your email");
+      toast.success(t("auth.info.recoverySent"));
     } catch (err) {
-      const msg = err instanceof ApiError ? err.message : (lang === "ar" ? "فشل الإرسال" : "Failed to send");
+      const msg = err instanceof ApiError ? err.message : t("auth.err.sendFailed");
       toast.error(msg);
     } finally {
       setSubmitting(false);
@@ -46,21 +46,17 @@ function ForgotPasswordPage() {
           <div className="mx-auto w-full max-w-md">
             <div className="text-start">
               <h1 className="text-3xl font-extrabold text-foreground">
-                {lang === "ar" ? "نسيت كلمة المرور؟" : "Forgot password?"}
+                {t("auth.forgot.title")}
               </h1>
               <p className="mt-2 text-sm text-muted-foreground">
-                {lang === "ar"
-                  ? "أدخل بريدك الإلكتروني وسنرسل لك رابطًا لإعادة تعيين كلمة المرور."
-                  : "Enter your email and we'll send you a link to reset your password."}
+                {t("auth.forgot.subtitle")}
               </p>
               <div className={`mt-3 h-0.5 w-16 rounded-full bg-primary ${dir === "rtl" ? "mr-0 ml-auto" : "ml-0 mr-auto"}`} />
             </div>
 
             {sent ? (
               <div className="mt-7 rounded-2xl border border-emerald-200 bg-emerald-50 p-5 text-sm text-emerald-800 text-start">
-                {lang === "ar"
-                  ? "تم إرسال رابط إعادة التعيين إلى بريدك إذا كان مسجلًا. تحقّق من صندوق الوارد أو الرسائل غير المرغوبة."
-                  : "If your email is registered, a reset link has been sent. Check your inbox or spam folder."}
+                {t("auth.forgot.sent")}
               </div>
             ) : (
               <form className="mt-7 space-y-5" onSubmit={onSubmit}>
@@ -85,8 +81,8 @@ function ForgotPasswordPage() {
                   className="w-full rounded-xl bg-primary py-3.5 text-sm font-bold text-white shadow-md transition hover:bg-primary-dark disabled:opacity-60"
                 >
                   {submitting
-                    ? (lang === "ar" ? "جاري الإرسال..." : "Sending...")
-                    : (lang === "ar" ? "إرسال رابط الاستعادة" : "Send reset link")}
+                    ? t("auth.sending")
+                    : t("auth.forgot.send")}
                 </button>
               </form>
             )}
@@ -94,7 +90,7 @@ function ForgotPasswordPage() {
             <p className="mt-7 text-center text-xs text-muted-foreground">
               <Link to="/login" search={{ redirect: undefined }} className="inline-flex items-center gap-1 font-bold text-primary hover:underline">
                 <ArrowLeft className={`h-3.5 w-3.5 ${dir === "rtl" ? "rotate-180" : ""}`} />
-                {lang === "ar" ? "العودة لتسجيل الدخول" : "Back to sign in"}
+                {t("auth.backToLogin")}
               </Link>
             </p>
           </div>

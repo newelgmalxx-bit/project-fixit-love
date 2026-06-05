@@ -133,33 +133,38 @@ function BookingsPage() {
   const [refundFor, setRefundFor] = useState<AdminBooking | null>(null);
 
   // Confirm-by-code form
+  const [confirmBookingId, setConfirmBookingId] = useState("");
   const [confirmCode, setConfirmCode] = useState("");
   const [confirming, setConfirming] = useState(false);
 
   async function handleConfirmByCode(e: React.FormEvent) {
     e.preventDefault();
+    const bId = confirmBookingId.trim();
     const code = confirmCode.trim();
-    if (!code) { toast.error(L("أدخل رقم التأكيد", "Enter confirmation #")); return; }
+    if (!bId || !code) { toast.error(L("أدخل رقم الحجز ورمز التأكيد", "Enter booking # and confirmation code")); return; }
+    if (!/^\d{6}$/.test(code)) { toast.error(L("رمز التأكيد 6 أرقام", "Code must be 6 digits")); return; }
     setConfirming(true);
     try {
-      const data = await adminBookingsApi.list({ q: code, limit: 10 });
+      const data = await adminBookingsApi.list({ q: bId, limit: 10 });
       const match = (data.items || []).find((b: any) => {
         const ref = pickRef(b) || "";
         const id = String(b.id || "");
         const tail = id.slice(-6).toUpperCase();
-        const c = code.toUpperCase();
+        const c = bId.toUpperCase();
         return ref.toUpperCase() === c || id.toUpperCase() === c || tail === c || id.toUpperCase().endsWith(c);
       }) || (data.items || [])[0];
-      if (!match) { toast.error(L("لا يوجد حجز بهذا الرقم", "No booking found with this code")); return; }
+      if (!match) { toast.error(L("لا يوجد حجز بهذا الرقم", "No booking found")); return; }
       const st = String(match.status || "").toLowerCase();
       if (st === "cancelled" || st === "refunded") { toast.error(L("هذا الحجز ملغي/مسترجع", "Booking is cancelled/refunded")); return; }
-      if (st === "confirmed" || st === "completed" || st === "redeemed") {
-        toast.message(L("الحجز مؤكد بالفعل", "Booking already confirmed"));
-      } else {
-        await adminBookingsApi.setStatus(match.id, "confirmed");
+      if (st === "completed" || st === "redeemed") { toast.warning(L("الحجز مستخدم من قبل", "Booking already redeemed")); return; }
+      try {
+        await adminBookingsApi.redeem(match.id, code);
         toast.success(L(`تم تأكيد حجز: ${match.customerName || match.id}`, `Confirmed: ${match.customerName || match.id}`));
+      } catch (err: any) {
+        toast.error(err?.message || L("رمز التأكيد غير صحيح", "Invalid confirmation code"));
+        return;
       }
-      setConfirmCode("");
+      setConfirmBookingId(""); setConfirmCode("");
       load();
     } catch (e: any) {
       toast.error(e?.message || L("فشل التأكيد", "Confirm failed"));
@@ -257,31 +262,48 @@ function BookingsPage() {
       subtitle={L("متابعة وإدارة كل حجوزات المراكز", "Track and manage all center bookings")}
       action={<GhostButton onClick={() => load()}><RefreshCw className="h-4 w-4" /> {L("تحديث", "Refresh")}</GhostButton>}
     >
-      {/* Confirm by code */}
+      {/* Verify booking */}
       <form onSubmit={handleConfirmByCode} className="mb-4 rounded-2xl border border-primary/30 bg-gradient-to-br from-primary/5 to-transparent p-4">
         <div className="mb-3 flex items-center gap-2">
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
             <Shield className="h-4 w-4" />
           </div>
           <div>
-            <div className="text-sm font-extrabold">{L("تأكيد حجز برقم التأكيد", "Confirm booking by code")}</div>
-            <div className="text-[11px] text-muted-foreground">{L("ادخل رقم التأكيد الخاص بالحجز لتأكيده مباشرة", "Enter the booking confirmation number to confirm it instantly")}</div>
+            <div className="text-sm font-extrabold">{L("التحقق من حجز العميل", "Verify customer booking")}</div>
+            <div className="text-[11px] text-muted-foreground">{L("أدخل رقم الحجز + رمز التأكيد المكوّن من 6 أرقام", "Enter booking # + 6-digit confirmation code")}</div>
           </div>
         </div>
-        <div className="grid gap-2 sm:grid-cols-[1fr_auto]">
-          <input
-            value={confirmCode}
-            onChange={(e) => setConfirmCode(e.target.value)}
-            placeholder={L("رقم التأكيد / رقم الحجز", "Confirmation # / Booking #")}
-            className="h-11 rounded-xl border border-border bg-background px-3 text-sm font-bold tracking-wider"
-            dir="ltr"
-            maxLength={64}
-          />
-          <button type="submit" disabled={confirming}
-            className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-emerald-500 px-5 text-sm font-bold text-white shadow-sm hover:bg-emerald-600 disabled:opacity-60">
-            {confirming ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
-            {L("تأكيد الحجز", "Confirm booking")}
-          </button>
+        <div className="grid gap-2 sm:grid-cols-[1fr_1fr_auto]">
+          <div>
+            <label className="text-[10px] font-bold text-muted-foreground block mb-1">{L("رقم الحجز", "Booking #")}</label>
+            <input
+              value={confirmBookingId}
+              onChange={(e) => setConfirmBookingId(e.target.value)}
+              placeholder="BK-XXXXXX"
+              className="h-11 w-full rounded-xl border border-border bg-background px-3 text-sm font-bold tracking-wider"
+              dir="ltr"
+              maxLength={64}
+            />
+          </div>
+          <div>
+            <label className="text-[10px] font-bold text-muted-foreground block mb-1">{L("رمز التأكيد (6 أرقام)", "Confirmation code (6 digits)")}</label>
+            <input
+              value={confirmCode}
+              onChange={(e) => setConfirmCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+              placeholder="000000"
+              maxLength={6}
+              inputMode="numeric"
+              className="h-11 w-full rounded-xl border border-border bg-background px-3 text-center text-base font-black tracking-[0.3em]"
+              dir="ltr"
+            />
+          </div>
+          <div className="flex items-end">
+            <button type="submit" disabled={confirming}
+              className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-emerald-500 px-5 text-sm font-bold text-white shadow-sm hover:bg-emerald-600 disabled:opacity-60">
+              {confirming ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
+              {L("تحقّق وتأكيد", "Verify & confirm")}
+            </button>
+          </div>
         </div>
       </form>
 

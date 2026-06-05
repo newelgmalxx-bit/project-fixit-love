@@ -184,7 +184,7 @@ function BookingPayPage() {
             {
               offerId: booking.offerId,
               offerTitle: booking.offerTitle ?? "حجز",
-              price: booking.priceAfter ?? booking.total ?? 0,
+              price: (booking as any).priceAfter ?? booking.total ?? 0,
               qty: booking.qty ?? 1,
             },
           ],

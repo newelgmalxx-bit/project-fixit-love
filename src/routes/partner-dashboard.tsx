@@ -3250,68 +3250,6 @@ function AgreementTab({ partner, onPartnerUpdate }: { partner: Profile; onPartne
       </div>
 
 
-      {/* Request form */}
-      <div className="rounded-3xl border border-border bg-card p-5">
-        <div className="flex items-center gap-2 mb-3">
-          <Send className="h-4 w-4 text-primary" />
-          <h3 className="font-extrabold">طلب تعديل النسبة</h3>
-        </div>
-        {hasPending && (
-          <div className="mb-4 rounded-2xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">
-            لديك طلب قيد المراجعة، يرجى انتظار رد الإدارة قبل إرسال طلب جديد.
-          </div>
-        )}
-        <label className="block">
-          <span className="text-xs font-bold text-foreground/70">النسبة المقترحة (%) — تشمل العربون والعمولة معاً</span>
-          <input type="number" min={0} max={50} step={0.5} value={reqCommission}
-            onChange={(e) => { const v = Number(e.target.value); setReqCommission(v); setReqDeposit(v); }}
-            className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm" />
-        </label>
-
-        <label className="mt-3 block">
-          <span className="text-xs font-bold text-foreground/70">سبب الطلب (اختياري)</span>
-          <textarea value={reason} onChange={(e) => setReason(e.target.value)} rows={3}
-            placeholder="مثال: حجم الحجوزات الشهرية تجاوز 500 وأطلب مراجعة العمولة."
-            className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm" />
-        </label>
-        <button onClick={submit} disabled={saving || hasPending}
-          className="mt-4 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#3F2A6B] to-[#E0254D] px-5 py-2.5 text-sm font-bold text-white shadow disabled:opacity-50">
-          {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-          إرسال الطلب للإدارة
-        </button>
-      </div>
-
-      {/* Request history */}
-      <div className="rounded-3xl border border-border bg-card p-5">
-        <h3 className="font-extrabold mb-3">سجل الطلبات</h3>
-        {requests.length === 0 ? (
-          <div className="text-sm text-muted-foreground py-6 text-center">لا توجد طلبات سابقة.</div>
-        ) : (
-          <div className="space-y-3">
-            {requests.map((r) => {
-              const tone = r.status === "approved" ? "bg-emerald-100 text-emerald-700"
-                : r.status === "rejected" ? "bg-rose-100 text-rose-700"
-                : "bg-amber-100 text-amber-700";
-              const label = r.status === "approved" ? "تمت الموافقة"
-                : r.status === "rejected" ? "مرفوض" : "قيد المراجعة";
-              return (
-                <div key={r.id} className="rounded-2xl border border-border p-4">
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <div className="text-xs text-muted-foreground">{new Date(r.created_at).toLocaleString("ar")}</div>
-                    <span className={`rounded-full px-3 py-1 text-[11px] font-bold ${tone}`}>{label}</span>
-                  </div>
-                  <div className="mt-2 text-xs">
-                    النسبة: <b>{r.current_commission_pct ?? "—"}%</b> ← <b className="text-primary">{r.requested_commission_pct}%</b>
-                  </div>
-
-                  {r.reason && <div className="mt-2 text-xs text-foreground/70">السبب: {r.reason}</div>}
-                  {r.admin_notes && <div className="mt-2 text-xs text-foreground/70">ملاحظة الإدارة: {r.admin_notes}</div>}
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
       </>)}
     </div>
 

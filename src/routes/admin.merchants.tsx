@@ -468,7 +468,7 @@ function MerchantsPage() {
                     <td className="p-3 text-sm">
                       <div className="font-bold text-foreground">
                         {(m.categoryIds && m.categoryIds.length)
-                          ? m.categoryIds.map((id) => categoryNameById.get(Number(id))).filter(Boolean).join("، ")
+                          ? m.categoryIds.map((id) => categoryNameById.get(categoryKey(id))).filter(Boolean).join("، ")
                           : (m.category && m.category !== "—" ? m.category : "—")}
                       </div>
                       <div className="text-xs text-muted-foreground">
@@ -777,14 +777,15 @@ function AddCenterDialog({
                 <span className="text-xs text-muted-foreground">لا توجد تصنيفات — أضفها من صفحة التصنيفات أولاً.</span>
               )}
               {(categories || []).map((c) => {
-                const selected = (f.categoryIds || []).includes(Number(c.id));
+                const idKey = categoryKey(c.id);
+                const selected = (f.categoryIds || []).some((id) => categoryKey(id) === idKey);
                 return (
                   <button
                     type="button"
                     key={c.id}
                     onClick={() => {
-                      const cur = new Set<number>((f.categoryIds || []).map((n) => Number(n)));
-                      if (selected) cur.delete(Number(c.id)); else cur.add(Number(c.id));
+                      const cur = new Map<string, CategoryId>((f.categoryIds || []).map((id) => [categoryKey(id), id]));
+                      if (selected) cur.delete(idKey); else cur.set(idKey, normalizeCategoryId(c.id)!);
                       up("categoryIds", Array.from(cur));
                     }}
                     className={[

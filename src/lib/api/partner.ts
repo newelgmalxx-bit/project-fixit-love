@@ -429,24 +429,23 @@ export const partnerApi = {
       payload.categoryIds = b.categoryIds;
       payload.category_ids = b.categoryIds;
     }
-    if (b.password !== undefined && b.password) payload.password = b.password;
     return unwrap<{ partner: PartnerProfile }>(
       request(`/partner/profile`, { method: "PUT", body: JSON.stringify(payload) }),
     );
   },
 
-  // Change password — backend PUT /partner/profile updates the password only when
-  // a non-empty `password` field is sent. We also send `currentPassword` if provided
-  // so the backend can verify it (ignored when not enforced).
-  changePassword: (body: { currentPassword?: string; newPassword: string }) =>
-    unwrap<{ partner: PartnerProfile }>(
-      request(`/partner/profile`, {
-        method: "PUT",
+  // Change password — dedicated endpoint that verifies the current password
+  // against partners.password_hash and users.password, then updates both.
+  changePassword: (body: { currentPassword: string; newPassword: string }) =>
+    unwrap<any>(
+      request(`/partner/change-password`, {
+        method: "POST",
         body: JSON.stringify({
-          password: body.newPassword,
+          currentPassword: body.currentPassword,
+          current_password: body.currentPassword,
           newPassword: body.newPassword,
-          currentPassword: body.currentPassword ?? undefined,
-          current_password: body.currentPassword ?? undefined,
+          new_password: body.newPassword,
+          password: body.newPassword,
         }),
       }),
     ),

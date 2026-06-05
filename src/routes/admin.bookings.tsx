@@ -299,7 +299,7 @@ function BookingsPage() {
           </div>
           <div>
             <div className="text-sm font-extrabold">{L("التحقق من حجز العميل", "Verify customer booking")}</div>
-            <div className="text-[11px] text-muted-foreground">{L("أدخل رقم الحجز + رمز التأكيد المكوّن من 6 أرقام", "Enter booking # + 6-digit confirmation code")}</div>
+            <div className="text-[11px] text-muted-foreground">{L("أدخل رقم الحجز + رمز التأكيد كما يظهران للعميل", "Enter booking # + confirmation code exactly as shown")}</div>
           </div>
         </div>
         <div className="grid gap-2 sm:grid-cols-[1fr_1fr_auto]">
@@ -315,13 +315,13 @@ function BookingsPage() {
             />
           </div>
           <div>
-            <label className="text-[10px] font-bold text-muted-foreground block mb-1">{L("رمز التأكيد (6 أرقام)", "Confirmation code (6 digits)")}</label>
+            <label className="text-[10px] font-bold text-muted-foreground block mb-1">{L("رمز التأكيد", "Confirmation code")}</label>
             <input
               value={confirmCode}
-              onChange={(e) => setConfirmCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
-              placeholder="000000"
-              maxLength={6}
-              inputMode="numeric"
+              onChange={(e) => setConfirmCode(e.target.value.replace(/[^a-zA-Z0-9-]/g, "").toUpperCase().slice(0, 32))}
+              placeholder="VERIFY_CODE"
+              maxLength={32}
+              inputMode="text"
               className="h-11 w-full rounded-xl border border-border bg-background px-3 text-center text-base font-black tracking-[0.3em]"
               dir="ltr"
             />

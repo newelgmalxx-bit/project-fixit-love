@@ -107,6 +107,10 @@ function pickRef(b: any): string | undefined {
   return b?.qrCode || b?.qr_code || b?.reference || b?.referenceCode || b?.reference_code || b?.confirmationCode || b?.confirmation_code || b?.code;
 }
 
+function pickVerifyCode(b: any): string | undefined {
+  return b?.verifyCode || b?.verify_code || b?.confirmCode || b?.confirm_code || b?.pin || b?.otp;
+}
+
 const PAGE_SIZE = 20;
 
 function BookingsPage() {

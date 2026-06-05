@@ -242,12 +242,46 @@ function OfferDetailPage() {
   // User reviews (local-only for now)
   type UserReview = { name: string; date: string; rating: number; text: string };
   const [userReviews, setUserReviews] = useState<UserReview[]>([]);
+  const [reviewStats, setReviewStats] = useState<{ avg: number; count: number; dist: Record<number, number> }>({ avg: 0, count: 0, dist: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 } });
   const [reviewName, setReviewName] = useState("");
   const [reviewText, setReviewText] = useState("");
   const [reviewRating, setReviewRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
   const [reviewSubmitted, setReviewSubmitted] = useState(false);
   const [reviewSubmitting, setReviewSubmitting] = useState(false);
+
+  async function loadReviews() {
+    const oid = (offer as any)?.id;
+    if (!oid) return;
+    try {
+      const res: any = await reviewsApi.list({ offerId: String(oid), limit: 100 });
+      const data = res?.data ?? res;
+      const itemsRaw: any[] = Array.isArray(data?.items) ? data.items : (Array.isArray(data) ? data : []);
+      // Only show approved/published reviews
+      const items = itemsRaw.filter((r) => {
+        const s = String(r.status ?? "published").toLowerCase();
+        return s === "published" || s === "approved" || s === "active" || s === "";
+      });
+      const mapped: UserReview[] = items.map((r) => ({
+        name: r.userName || r.user_name || r.name || "مستخدم",
+        date: String(r.created_at || r.createdAt || "").slice(0, 10),
+        rating: Number(r.rating) || 0,
+        text: r.comment || r.text || "",
+      }));
+      setUserReviews(mapped);
+      const count = mapped.length;
+      const sum = mapped.reduce((a, b) => a + (b.rating || 0), 0);
+      const avg = typeof data?.average === "number" ? Number(data.average) : (count ? sum / count : 0);
+      const dist: Record<number, number> = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+      mapped.forEach((m) => { const k = Math.round(m.rating); if (dist[k] != null) dist[k] += 1; });
+      setReviewStats({ avg: Math.round(avg * 10) / 10, count: Number(data?.total ?? count), dist });
+    } catch { /* ignore */ }
+  }
+
+  useEffect(() => {
+    loadReviews();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [(offer as any)?.id]);
 
   async function submitReview(e: React.FormEvent) {
     e.preventDefault();
@@ -277,6 +311,8 @@ function OfferDetailPage() {
       setReviewRating(0);
       setReviewSubmitted(true);
       setTimeout(() => setReviewSubmitted(false), 2500);
+      // Refresh list — newly approved reviews will appear after admin moderation
+      loadReviews();
     } catch (err: any) {
       const msg = err?.message || "تعذّر إرسال التقييم";
       toast.error(msg);
@@ -809,34 +845,44 @@ function OfferDetailPage() {
 
                   {tab === "reviews" && (
                     <div className="space-y-4">
-                      <div className="flex items-center gap-4 rounded-2xl border border-border bg-muted/20 p-5">
-                        <div className="text-center">
-                          <div className="text-4xl font-black text-foreground">{offer.vendor.reviewsCount > 0 ? offer.vendor.rating : "—"}</div>
-                          <div className="mt-1 flex justify-center text-amber-500">
-                            {Array.from({ length: 5 }).map((_, i) => {
-                              const filled = offer.vendor.reviewsCount > 0 && i < Math.round(offer.vendor.rating);
+                      {(() => {
+                        const displayCount = reviewStats.count || offer.vendor.reviewsCount || 0;
+                        const displayAvg = reviewStats.count ? reviewStats.avg : offer.vendor.rating;
+                        return (
+                        <div className="flex items-center gap-4 rounded-2xl border border-border bg-muted/20 p-5">
+                          <div className="text-center">
+                            <div className="text-4xl font-black text-foreground">{displayCount > 0 ? displayAvg : "—"}</div>
+                            <div className="mt-1 flex justify-center text-amber-500">
+                              {Array.from({ length: 5 }).map((_, i) => {
+                                const filled = displayCount > 0 && i < Math.round(displayAvg);
+                                return (
+                                  <Star key={i} className={`h-4 w-4 ${filled ? "fill-amber-400 text-amber-400" : "text-muted-foreground/30"}`} />
+                                );
+                              })}
+                            </div>
+                            <div className="mt-1 text-xs text-muted-foreground">
+                              {displayCount > 0 ? `${displayCount} تقييم` : "لا توجد تقييمات"}
+                            </div>
+                          </div>
+                          <div className="flex-1 space-y-1.5">
+                            {[5, 4, 3, 2, 1].map((l) => {
+                              const c = reviewStats.dist[l] || 0;
+                              const pct = reviewStats.count ? Math.round((c / reviewStats.count) * 100) : 0;
                               return (
-                                <Star key={i} className={`h-4 w-4 ${filled ? "fill-amber-400 text-amber-400" : "text-muted-foreground/30"}`} />
+                                <div key={l} className="flex items-center gap-2 text-xs">
+                                  <span className="w-3 font-bold text-foreground">{l}</span>
+                                  <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
+                                  <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted">
+                                    <div className="h-full rounded-full bg-amber-400" style={{ width: `${pct}%` }} />
+                                  </div>
+                                  <span className="w-8 text-end text-muted-foreground">{pct}%</span>
+                                </div>
                               );
                             })}
                           </div>
-                          <div className="mt-1 text-xs text-muted-foreground">
-                            {offer.vendor.reviewsCount > 0 ? `${offer.vendor.reviewsCount} تقييم` : "لا توجد تقييمات"}
-                          </div>
                         </div>
-                        <div className="flex-1 space-y-1.5">
-                          {[5, 4, 3, 2, 1].map((l) => (
-                            <div key={l} className="flex items-center gap-2 text-xs">
-                              <span className="w-3 font-bold text-foreground">{l}</span>
-                              <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
-                              <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted">
-                                <div className="h-full rounded-full bg-amber-400" style={{ width: "0%" }} />
-                              </div>
-                              <span className="w-8 text-end text-muted-foreground">0%</span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
+                        );
+                      })()}
 
                       {/* Write a review */}
                       <form

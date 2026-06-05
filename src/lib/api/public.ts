@@ -129,8 +129,15 @@ export const publicApi = {
 
 
   /* ───── Misc public ───── */
-  lookupOrder: (orderNumber: string) =>
-    request<ApiResponse<{ order: any }>>(`/lookup-order?orderNumber=${encodeURIComponent(orderNumber)}`),
+  lookupOrder: (params: { orderNumber: string; email?: string; phone?: string }) => {
+    const sp = new URLSearchParams();
+    sp.set('orderNumber', params.orderNumber);
+    if (params.email) sp.set('email', params.email);
+    if (params.phone) sp.set('phone', params.phone);
+    return request<ApiResponse<{ order: any; items?: any[]; timeline?: any[]; partner?: any }>>(
+      `/lookup-order?${sp.toString()}`
+    );
+  },
   submitQuote: (body: Record<string, any>) =>
     request<ApiResponse<any>>(`/quote`, { method: "POST", body: JSON.stringify(body) }),
 

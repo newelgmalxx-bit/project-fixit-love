@@ -277,7 +277,7 @@ function PartnerDashboard() {
     { id: "wallet", label: "نتائج المبيعات", icon: Wallet },
     { id: "reviews", label: "التقييمات", icon: Star },
     { id: "agreement", label: "الاتفاقية والعمولة", icon: Percent },
-    
+    { id: "commission-request", label: "طلب تعديل العمولة", icon: Send },
     { id: "support", label: "الدعم", icon: LifeBuoy },
     { id: "profile", label: "ملف المركز", icon: Store },
   ];

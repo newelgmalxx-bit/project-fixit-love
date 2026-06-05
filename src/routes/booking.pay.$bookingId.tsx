@@ -151,19 +151,58 @@ function BookingPayPage() {
     const paymentMethodId: number | undefined = mfIdMap[method];
 
     try {
-      // Re-pay existing booking via dedicated backend endpoint.
-      // See docs/BACKEND_PAY_EXISTING_BOOKING.md
-      const res: any = await checkout.payExistingBooking(
-        (booking as any).bookingNumber || (booking as any).serverBookingId || bookingId,
-        paymentMethodId,
+      // Two flows:
+      // 1) Booking already exists on server (re-pay) → POST /bookings/{id}/pay
+      // 2) First-time pay (booking only exists locally) → POST /checkout to create + pay
+      const hasServerBooking = Boolean(
+        (booking as any).serverBookingId || (booking as any).bookingNumber,
       );
+
+      let res: any;
+      if (hasServerBooking) {
+        res = await checkout.payExistingBooking(
+          (booking as any).bookingNumber || (booking as any).serverBookingId || bookingId,
+          paymentMethodId,
+        );
+      } else {
+        const backendMethod: string =
+          method === "cod" ? "cod"
+          : paymentMethodId != null ? String(paymentMethodId)
+          : "myfatoorah";
+        let sessionId: string | undefined;
+        try { sessionId = localStorage.getItem("guestSessionId") || undefined; } catch {}
+        res = await checkout.create({
+          paymentMethod: backendMethod as any,
+          contactName: booking.customerName,
+          contactEmail: booking.customerEmail ?? "",
+          contactPhone: booking.customerPhone,
+          date: booking.date,
+          time: booking.time,
+          sessionId,
+          notes: `Booking ${booking.bookingId} — ${booking.date} ${booking.time}`,
+          items: [
+            {
+              offerId: booking.offerId,
+              offerTitle: booking.offerTitle ?? "حجز",
+              price: booking.priceAfter ?? booking.total ?? 0,
+              qty: booking.qty ?? 1,
+            },
+          ],
+        });
+      }
 
       const data = res?.data ?? res ?? {};
       const url: string | undefined = data.paymentUrl;
-      const bookingNumber: string | undefined = data.bookingNumber;
+      const bookingNumber: string | undefined = data.bookingNumber ?? data.orderNumber;
+      const serverBookingId: string | undefined = data.bookingId ?? data.orderId;
 
       try {
-        const merged = { ...booking, paymentMethod: method, bookingNumber: bookingNumber ?? (booking as any).bookingNumber };
+        const merged = {
+          ...booking,
+          paymentMethod: method,
+          bookingNumber: bookingNumber ?? (booking as any).bookingNumber,
+          serverBookingId: serverBookingId ?? (booking as any).serverBookingId,
+        };
         sessionStorage.setItem(`booking:${bookingId}`, JSON.stringify(merged));
       } catch {}
 

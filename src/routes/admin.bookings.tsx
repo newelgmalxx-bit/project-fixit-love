@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { AdminLayout, PanelCard, Pill, PrimaryButton, GhostButton } from "@/components/admin/AdminLayout";
 import {
   CalendarCheck, Loader2, Search, Eye, RefreshCw,
-  ChevronLeft, ChevronRight, X, CheckCircle2,
+  ChevronLeft, ChevronRight, X, CheckCircle2, Shield,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
@@ -132,6 +132,42 @@ function BookingsPage() {
   const [viewing, setViewing] = useState<AdminBooking | null>(null);
   const [refundFor, setRefundFor] = useState<AdminBooking | null>(null);
 
+  // Confirm-by-code form
+  const [confirmCode, setConfirmCode] = useState("");
+  const [confirming, setConfirming] = useState(false);
+
+  async function handleConfirmByCode(e: React.FormEvent) {
+    e.preventDefault();
+    const code = confirmCode.trim();
+    if (!code) { toast.error(L("أدخل رقم التأكيد", "Enter confirmation #")); return; }
+    setConfirming(true);
+    try {
+      const data = await adminBookingsApi.list({ q: code, limit: 10 });
+      const match = (data.items || []).find((b: any) => {
+        const ref = pickRef(b) || "";
+        const id = String(b.id || "");
+        const tail = id.slice(-6).toUpperCase();
+        const c = code.toUpperCase();
+        return ref.toUpperCase() === c || id.toUpperCase() === c || tail === c || id.toUpperCase().endsWith(c);
+      }) || (data.items || [])[0];
+      if (!match) { toast.error(L("لا يوجد حجز بهذا الرقم", "No booking found with this code")); return; }
+      const st = String(match.status || "").toLowerCase();
+      if (st === "cancelled" || st === "refunded") { toast.error(L("هذا الحجز ملغي/مسترجع", "Booking is cancelled/refunded")); return; }
+      if (st === "confirmed" || st === "completed" || st === "redeemed") {
+        toast.message(L("الحجز مؤكد بالفعل", "Booking already confirmed"));
+      } else {
+        await adminBookingsApi.setStatus(match.id, "confirmed");
+        toast.success(L(`تم تأكيد حجز: ${match.customerName || match.id}`, `Confirmed: ${match.customerName || match.id}`));
+      }
+      setConfirmCode("");
+      load();
+    } catch (e: any) {
+      toast.error(e?.message || L("فشل التأكيد", "Confirm failed"));
+    } finally {
+      setConfirming(false);
+    }
+  }
+
   async function load(p = page) {
     setLoading(true);
     try {
@@ -221,6 +257,34 @@ function BookingsPage() {
       subtitle={L("متابعة وإدارة كل حجوزات المراكز", "Track and manage all center bookings")}
       action={<GhostButton onClick={() => load()}><RefreshCw className="h-4 w-4" /> {L("تحديث", "Refresh")}</GhostButton>}
     >
+      {/* Confirm by code */}
+      <form onSubmit={handleConfirmByCode} className="mb-4 rounded-2xl border border-primary/30 bg-gradient-to-br from-primary/5 to-transparent p-4">
+        <div className="mb-3 flex items-center gap-2">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
+            <Shield className="h-4 w-4" />
+          </div>
+          <div>
+            <div className="text-sm font-extrabold">{L("تأكيد حجز برقم التأكيد", "Confirm booking by code")}</div>
+            <div className="text-[11px] text-muted-foreground">{L("ادخل رقم التأكيد الخاص بالحجز لتأكيده مباشرة", "Enter the booking confirmation number to confirm it instantly")}</div>
+          </div>
+        </div>
+        <div className="grid gap-2 sm:grid-cols-[1fr_auto]">
+          <input
+            value={confirmCode}
+            onChange={(e) => setConfirmCode(e.target.value)}
+            placeholder={L("رقم التأكيد / رقم الحجز", "Confirmation # / Booking #")}
+            className="h-11 rounded-xl border border-border bg-background px-3 text-sm font-bold tracking-wider"
+            dir="ltr"
+            maxLength={64}
+          />
+          <button type="submit" disabled={confirming}
+            className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-emerald-500 px-5 text-sm font-bold text-white shadow-sm hover:bg-emerald-600 disabled:opacity-60">
+            {confirming ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
+            {L("تأكيد الحجز", "Confirm booking")}
+          </button>
+        </div>
+      </form>
+
       <PanelCard>
         {/* Filters */}
         <form onSubmit={applySearch} className="mb-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">

@@ -252,6 +252,12 @@ function VerifyPage() {
                   </div>
                 </div>
                 <div className="space-y-2 p-4 text-sm text-foreground">
+                  {(() => { const ps = getPaymentStatus(result.booking); return (
+                    <div className={`mb-2 flex items-center justify-between rounded-xl border px-3 py-2 ${ps.cls}`}>
+                      <span className="text-xs font-bold">حالة الدفع</span>
+                      <span className="text-sm font-extrabold">{ps.label}</span>
+                    </div>
+                  ); })()}
                   <Row icon={User} label="العميل" value={result.booking.customerName} />
                   <Row icon={Phone} label="الجوال" value={result.booking.customerPhone} ltr />
                   <Row icon={Calendar} label="التاريخ" value={result.booking.date} />

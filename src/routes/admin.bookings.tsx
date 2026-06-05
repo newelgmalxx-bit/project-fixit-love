@@ -229,51 +229,6 @@ function BookingsPage() {
       subtitle={L("متابعة وإدارة كل حجوزات المراكز", "Track and manage all center bookings")}
       action={<GhostButton onClick={() => load()}><RefreshCw className="h-4 w-4" /> {L("تحديث", "Refresh")}</GhostButton>}
     >
-      {/* Verify booking */}
-      <form onSubmit={handleConfirmByCode} className="mb-4 rounded-2xl border border-primary/30 bg-gradient-to-br from-primary/5 to-transparent p-4">
-        <div className="mb-3 flex items-center gap-2">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
-            <Shield className="h-4 w-4" />
-          </div>
-          <div>
-            <div className="text-sm font-extrabold">{L("التحقق من حجز العميل", "Verify customer booking")}</div>
-            <div className="text-[11px] text-muted-foreground">{L("أدخل رقم الحجز + رمز التأكيد كما يظهران للعميل", "Enter booking # + confirmation code exactly as shown")}</div>
-          </div>
-        </div>
-        <div className="grid gap-2 sm:grid-cols-[1fr_1fr_auto]">
-          <div>
-            <label className="text-[10px] font-bold text-muted-foreground block mb-1">{L("رقم الحجز", "Booking #")}</label>
-            <input
-              value={confirmBookingId}
-              onChange={(e) => setConfirmBookingId(e.target.value)}
-              placeholder="BK-XXXXXX"
-              className="h-11 w-full rounded-xl border border-border bg-background px-3 text-sm font-bold tracking-wider"
-              dir="ltr"
-              maxLength={64}
-            />
-          </div>
-          <div>
-            <label className="text-[10px] font-bold text-muted-foreground block mb-1">{L("رمز التأكيد", "Confirmation code")}</label>
-            <input
-              value={confirmCode}
-              onChange={(e) => setConfirmCode(e.target.value.replace(/[^a-zA-Z0-9-]/g, "").toUpperCase().slice(0, 32))}
-              placeholder="VERIFY_CODE"
-              maxLength={32}
-              inputMode="text"
-              className="h-11 w-full rounded-xl border border-border bg-background px-3 text-center text-base font-black tracking-[0.3em]"
-              dir="ltr"
-            />
-          </div>
-          <div className="flex items-end">
-            <button type="submit" disabled={confirming}
-              className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-emerald-500 px-5 text-sm font-bold text-white shadow-sm hover:bg-emerald-600 disabled:opacity-60">
-              {confirming ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
-              {L("تحقّق وتأكيد", "Verify & confirm")}
-            </button>
-          </div>
-        </div>
-      </form>
-
       <PanelCard>
         {/* Filters */}
         <form onSubmit={applySearch} className="mb-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">

@@ -1455,7 +1455,7 @@ function ChangePasswordSection() {
     }
     setSaving(true);
     try {
-      await partnerApi.changePassword({ currentPassword: currentPassword || undefined, newPassword });
+      await partnerApi.changePassword({ currentPassword, newPassword });
       toast.success("تم تغيير كلمة المرور بنجاح");
       setCurrentPassword("");
       setNewPassword("");

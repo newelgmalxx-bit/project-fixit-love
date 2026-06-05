@@ -7,6 +7,48 @@ import api, { ApiError } from "@/lib/api";
 import { LangSwitch } from "@/components/layout/SiteHeader";
 import { AuthHero } from "@/components/auth/AuthHero";
 
+function PwdField({
+  value,
+  onChange,
+  label,
+  dir,
+  show,
+  setShow,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  label: string;
+  dir: "rtl" | "ltr";
+  show: boolean;
+  setShow: (fn: (v: boolean) => boolean) => void;
+}) {
+  return (
+    <div className="text-start">
+      <label className="mb-1.5 block text-xs font-bold text-foreground">{label}</label>
+      <div className="relative">
+        <span className={`pointer-events-none absolute inset-y-0 ${dir === "rtl" ? "left-3" : "right-3"} flex items-center text-muted-foreground`}>
+          <Lock className="h-4 w-4" />
+        </span>
+        <button
+          type="button"
+          onClick={() => setShow((v) => !v)}
+          className={`absolute inset-y-0 ${dir === "rtl" ? "right-3" : "left-3"} flex items-center text-muted-foreground transition hover:text-primary`}
+        >
+          {show ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+        </button>
+        <input
+          type={show ? "text" : "password"}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder="••••••••"
+          dir={dir}
+          className="w-full rounded-xl border border-border bg-white px-10 py-3 text-start text-sm placeholder:text-muted-foreground/60 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+        />
+      </div>
+    </div>
+  );
+}
+
 function ResetPasswordPage() {
   const { dir, lang, toggle, t } = useLang();
   const navigate = useNavigate();
@@ -44,34 +86,6 @@ function ResetPasswordPage() {
     }
   }
 
-  function PwdField({ value, onChange, label }: { value: string; onChange: (v: string) => void; label: string }) {
-    return (
-      <div className="text-start">
-        <label className="mb-1.5 block text-xs font-bold text-foreground">{label}</label>
-        <div className="relative">
-          <span className={`pointer-events-none absolute inset-y-0 ${dir === "rtl" ? "left-3" : "right-3"} flex items-center text-muted-foreground`}>
-            <Lock className="h-4 w-4" />
-          </span>
-          <button
-            type="button"
-            onClick={() => setShow((v) => !v)}
-            className={`absolute inset-y-0 ${dir === "rtl" ? "right-3" : "left-3"} flex items-center text-muted-foreground transition hover:text-primary`}
-          >
-            {show ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-          </button>
-          <input
-            type={show ? "text" : "password"}
-            value={value}
-            onChange={(e) => onChange(e.target.value)}
-            placeholder="••••••••"
-            dir={dir}
-            className="w-full rounded-xl border border-border bg-white px-10 py-3 text-start text-sm placeholder:text-muted-foreground/60 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
-          />
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="relative min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-4 sm:p-8" dir={dir}>
       <div className={`absolute top-4 z-20 ${dir === "rtl" ? "left-4" : "right-4"} sm:top-6 ${dir === "rtl" ? "sm:left-6" : "sm:right-6"}`}>
@@ -100,8 +114,8 @@ function ResetPasswordPage() {
             )}
 
             <form className="mt-6 w-full space-y-5" onSubmit={onSubmit}>
-              <PwdField value={password} onChange={setPassword} label={t("auth.reset.newPassword")} />
-              <PwdField value={confirm} onChange={setConfirm} label={t("auth.reset.confirm")} />
+              <PwdField value={password} onChange={setPassword} label={t("auth.reset.newPassword")} dir={dir} show={show} setShow={setShow} />
+              <PwdField value={confirm} onChange={setConfirm} label={t("auth.reset.confirm")} dir={dir} show={show} setShow={setShow} />
               <button
                 type="submit"
                 disabled={submitting || !token}

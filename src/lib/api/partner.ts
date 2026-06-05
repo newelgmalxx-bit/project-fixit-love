@@ -295,11 +295,18 @@ function denormalizeOfferPayload(b: any): any {
 // Backend booking → frontend Booking shape
 function normalizeBooking(b: any): any {
   if (!b) return b;
+  const uuidRe = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  const rawTitle = b.offerTitle ?? b.offer?.title ?? b.offer?.titleAr ?? b.offer_title ?? null;
+  const offer_title = rawTitle && !uuidRe.test(String(rawTitle).trim()) ? rawTitle : null;
+  const booking_number = b.qrCode ?? b.qr_code ?? b.bookingNumber ?? b.booking_number ?? b.reference ?? b.referenceCode ?? b.reference_code ?? null;
+  const verify_code = b.verifyCode ?? b.verify_code ?? b.confirmCode ?? b.confirm_code ?? b.pin ?? b.otp ?? null;
   return {
     id: b.id,
     partner_id: b.partnerId ?? null,
     offer_id: b.offerId ?? null,
-    offer_title: b.offerTitle ?? null,
+    offer_title,
+    booking_number,
+    qr_code: booking_number,
     customer_name: b.customerName ?? "",
     customer_phone: b.customerPhone ?? "",
     customer_email: b.customerEmail ?? null,
@@ -312,10 +319,13 @@ function normalizeBooking(b: any): any {
     partner_amount: b.partnerAmount != null ? Number(b.partnerAmount) : null,
     status: b.status ?? "pending",
     notes: b.notes ?? null,
-    verify_code: b.qrCode ?? null,
+    verify_code,
     qty: b.qty ?? 1,
     payment_method: b.paymentMethod ?? null,
     payment_status: b.paymentStatus ?? null,
+    source: b.source ?? null,
+    confirmed_at: b.confirmedAt ?? b.confirmed_at ?? null,
+    redeemed_at: b.redeemedAt ?? b.redeemed_at ?? null,
     created_at: b.createdAt ?? null,
     updated_at: b.updatedAt ?? null,
   };

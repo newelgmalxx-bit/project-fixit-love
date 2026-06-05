@@ -182,15 +182,33 @@ export const partnerAuth = {
   },
 
   login: async (body: { emailOrPhone: string; password: string }) => {
-    const r = await request<ApiResponse<{ token: string; user: PartnerUser; partner: PartnerProfile }>>(
+    const r = await request<ApiResponse<any>>(
       "/auth/partner/login",
       { method: "POST", body: JSON.stringify({ emailOrPhone: body.emailOrPhone, password: body.password }) },
+    );
+    const d = r.data;
+    if (d?.requiresOtp) return d;
+    if (d?.token) setToken(d.token);
+    if (d?.partner) setStoredPartner(d.partner);
+    return d;
+  },
+
+  verifyLoginOtp: async (body: { email: string; otp: string }) => {
+    const r = await request<ApiResponse<{ token: string; user: PartnerUser; partner: PartnerProfile }>>(
+      "/auth/partner/login/verify-otp",
+      { method: "POST", body: JSON.stringify({ email: body.email, otp: body.otp }) },
     );
     const d = r.data;
     if (d?.token) setToken(d.token);
     if (d?.partner) setStoredPartner(d.partner);
     return d;
   },
+
+  resendLoginOtp: async (body: { email: string }) =>
+    request<ApiResponse<any>>("/auth/partner/login/resend-otp", {
+      method: "POST",
+      body: JSON.stringify({ email: body.email }),
+    }),
 
   logout: async () => {
     try { await request("/auth/partner/logout", { method: "POST" }); } catch {}

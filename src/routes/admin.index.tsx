@@ -152,7 +152,9 @@ function AdminDashboard() {
         const data = d?.data ?? d ?? {};
         setStats((s: any) => ({
           ...s,
-          avgOrderValue: Number(data.avgOrderValue ?? s.avgOrderValue ?? 0) || 0,
+          avgOrderValue: Number(data.avgOrderValue) > 0
+            ? Number(data.avgOrderValue)
+            : (s.avgOrderValue || 0),
           // growthPercent رقم؛ revenueGrowth قد يكون "+12.3%"
           revenueGrowth: Number(
             data.growthPercent ?? String(data.revenueGrowth ?? "").replace(/[^\d.\-]/g, ""),

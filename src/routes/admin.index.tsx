@@ -124,11 +124,16 @@ function AdminDashboard() {
           ) || 0,
         }));
         if (Array.isArray(data.monthlyRevenue) && data.monthlyRevenue.length) {
-          setRevenue(data.monthlyRevenue.map((m: any) => ({
+          const analyticsRevenue = data.monthlyRevenue.map((m: any) => ({
             m: m.m ?? m.month,
             v: Number(m.v ?? m.commission ?? m.revenue ?? 0) || 0,
             total: Number(m.bookingsValue ?? m.total ?? 0) || 0,
-          })));
+          }));
+          setRevenue((current) => {
+            const currentSum = current.reduce((sum: number, point: any) => sum + (Number(point.v) || 0), 0);
+            const analyticsSum = analyticsRevenue.reduce((sum: number, point: any) => sum + (Number(point.v) || 0), 0);
+            return currentSum > analyticsSum ? current : analyticsRevenue;
+          });
         }
       })
       .catch((e) => { if (!(e instanceof ApiError) || e.status !== 401) console.warn("[admin.analytics]", e); });

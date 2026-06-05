@@ -8,7 +8,7 @@ import {
   Sparkles, ChevronLeft, ChevronRight, Zap, Menu, ExternalLink, Percent, FileText, Eye,
 } from "lucide-react";
 import { toast } from "sonner";
-import { partnerApi, partnerAuth, getStoredPartner, type PartnerProfile as ApiPartnerProfile } from "@/lib/api/partner";
+import { partnerApi, partnerAuth, getStoredPartner, setStoredPartner, type PartnerProfile as ApiPartnerProfile } from "@/lib/api/partner";
 import { useCategories } from "@/hooks/useCatalog";
 import logoImg from "@/assets/booking-logo.png";
 import { generateTimeSlots } from "@/lib/timeSlots";
@@ -1147,6 +1147,9 @@ function ProfileTab({ partner, onUpdate }: { partner: Profile; onUpdate: (p: Pro
   const [saving, setSaving] = useState(false);
   const upd = <K extends keyof Profile>(k: K, v: Profile[K]) => setF((p) => ({ ...p, [k]: v }));
 
+  // Re-sync form when the partner prop changes (e.g. after /auth/partner/me hydration)
+  useEffect(() => { setF(partner); }, [partner]);
+
   async function save() {
     setSaving(true);
     try {
@@ -1155,8 +1158,13 @@ function ProfileTab({ partner, onUpdate }: { partner: Profile; onUpdate: (p: Pro
         city: f.city, phone: f.phone, email: f.email, commercialNumber: f.commercial_number,
         logoUrl: f.logo_url, about: f.about, workingHours: f.working_hours, address: f.address, mapsUrl: f.maps_url || null,
       } as any);
+      // The API returns the raw partner shape (camelCase). Normalize before storing.
+      const raw = (r?.partner || r) as any;
+      const mapped = mapApiPartner(raw) || f;
+      if (raw?.id) setStoredPartner(raw);
+      setF(mapped);
+      onUpdate(mapped);
       setSaving(false);
-      onUpdate((r?.partner || r || f) as Profile);
       toast.success("تم حفظ الملف");
     } catch (e: any) {
       setSaving(false);
@@ -1171,13 +1179,16 @@ function ProfileTab({ partner, onUpdate }: { partner: Profile; onUpdate: (p: Pro
       <div>
         <label className="mb-1.5 block text-xs font-bold">التصنيف</label>
         <select value={f.category} onChange={(e) => upd("category", e.target.value)} className="h-10 w-full rounded-xl border border-border bg-background px-3 text-sm">
+          <option value="">اختر التصنيف</option>
           {categories.map((c: any) => <option key={c.id || c.slug} value={c.id || c.slug}>{c.nameAr}</option>)}
         </select>
       </div>
-      <Input label="المدينة" value={f.address || ""} onChange={(v) => { upd("address", v); upd("city", v); }} />
+      <Input label="المدينة" value={f.city || ""} onChange={(v) => upd("city", v)} />
       <Input label="رقم الجوال" value={f.phone} onChange={(v) => upd("phone", v)} />
       <Input label="البريد الإلكتروني" value={f.email || ""} onChange={(v) => upd("email", v)} />
       <Input label="السجل التجاري" value={f.commercial_number || ""} onChange={(v) => upd("commercial_number", v)} />
+      <Input label="العنوان التفصيلي" value={f.address || ""} onChange={(v) => upd("address", v)} className="sm:col-span-2" />
+      <Input label="ساعات العمل" value={f.working_hours || ""} onChange={(v) => upd("working_hours", v)} placeholder="السبت - الخميس · 10ص - 10م" className="sm:col-span-2" />
       <div className="sm:col-span-2">
         <ImageUpload
           label="شعار المركز"
@@ -1228,20 +1239,17 @@ function WalletTab() {
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<any>(null);
   const [bookings, setBookings] = useState<Booking[]>([]);
-  const [payoutSummary, setPayoutSummary] = useState<any>(null);
 
   useEffect(() => {
     (async () => {
       setLoading(true);
       try {
-        const [s, b, p]: any[] = await Promise.all([
+        const [s, b]: any[] = await Promise.all([
           partnerApi.stats("30d").catch(() => ({})),
           partnerApi.listBookings({ limit: 100 }).catch(() => ({ items: [] })),
-          partnerApi.payoutsSummary().catch(() => ({})),
         ]);
         setStats(s || {});
         setBookings((b?.items || []) as Booking[]);
-        setPayoutSummary(p || {});
       } catch (e: any) {
         toast.error(e?.message || "تعذر تحميل النتائج");
       }
@@ -1296,22 +1304,6 @@ function WalletTab() {
         </div>
       </div>
 
-
-      {payoutSummary && (payoutSummary.due || payoutSummary.paid || payoutSummary.pending) ? (
-        <div className="grid gap-4 sm:grid-cols-4">
-          {[
-            { label: "مستحق", value: Number(payoutSummary.due || 0), color: "text-amber-600" },
-            { label: "قيد المعالجة", value: Number(payoutSummary.processing || 0), color: "text-sky-600" },
-            { label: "بانتظار", value: Number(payoutSummary.pending || 0), color: "text-violet-600" },
-            { label: "تمت التسوية", value: Number(payoutSummary.paid || 0), color: "text-emerald-600" },
-          ].map((p) => (
-            <div key={p.label} className="rounded-3xl border border-border bg-card p-5">
-              <div className="text-xs font-bold text-muted-foreground">{p.label}</div>
-              <div className={`mt-2 text-xl font-black ${p.color}`} dir="ltr">{p.value.toLocaleString()} ر.س</div>
-            </div>
-          ))}
-        </div>
-      ) : null}
 
       <div className="overflow-hidden rounded-3xl border border-border bg-card">
         <div className="border-b border-border p-5">

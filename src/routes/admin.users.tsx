@@ -67,7 +67,9 @@ function UsersPage() {
     admin: { l: L("مدير", "Admin"), t: "primary" as const },
     manager: { l: L("مشرف", "Manager"), t: "violet" as const },
     support: { l: L("دعم", "Support"), t: "emerald" as const },
-  };
+    partner: { l: L("شريك", "Partner"), t: "violet" as const },
+    client: { l: L("عميل", "Client"), t: "sky" as const },
+  } as const;
   const [users, setUsers] = useState<AdminUser[]>(initial);
   const [open, setOpen] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
@@ -95,7 +97,7 @@ function UsersPage() {
   const openAdd = () => { setEditId(null); setF(empty); setOpen(true); };
   const openEdit = async (u: AdminUser) => {
     setEditId(u.id);
-    setF({ ...empty, name: u.name, email: u.email, phone: u.phone, role: u.role, status: u.active ? "active" : "suspended" });
+    setF({ ...empty, name: u.name, email: u.email, phone: u.phone, city: (u as any).city || "", role: u.role, status: u.active ? "active" : "suspended" });
     setOpen(true);
     setLoadingForm(true);
     try {
@@ -105,7 +107,7 @@ function UsersPage() {
           name: user.name ?? u.name ?? "",
           email: user.email ?? u.email ?? "",
           phone: user.phone ?? u.phone ?? "",
-          city: user.city ?? "",
+          city: user.city ?? user.city_name ?? user.cityName ?? (u as any).city ?? "",
           avatar: user.avatar ?? user.avatar_url ?? "",
           role: (user.role as any) || u.role || "support",
           status: (user.status as any) || (u.active ? "active" : "suspended"),
@@ -270,6 +272,8 @@ function UsersPage() {
                   <option value="manager">{L("مشرف", "Manager")}</option>
                   <option value="support">{L("دعم", "Support")}</option>
                   <option value="owner">{L("مالك", "Owner")}</option>
+                  <option value="partner">{L("شريك", "Partner")}</option>
+                  <option value="client">{L("عميل", "Client")}</option>
                 </select>
               </Lb>
               <Lb label={L("الحالة", "Status")}>

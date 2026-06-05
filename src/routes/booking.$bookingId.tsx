@@ -268,17 +268,25 @@ function BookingConfirmation() {
                   <Row icon={<MapPin className="h-4 w-4 text-primary" />} label="المنشأة">
                     <div>
                       <div className="font-bold text-foreground">{offer.vendor.name}</div>
-                      <div className="text-xs text-muted-foreground">
-                        {offer.vendor.address}، {offer.vendor.city}
-                      </div>
-                      {(() => {
-                        const mapsUrl = (offer.vendor as any).mapsUrl || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${offer.vendor.name} ${offer.vendor.address} ${offer.vendor.city}`)}`;
-                        return (
-                          <a href={mapsUrl} target="_blank" rel="noopener noreferrer" className="mt-2 inline-flex items-center gap-1.5 rounded-md border border-primary/40 bg-primary/5 px-2.5 py-1 text-xs font-bold text-primary hover:bg-primary/10">
-                            <MapPin className="h-3 w-3" /> الذهاب للفرع عبر خرائط جوجل
-                          </a>
-                        );
-                      })()}
+                      {isPaid ? (
+                        <>
+                          <div className="text-xs text-muted-foreground">
+                            {offer.vendor.address}، {offer.vendor.city}
+                          </div>
+                          {(() => {
+                            const mapsUrl = (offer.vendor as any).mapsUrl || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${offer.vendor.name} ${offer.vendor.address} ${offer.vendor.city}`)}`;
+                            return (
+                              <a href={mapsUrl} target="_blank" rel="noopener noreferrer" className="mt-2 inline-flex items-center gap-1.5 rounded-md border border-primary/40 bg-primary/5 px-2.5 py-1 text-xs font-bold text-primary hover:bg-primary/10">
+                                <MapPin className="h-3 w-3" /> الذهاب للفرع عبر خرائط جوجل
+                              </a>
+                            );
+                          })()}
+                        </>
+                      ) : (
+                        <div className="text-xs text-muted-foreground">
+                          {offer.vendor.city ? `${offer.vendor.city} — ` : ""}سيظهر العنوان التفصيلي بعد إتمام الدفع
+                        </div>
+                      )}
                     </div>
                   </Row>
                   <Row icon={<Phone className="h-4 w-4 text-primary" />} label="هاتف المنشأة">

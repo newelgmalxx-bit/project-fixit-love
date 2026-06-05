@@ -454,9 +454,7 @@ function OverviewTab({ partner, onNavigate }: { partner: Profile; onNavigate: (t
         setStats({
           offers: s?.offers ?? s?.offersCount ?? offersList.length,
           bookings: s?.bookingsCount ?? s?.totalBookings ?? bookingsList.length,
-          revenue: Number(
-            s?.partnerEarnings ?? s?.netRevenue ?? s?.totalRevenue ?? s?.revenue ?? revenueFromList
-          ),
+          revenue: revenueFromList,
           pendingBookings: s?.pendingBookings ?? s?.pendingCount ?? pendingFromList,
         });
         setRecentBookings(((brecent?.items || []) as Booking[]).slice(0, 4));

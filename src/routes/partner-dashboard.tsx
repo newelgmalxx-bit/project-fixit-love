@@ -1011,14 +1011,36 @@ function BookingsTab({ partner }: { partner: Profile }) {
 
   async function handleVerify(e: React.FormEvent) {
     e.preventDefault();
-    const idQ = vId.trim();
+    const rawIdQ = vId.trim();
     const codeQ = vCode.trim();
+    const idQ = rawIdQ.replace(/\s+/g, "").replace(/^#/, "").replace(/^bk[-_ ]?/i, "").toUpperCase();
     if (!idQ || !codeQ) { toast.error("أدخل رقم الحجز ورمز التحقق"); return; }
-    const b = items.find((x) =>
-      (x.id.toLowerCase() === idQ.toLowerCase() ||
-        x.id.toLowerCase().endsWith(idQ.toLowerCase()) ||
-        x.customer_phone.endsWith(idQ))
-    );
+    const matchBooking = (x: any) => {
+      const id = String(x.id || "").toUpperCase();
+      const idShort = id.replace(/-/g, "").slice(-6);
+      const bn = String((x as any).booking_number || (x as any).qr_code || "")
+        .replace(/\s+/g, "").replace(/^#/, "").replace(/^BK[-_ ]?/i, "").toUpperCase();
+      const phone = String(x.customer_phone || "");
+      return (
+        id === idQ ||
+        id.endsWith(idQ) ||
+        idShort === idQ ||
+        (bn && (bn === idQ || bn.endsWith(idQ))) ||
+        (phone && phone.endsWith(rawIdQ))
+      );
+    };
+    let b = items.find(matchBooking);
+    // Fallback: query backend if not in the currently loaded page
+    if (!b && !(items[0]?.id?.startsWith?.("demo-"))) {
+      try {
+        const r1 = await partnerApi.listBookings({ search: rawIdQ, limit: 50 }).catch(() => ({ items: [] as any[] }));
+        const r2 = rawIdQ !== idQ
+          ? await partnerApi.listBookings({ search: idQ, limit: 50 }).catch(() => ({ items: [] as any[] }))
+          : { items: [] as any[] };
+        const pool = [...(r1.items || []), ...(r2.items || [])] as any[];
+        b = pool.find(matchBooking);
+      } catch { /* ignore */ }
+    }
     if (!b) { toast.error("الحجز غير موجود"); return; }
     if (b.redeemed_at || b.status === "completed") { toast.warning("هذا الحجز مستخدم من قبل"); return; }
     if (b.status === "cancelled") { toast.error("هذا الحجز ملغي"); return; }

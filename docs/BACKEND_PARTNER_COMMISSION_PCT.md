@@ -33,9 +33,13 @@ So the UI is forced to fall back to a hardcoded 10% for every center.
 
 ## Frontend resolution order
 
-The normalizer already reads, in order:
+The normalizer reads, in order:
 `offer.commissionPctOverride` → `offer.commission_pct` →
-`partner.commission_pct` → `10` (last-resort default).
+`partner.commission_pct`.
+
+There is intentionally **no fixed 10% fallback** anymore. If the backend does
+not return a center/offer percentage, the storefront will show the deposit as
+unavailable and block checkout instead of charging a wrong amount.
 
 Once the backend returns the field, the deposit shown on the offer page
 (`عربون الحجز`) will correctly reflect each merchant's agreed rate.

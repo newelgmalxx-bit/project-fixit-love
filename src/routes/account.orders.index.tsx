@@ -48,9 +48,9 @@ function OrdersList() {
         window.location.href = url;
         return;
       }
-      toast.error(lang === "ar" ? "تعذّر الحصول على رابط الدفع" : "Could not get payment URL");
+      toast.error(t("account.orders.toast.payUrlFail"));
     } catch (e: any) {
-      toast.error(e?.message || (lang === "ar" ? "تعذّر بدء عملية الدفع" : "Could not start payment"));
+      toast.error(e?.message || t("account.orders.toast.payStartFail"));
     } finally {
       setPaying(false);
     }
@@ -127,14 +127,14 @@ function OrdersList() {
             <table className="w-full text-sm">
               <thead className="bg-muted/40 text-xs text-muted-foreground">
                 <tr className={dir === "rtl" ? "text-right" : "text-left"}>
-                  <th className="px-4 py-3 font-bold">{lang === "ar" ? "رقم الطلب" : "Order #"}</th>
-                  <th className="px-4 py-3 font-bold">{lang === "ar" ? "الخدمات" : "Services"}</th>
-                  <th className="px-4 py-3 font-bold">{lang === "ar" ? "التاريخ" : "Date"}</th>
-                  <th className="px-4 py-3 font-bold">{lang === "ar" ? "الحالة" : "Status"}</th>
-                  <th className="px-4 py-3 font-bold">{lang === "ar" ? "الإجمالي" : "Total"}</th>
-                  <th className="px-4 py-3 font-bold">{lang === "ar" ? "حالة الدفع" : "Payment"}</th>
-                  <th className="px-4 py-3 font-bold">{lang === "ar" ? "استلام الخدمة" : "Redeemed"}</th>
-                  <th className="px-4 py-3 font-bold text-end">{lang === "ar" ? "الإجراءات" : "Actions"}</th>
+                  <th className="px-4 py-3 font-bold">{t("account.orders.col.order")}</th>
+                  <th className="px-4 py-3 font-bold">{t("account.orders.col.services")}</th>
+                  <th className="px-4 py-3 font-bold">{t("account.orders.col.date")}</th>
+                  <th className="px-4 py-3 font-bold">{t("account.orders.col.status")}</th>
+                  <th className="px-4 py-3 font-bold">{t("account.orders.col.total")}</th>
+                  <th className="px-4 py-3 font-bold">{t("account.orders.col.payment")}</th>
+                  <th className="px-4 py-3 font-bold">{t("account.orders.col.redeemed")}</th>
+                  <th className="px-4 py-3 font-bold text-end">{t("account.orders.col.actions")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -171,7 +171,7 @@ function OrdersList() {
                         {o.paid ? (
                           <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2.5 py-1 text-[11px] font-bold text-emerald-700">
                             <Check className="h-3 w-3" />
-                            {lang === "ar" ? "مدفوع" : "Paid"}
+                            {t("account.orders.paid")}
                           </span>
                         ) : (
                           <span className="inline-flex items-center gap-1 rounded-full bg-rose-100 px-2.5 py-1 text-[11px] font-bold text-rose-700">
@@ -184,7 +184,7 @@ function OrdersList() {
                           <div className="flex flex-col gap-0.5">
                             <span className="inline-flex w-fit items-center gap-1 rounded-full bg-emerald-100 px-2.5 py-1 text-[11px] font-bold text-emerald-700">
                               <Check className="h-3 w-3" />
-                              {lang === "ar" ? "تم الاستلام" : "Redeemed"}
+                              {t("account.orders.cell.redeemed")}
                             </span>
                             {o.redeemedAt && (
                               <span className="text-[10px] text-muted-foreground" data-ltr-number>{o.redeemedAt}</span>
@@ -192,11 +192,11 @@ function OrdersList() {
                           </div>
                         ) : o.status === "cancelled" ? (
                           <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-1 text-[11px] font-bold text-muted-foreground">
-                            {lang === "ar" ? "غير متاح" : "N/A"}
+                            {t("account.orders.cell.notAvailable")}
                           </span>
                         ) : (
                           <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-1 text-[11px] font-bold text-amber-700">
-                            {lang === "ar" ? "لم يُستلم بعد" : "Not yet"}
+                            {t("account.orders.cell.notYet")}
                           </span>
                         )}
                       </td>
@@ -212,7 +212,7 @@ function OrdersList() {
                               className="inline-flex h-8 items-center gap-1 rounded-full bg-gradient-to-r from-emerald-500 to-emerald-600 px-3 text-xs font-bold text-white shadow-sm hover:opacity-95"
                             >
                               <Wallet className="h-3.5 w-3.5" />
-                              {lang === "ar" ? "إعادة الدفع" : "Pay now"}
+                              {t("account.orders.cell.rePay")}
                             </button>
                           )}
                           {o.paid && (
@@ -263,7 +263,7 @@ function OrdersList() {
               <X className="h-4 w-4" />
             </button>
             <h3 className="text-lg font-extrabold">
-              {lang === "ar" ? "اختر طريقة الدفع" : "Choose a payment method"}
+              {t("account.orders.payModal.title")}
             </h3>
             <p className="mt-1 text-xs text-muted-foreground" dir="ltr">
               {payOrderState.number} • <span data-ltr-number>{formatCurrency(payOrderState.total, lang)}</span>
@@ -294,7 +294,7 @@ function OrdersList() {
               className="mt-5 inline-flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-primary to-primary-dark px-5 text-sm font-extrabold text-primary-foreground shadow-sm hover:opacity-95 disabled:opacity-60"
             >
               {paying ? <Loader2 className="h-4 w-4 animate-spin" /> : <Wallet className="h-4 w-4" />}
-              {lang === "ar" ? "المتابعة للدفع" : "Continue to payment"}
+              {t("account.orders.payModal.continue")}
             </button>
           </div>
         </div>

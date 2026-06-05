@@ -56,16 +56,15 @@ function ClientsPage() {
     };
     Promise.all([
       adminApi.clients.list({ limit: 200 }).catch(() => ({ items: [] })),
-      adminApi.invoices.list({ limit: 1000 }).catch(() => ({ items: [] })),
-      adminApi.orders.list({ limit: 1000 }).catch(() => ({ items: [] })),
       adminApi.consultations?.list?.({ limit: 1000 }).catch(() => ({ items: [] })) ?? Promise.resolve({ items: [] }),
-    ]).then(([cp, ip, op, bp]: any) => {
-      const invoices: any[] = ip?.items || [];
-      const orders: any[] = op?.items || [];
+    ]).then(([cp, bp]: any) => {
       const bookings: any[] = bp?.items || [];
       const byEmail = new Map<string, { orders: number; spent: number }>();
       const byName = new Map<string, { orders: number; spent: number }>();
       const byUserId = new Map<string, { orders: number; spent: number }>();
+      const cityByEmail = new Map<string, string>();
+      const cityByName = new Map<string, string>();
+      const cityByUserId = new Map<string, string>();
       const bump = (m: Map<string, any>, key: string, amount: number) => {
         if (!key) return;
         const cur = m.get(key) || { orders: 0, spent: 0 };
@@ -74,29 +73,25 @@ function ClientsPage() {
         m.set(key, cur);
       };
       const sources = [
-        ...orders.map((o) => ({
-          userId: o.user_id ?? o.userId ?? o.client_id ?? o.clientId,
-          email: o.contact_email ?? o.client_email ?? o.email ?? o.user_email,
-          name: o.contact_name ?? o.client_name ?? o.client ?? o.user_name,
-          total: o.total ?? o.amount ?? o.subtotal ?? 0,
-        })),
-        ...invoices.map((i) => ({
-          userId: i.user_id ?? i.userId ?? i.client_id ?? i.clientId,
-          email: i.client_email ?? i.email,
-          name: i.client_name ?? i.client,
-          total: i.total ?? i.amount ?? 0,
-        })),
         ...bookings.map((b) => ({
           userId: b.user_id ?? b.userId ?? b.client_id ?? b.clientId,
-          email: b.contact_email ?? b.client_email ?? b.email,
-          name: b.contact_name ?? b.client_name ?? b.name,
-          total: b.total ?? b.amount ?? 0,
+          email: b.customerEmail ?? b.customer_email ?? b.contact_email ?? b.client_email ?? b.email,
+          name: b.customerName ?? b.customer_name ?? b.contact_name ?? b.client_name ?? b.name,
+          total: b.total ?? b.totalAmount ?? b.total_amount ?? b.amount ?? 0,
+          city: b.city ?? b.customerCity ?? b.customer_city ?? "",
         })),
       ];
       sources.forEach((s) => {
         if (s.userId) bump(byUserId, String(s.userId), Number(s.total) || 0);
         bump(byEmail, normEmail(s.email), Number(s.total) || 0);
         bump(byName, normName(s.name), Number(s.total) || 0);
+        if (s.city) {
+          if (s.userId && !cityByUserId.has(String(s.userId))) cityByUserId.set(String(s.userId), s.city);
+          const ne = normEmail(s.email);
+          if (ne && !cityByEmail.has(ne)) cityByEmail.set(ne, s.city);
+          const nn = normName(s.name);
+          if (nn && !cityByName.has(nn)) cityByName.set(nn, s.city);
+        }
       });
       if (typeof window !== "undefined") console.log("[clients] sample row:", (cp.items || [])[0]);
       const pickDate = (v: any) => {
@@ -108,7 +103,19 @@ function ClientsPage() {
         const d = new Date(s);
         return isNaN(d.getTime()) ? "" : d.toISOString().slice(0, 10);
       };
-      const items: AdminClient[] = (cp.items || []).map((c: any) => {
+      // Exclude partners/merchants — they belong on the centers page, not clients
+      const isPartnerRole = (r: any) => {
+        const v = String(r ?? "").toLowerCase();
+        return v === "partner" || v === "merchant" || v === "vendor" || v === "center" || v === "salon";
+      };
+      const rawClients: any[] = (cp.items || []).filter((c: any) => {
+        const role = c.role ?? c.user?.role;
+        const type = c.type ?? c.user?.type ?? c.accountType ?? c.account_type;
+        if (isPartnerRole(role) || isPartnerRole(type)) return false;
+        if (c.partnerId || c.partner_id || c.isPartner || c.is_partner) return false;
+        return true;
+      });
+      const items: AdminClient[] = rawClients.map((c: any) => {
         const u = c.user || {};
         const aMatch =
           (c.id && byUserId.get(String(c.id))) ||
@@ -116,6 +123,13 @@ function ClientsPage() {
           byEmail.get(normEmail(c.email ?? u.email)) ||
           byName.get(normName(c.name ?? u.name)) ||
           { orders: 0, spent: 0 };
+        const resolvedCity =
+          (c.city ?? u.city) ||
+          (c.id ? cityByUserId.get(String(c.id)) : undefined) ||
+          (c.userId ? cityByUserId.get(String(c.userId)) : undefined) ||
+          cityByEmail.get(normEmail(c.email ?? u.email)) ||
+          cityByName.get(normName(c.name ?? u.name)) ||
+          undefined;
         const joined = pickDate(c.joinedAt ?? c.joined_at ?? c.created_at ?? c.createdAt ?? u.created_at ?? u.createdAt);
         const updated = pickDate(c.updated_at ?? c.updatedAt ?? u.updated_at ?? u.updatedAt);
         return {
@@ -127,7 +141,7 @@ function ClientsPage() {
           totalSpent: aMatch.spent || Number(c.totalSpent) || 0,
           segment: (c.segment as any) || "new",
           joinedAt: joined || "—",
-          city: c.city ?? u.city ?? undefined,
+          city: resolvedCity,
           role: c.role ?? u.role ?? undefined,
           status: c.status ?? u.status ?? undefined,
           authProvider: c.auth_provider ?? c.authProvider ?? u.auth_provider ?? undefined,
@@ -137,7 +151,7 @@ function ClientsPage() {
       });
       setClients(items.length ? items : adminClients);
 
-      // Compute avg order from real orders/invoices/bookings totals
+      // Compute avg order from real bookings totals
       const allTotals = sources.map((s) => Number(s.total) || 0).filter((n) => n > 0);
       if (allTotals.length) {
         const avg = allTotals.reduce((a, b) => a + b, 0) / allTotals.length;
@@ -145,7 +159,7 @@ function ClientsPage() {
       }
 
       // Build client-growth series — fill gaps between months so the chart is continuous
-      const list: any[] = cp.items || [];
+      const list: any[] = rawClients;
       const monthMap = new Map<string, number>();
       let unknown = 0;
       list.forEach((c) => {

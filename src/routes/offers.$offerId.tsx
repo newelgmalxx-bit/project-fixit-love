@@ -76,6 +76,9 @@ const FAQ = [
   },
 ];
 
+const formatMoney = (value: number) =>
+  new Intl.NumberFormat("en-US", { maximumFractionDigits: 2 }).format(value);
+
 const PLACEHOLDER_OFFER: any = {
   id: "",
   title: "",
@@ -339,8 +342,8 @@ function OfferDetailPage() {
   const total = offer.priceAfter * qty;
   // Online deposit = platform commission (admin's share). Center collects rest.
   const depositPct = offer.vendor.commissionPct ?? offer.vendor.depositPct ?? 10;
-  const depositAmount = Math.round((total * depositPct) / 100);
-  const remainingAmount = total - depositAmount;
+  const depositAmount = +((total * depositPct) / 100).toFixed(2);
+  const remainingAmount = +(total - depositAmount).toFixed(2);
   const { add: addToCartHook } = useCart();
   const { lang: _lang } = useLang();
 

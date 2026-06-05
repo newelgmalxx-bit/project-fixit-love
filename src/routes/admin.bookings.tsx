@@ -357,7 +357,7 @@ function BookingsPage() {
                 <th className="px-3 py-3 font-medium">{L("بيانات التواصل", "Contact")}</th>
                 <th className="px-3 py-3 font-medium">{L("العرض", "Offer")}</th>
                 
-                <th className="px-3 py-3 font-medium">{L("قيمة الخدمات", "Value")}</th>
+                <th className="px-3 py-3 font-medium">{L("قيمة العرض", "Value")}</th>
                 <th className="px-3 py-3 font-medium">{L("الموعد", "Schedule")}</th>
                 <th className="px-3 py-3 font-medium">{L("العربون", "Deposit")}</th>
                 <th className="px-3 py-3 font-medium">{L("الحالة", "Status")}</th>

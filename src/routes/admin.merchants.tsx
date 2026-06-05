@@ -119,21 +119,30 @@ function categoryKey(value: any): string {
 }
 
 function pickAssignedCategoryIds(p: any, opts?: { treatPlainCategoriesAsAssigned?: boolean; masterCategories?: any[] }): CategoryId[] {
+  const fromArray = (arr: any[]) => arr.map(normalizeCategoryId).filter((id: CategoryId | null): id is CategoryId => id !== null);
+  const singular = normalizeCategoryId(p?.categoryId ?? p?.category_id);
+  if (singular !== null) return [singular];
   if (Array.isArray(p?.categoryIds)) {
-    return p.categoryIds.map(normalizeCategoryId).filter((id: CategoryId | null): id is CategoryId => id !== null);
+    return fromArray(p.categoryIds);
   }
   if (Array.isArray(p?.category_ids)) {
-    return p.category_ids.map(normalizeCategoryId).filter((id: CategoryId | null): id is CategoryId => id !== null);
+    return fromArray(p.category_ids);
+  }
+  if (Array.isArray(p?.partnerCategories)) {
+    return fromArray(p.partnerCategories);
+  }
+  if (Array.isArray(p?.partner_categories)) {
+    return fromArray(p.partner_categories);
   }
   if (Array.isArray(p?.categories)) {
     const assigned = p.categories.filter((c: any) =>
       c && (c.pivot || c.assigned === true || c.selected === true || c.isAssigned === true || c.partner_id != null || c.partnerId != null)
     );
     if (assigned.length) {
-      return assigned.map(normalizeCategoryId).filter((id: CategoryId | null): id is CategoryId => id !== null);
+      return fromArray(assigned);
     }
     if (opts?.treatPlainCategoriesAsAssigned) {
-      const ids = p.categories.map(normalizeCategoryId).filter((id: CategoryId | null): id is CategoryId => id !== null);
+      const ids = fromArray(p.categories);
       const masterKeys = new Set((opts.masterCategories || []).map(categoryKey).filter(Boolean));
       const isWholeMasterList = masterKeys.size > 0 && ids.length === masterKeys.size && ids.every((id: CategoryId) => masterKeys.has(categoryKey(id)));
       return isWholeMasterList ? [] : ids;

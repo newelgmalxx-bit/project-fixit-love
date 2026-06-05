@@ -6,6 +6,7 @@ import { useLang } from "@/i18n/LanguageProvider";
 import { useAuth } from "@/hooks/useAuth";
 import { auth as authApi } from "@/lib/api/auth";
 import { setToken, setUser as setStoredUser } from "@/lib/api/client";
+import { partnerAuth, setStoredPartner } from "@/lib/api/partner";
 import { toast } from "sonner";
 
 function destinationFor(role?: string): string {
@@ -20,7 +21,8 @@ function VerifyOtpPage() {
   const { user, refresh } = useAuth();
   const search = useSearch({ from: "/verify-otp" }) as { email?: string; mode?: string };
   const emailFromQuery = search?.email || "";
-  const mode: "signup" | "login" = search?.mode === "login" ? "login" : "signup";
+  const mode: "signup" | "login" | "partner" =
+    search?.mode === "login" ? "login" : search?.mode === "partner" ? "partner" : "signup";
 
   const [email, setEmail] = useState(emailFromQuery);
   const [otp, setOtp] = useState("");
@@ -53,18 +55,24 @@ function VerifyOtpPage() {
     }
     setSubmitting(true);
     try {
+      if (mode === "partner") {
+        const d: any = await partnerAuth.verifyLoginOtp({ email: email.trim(), otp: otp.trim() });
+        if (d?.partner) setStoredPartner(d.partner);
+        if (d?.user) setStoredUser(d.user);
+        await refresh();
+        toast.success(t("auth.loggedIn"));
+        navigate({ to: "/partner-dashboard" as any });
+        return;
+      }
       const data: any = mode === "login"
         ? await authApi.verifyEmailOtp({ email: email.trim(), otp: otp.trim() })
         : await authApi.verifyRegisterOtp({ email: email.trim(), otp: otp.trim() });
-      // data may be { user, token } (unwrapped) or { data: { user, token } }
       const token = data?.token ?? data?.data?.token;
       const u = data?.user ?? data?.data?.user;
       if (token) setToken(token);
       if (u) setStoredUser(u);
       await refresh();
-      toast.success(mode === "login"
-        ? t("auth.loggedIn")
-        : t("auth.accountVerified"));
+      toast.success(mode === "login" ? t("auth.loggedIn") : t("auth.accountVerified"));
       navigate({ to: destinationFor(u?.role) as any });
     } catch (err: any) {
       setError(err?.message || t("auth.err.invalidExpiredCode"));
@@ -82,7 +90,9 @@ function VerifyOtpPage() {
     }
     setResending(true);
     try {
-      if (mode === "login") {
+      if (mode === "partner") {
+        await partnerAuth.resendLoginOtp({ email: email.trim() });
+      } else if (mode === "login") {
         await authApi.requestEmailOtp({ email: email.trim() });
       } else {
         await authApi.resendRegisterOtp({ email: email.trim() });

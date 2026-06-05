@@ -72,7 +72,12 @@ function PartnerLoginPage() {
     }
     setSubmitting(true);
     try {
-      await partnerAuth.login({ emailOrPhone: id, password });
+      const res: any = await partnerAuth.login({ emailOrPhone: id, password });
+      if (res?.requiresOtp) {
+        const emailForOtp = res.email || (tab === "email" ? id : "");
+        navigate({ to: "/verify-otp", search: { email: emailForOtp, mode: "partner" } as any } as any);
+        return;
+      }
       toast.success(lang === "ar" ? "مرحباً بك مجدداً" : "Welcome back");
       navigate({ to: "/partner-dashboard" as any });
     } catch (err: any) {

@@ -340,10 +340,12 @@ function OfferDetailPage() {
 
   const savings = offer.priceBefore - offer.priceAfter;
   const total = offer.priceAfter * qty;
-  // Online deposit = platform commission (admin's share). Center collects rest.
-  const depositPct = offer.vendor.commissionPct ?? offer.vendor.depositPct ?? 10;
-  const depositAmount = +((total * depositPct) / 100).toFixed(2);
-  const remainingAmount = +(total - depositAmount).toFixed(2);
+  // Online deposit = the center's configured booking/deposit percentage.
+  // Do not fall back to a fixed 10% because every center has its own rate.
+  const rawDepositPct = offer.vendor.depositPct ?? offer.vendor.commissionPct;
+  const depositPct = typeof rawDepositPct === "number" && rawDepositPct > 0 ? rawDepositPct : null;
+  const depositAmount = depositPct != null ? +((total * depositPct) / 100).toFixed(2) : 0;
+  const remainingAmount = depositPct != null ? +(total - depositAmount).toFixed(2) : total;
   const { add: addToCartHook } = useCart();
   const { lang: _lang } = useLang();
 
@@ -535,12 +537,23 @@ function OfferDetailPage() {
       return;
     }
 
+    if (depositPct == null) {
+      toast.error("نسبة عربون المركز غير متاحة", {
+        description: "لا يمكن عرض أو دفع عربون ثابت لأن نسبة هذا المركز لم تصل من النظام.",
+      });
+      return;
+    }
+
     setStep("review");
     if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
   function confirmBooking() {
     if (!agreed) return;
+    if (depositPct == null) {
+      toast.error("نسبة عربون المركز غير متاحة");
+      return;
+    }
     setLoading(true);
     const bookingId = "BK-" + Math.random().toString(36).slice(2, 8).toUpperCase();
     const verifyCode = Math.floor(100000 + Math.random() * 900000).toString();

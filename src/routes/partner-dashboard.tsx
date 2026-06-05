@@ -2482,15 +2482,38 @@ function AnalyticsTab() {
           partnerApi.stats(range).catch(() => ({})),
           partnerApi.listBookings({ limit: 200 }).catch(() => ({ items: [] })),
         ]);
-        setStats(s || {});
         const bookings = (b?.items || []) as any[];
+        const days = range === "7d" ? 7 : range === "90d" ? 90 : 30;
+        const cutoff = new Date();
+        cutoff.setHours(0, 0, 0, 0);
+        cutoff.setDate(cutoff.getDate() - (days - 1));
+        const inRange = (bk: any) => {
+          const raw = bk.created_at || bk.createdAt || bk.booking_date || bk.date || bk.scheduled_at || bk.scheduledAt;
+          if (!raw) return true;
+          const dt = new Date(String(raw).replace(" ", "T"));
+          return Number.isNaN(dt.getTime()) ? true : dt >= cutoff;
+        };
+        const countedBookings = bookings.filter((bk) => isCountedBooking(bk) && inRange(bk));
+        const dailyMap: Record<string, { day: string; bookings: number; revenue: number; commission: number }> = {};
+        for (const bk of countedBookings) {
+          const raw = bk.created_at || bk.createdAt || bk.booking_date || bk.date || bk.scheduled_at || bk.scheduledAt || new Date().toISOString();
+          const day = String(raw).slice(0, 10);
+          if (!dailyMap[day]) dailyMap[day] = { day, bookings: 0, revenue: 0, commission: 0 };
+          dailyMap[day].bookings += 1;
+          dailyMap[day].revenue += bookingTotalValue(bk);
+          dailyMap[day].commission += bookingCommissionValue(bk);
+        }
+        const calculatedDaily = Object.values(dailyMap).sort((a, b) => a.day.localeCompare(b.day));
+        const calculatedRevenue = countedBookings.reduce((sum, bk) => sum + bookingTotalValue(bk), 0);
+        const calculatedCommission = countedBookings.reduce((sum, bk) => sum + bookingCommissionValue(bk), 0);
+        setStats({ ...(s || {}), calculatedDaily, calculatedRevenue, calculatedCommission, calculatedBookings: countedBookings.length });
         const grouped: Record<string, { name: string; bookings: number; revenue: number }> = {};
-        for (const bk of bookings) {
+        for (const bk of countedBookings) {
           const key = bk.offer_id || bk.offer_title || "—";
           const name = bk.offer_title || "—";
           if (!grouped[key]) grouped[key] = { name, bookings: 0, revenue: 0 };
           grouped[key].bookings += 1;
-          if (bk.status === "completed") grouped[key].revenue += Number(bk.partner_amount ?? bk.amount ?? 0);
+          grouped[key].revenue += bookingTotalValue(bk);
         }
         setTopOffers(Object.values(grouped).sort((a, b) => b.bookings - a.bookings).slice(0, 5));
       } catch (e: any) {
@@ -2501,10 +2524,12 @@ function AnalyticsTab() {
   }, [range]);
 
   const daily: { day: string; bookings: number; revenue: number; commission?: number }[] =
-    stats?.daily || stats?.dailyBreakdown || [];
-  const totalRevenue = Number(stats?.totalRevenue ?? 0);
-  const totalCommission = Number(stats?.totalCommission ?? 0);
-  const totalBookings = Number(stats?.totalBookings ?? 0);
+    (stats?.calculatedDaily?.length ? stats.calculatedDaily : (stats?.daily || stats?.dailyBreakdown || []));
+  const dailyRevenue = daily.reduce((sum, d) => sum + safeAmount(d.revenue), 0);
+  const dailyCommission = daily.reduce((sum, d) => sum + safeAmount(d.commission), 0);
+  const totalRevenue = safeAmount(stats?.calculatedRevenue || stats?.totalRevenue || dailyRevenue);
+  const totalCommission = safeAmount(stats?.calculatedCommission || stats?.totalCommission || dailyCommission);
+  const totalBookings = safeAmount(stats?.calculatedBookings || stats?.totalBookings || daily.reduce((sum, d) => sum + safeAmount(d.bookings), 0));
   const netRevenue = Number(stats?.netRevenue ?? (totalRevenue - totalCommission));
   const avgValue = totalBookings > 0 ? (totalRevenue / totalBookings) : 0;
 

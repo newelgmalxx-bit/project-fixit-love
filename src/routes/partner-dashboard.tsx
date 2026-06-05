@@ -1453,6 +1453,219 @@ function Input({ label, value, onChange, type = "text", placeholder, className =
   );
 }
 
+/* -------------------- Verify Booking -------------------- */
+function VerifyTab({ partner }: { partner: Profile }) {
+  const [bookingId, setBookingId] = useState("");
+  const [code, setCode] = useState("");
+  const [items, setItems] = useState<Booking[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [result, setResult] = useState<
+    | { status: "idle" }
+    | { status: "notfound" }
+    | { status: "wrong" }
+    | { status: "ok"; booking: Booking; alreadyRedeemed: boolean }
+  >({ status: "idle" });
+  const [submitting, setSubmitting] = useState(false);
+  const [redeeming, setRedeeming] = useState(false);
+
+  async function load() {
+    setLoading(true);
+    if (partner.id === DEMO_PARTNER_ID) {
+      setItems(DEMO_BOOKINGS);
+      setLoading(false);
+      return;
+    }
+    try {
+      const b: any = await partnerApi.listBookings({ limit: 300 });
+      setItems(((b?.items || b || []) as Booking[]));
+    } catch {
+      setItems([]);
+    }
+    setLoading(false);
+  }
+  useEffect(() => { load(); }, [partner.id]);
+
+  function findBooking(idQ: string): Booking | undefined {
+    const q = idQ.toLowerCase();
+    return items.find((x) => {
+      const short = `#${x.id.replace(/-/g, "").slice(-6)}`.toLowerCase();
+      return (
+        x.id.toLowerCase() === q ||
+        x.id.toLowerCase().endsWith(q) ||
+        short === q ||
+        short.replace("#", "") === q.replace("#", "") ||
+        (x.customer_phone || "").endsWith(idQ)
+      );
+    });
+  }
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    const idQ = bookingId.trim();
+    const codeQ = code.trim();
+    if (!idQ || codeQ.length < 4) { toast.error("أدخل رقم الحجز ورمز التحقق"); return; }
+    setSubmitting(true);
+    const b = findBooking(idQ);
+    if (!b) { setResult({ status: "notfound" }); setSubmitting(false); return; }
+    if ((b.verify_code || "") !== codeQ) { setResult({ status: "wrong" }); setSubmitting(false); return; }
+    const already = !!b.redeemed_at || b.status === "completed";
+    setResult({ status: "ok", booking: b, alreadyRedeemed: already });
+    setSubmitting(false);
+  }
+
+  async function confirmRedeem() {
+    if (result.status !== "ok") return;
+    const b = result.booking;
+    if (b.status === "cancelled") { toast.error("هذا الحجز ملغي"); return; }
+    setRedeeming(true);
+    try {
+      if (b.id.startsWith("demo-")) {
+        const stamped: Booking = { ...b, status: "completed", redeemed_at: new Date().toISOString() };
+        setItems((prev) => prev.map((x) => x.id === b.id ? stamped : x));
+        setResult({ status: "ok", booking: stamped, alreadyRedeemed: true });
+      } else {
+        await partnerApi.redeemBooking(b.id, code.trim());
+        const stamped: Booking = { ...b, status: "completed", redeemed_at: new Date().toISOString() };
+        setItems((prev) => prev.map((x) => x.id === b.id ? stamped : x));
+        setResult({ status: "ok", booking: stamped, alreadyRedeemed: true });
+      }
+      toast.success(`تم تأكيد حضور: ${b.customer_name}`);
+    } catch (e: any) {
+      toast.error(e?.message || "تعذّر تأكيد الحجز");
+    } finally {
+      setRedeeming(false);
+    }
+  }
+
+  function reset() {
+    setBookingId("");
+    setCode("");
+    setResult({ status: "idle" });
+  }
+
+  const b = result.status === "ok" ? result.booking : null;
+  const totalWithVat = b?.amount != null ? Number(b.amount) : null;
+  const paidOnline = b ? Number(b.deposit_amount ?? b.commission ?? 0) : 0;
+  const remaining = totalWithVat != null ? Math.max(0, +(totalWithVat - paidOnline).toFixed(2)) : null;
+
+  return (
+    <div className="mx-auto max-w-2xl">
+      <div className="overflow-hidden rounded-3xl border border-border bg-white shadow-xl">
+        {/* Purple header */}
+        <div className="bg-gradient-to-r from-[#3F2A6B] to-[#5a3d8f] p-6 text-white">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <h2 className="text-xl font-extrabold">التحقق من حجز العميل</h2>
+              <p className="text-xs text-white/85">للمراكز فقط — أدخل رقم الحجز ورمز التأكيد</p>
+            </div>
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/15">
+              <ShieldCheck className="h-6 w-6" />
+            </div>
+          </div>
+        </div>
+
+        {/* Form */}
+        <form onSubmit={handleSubmit} className="space-y-4 p-6">
+          <div>
+            <label className="mb-1.5 block text-xs font-bold text-muted-foreground text-right">رقم الحجز</label>
+            <input
+              value={bookingId}
+              onChange={(e) => setBookingId(e.target.value)}
+              placeholder="BK-XXXXXX"
+              dir="ltr"
+              className="w-full rounded-xl border border-border bg-background px-4 py-3 text-base font-bold tracking-wider text-foreground outline-none focus:border-primary"
+            />
+          </div>
+          <div>
+            <label className="mb-1.5 block text-xs font-bold text-muted-foreground text-right">رمز التأكيد (6 أرقام)</label>
+            <input
+              value={code}
+              onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+              placeholder="••••••"
+              inputMode="numeric"
+              dir="ltr"
+              className="w-full rounded-xl border border-border bg-background px-4 py-3 text-2xl font-black tracking-[0.4em] text-center text-foreground outline-none focus:border-primary"
+            />
+          </div>
+          <button
+            type="submit"
+            disabled={submitting || loading}
+            className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#3F2A6B] py-3 text-sm font-bold text-white hover:bg-[#3F2A6B]/90 disabled:opacity-60"
+          >
+            {submitting || loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />} تحقّق
+          </button>
+        </form>
+
+        {result.status === "notfound" && (
+          <div className="mx-6 mb-6 flex items-start gap-3 rounded-2xl border border-rose-200 bg-rose-50 p-4 text-rose-700">
+            <XCircle className="h-5 w-5 shrink-0" />
+            <div className="text-sm font-bold">رقم الحجز غير موجود.</div>
+          </div>
+        )}
+        {result.status === "wrong" && (
+          <div className="mx-6 mb-6 flex items-start gap-3 rounded-2xl border border-rose-200 bg-rose-50 p-4 text-rose-700">
+            <XCircle className="h-5 w-5 shrink-0" />
+            <div className="text-sm font-bold">رمز التأكيد غير صحيح.</div>
+          </div>
+        )}
+
+        {result.status === "ok" && b && (
+          <div className="mx-6 mb-6 overflow-hidden rounded-2xl border border-emerald-200 bg-emerald-50">
+            <div className="flex items-center gap-3 bg-emerald-100/60 px-4 py-3 text-emerald-700">
+              <CheckCircle2 className="h-5 w-5" />
+              <div className="text-sm font-extrabold">
+                {result.alreadyRedeemed ? "تم استخدام هذا الحجز مسبقاً" : "الحجز صحيح ومؤكد"}
+              </div>
+            </div>
+            <div className="space-y-2 p-4 text-sm">
+              <VRow icon={UserIcon} label="العميل" value={b.customer_name || "—"} />
+              <VRow icon={Phone} label="الجوال" value={b.customer_phone || "—"} ltr />
+              <VRow icon={Calendar} label="التاريخ" value={b.booking_date || "—"} ltr />
+              <VRow icon={Clock} label="الوقت" value={b.booking_time || "—"} ltr />
+              {remaining != null && remaining > 0 ? (
+                <div className="mt-3 flex items-center justify-between rounded-xl bg-amber-50 px-3 py-2 text-amber-800">
+                  <span className="text-xs font-bold">يتبقى عند الخدمة</span>
+                  <span dir="ltr" className="font-extrabold">{remaining} ر.س</span>
+                </div>
+              ) : null}
+              <div className="flex gap-2 pt-3">
+                {!result.alreadyRedeemed && (
+                  <button
+                    type="button"
+                    onClick={confirmRedeem}
+                    disabled={redeeming}
+                    className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 py-2.5 text-sm font-bold text-white hover:bg-emerald-700 disabled:opacity-60"
+                  >
+                    {redeeming && <Loader2 className="h-4 w-4 animate-spin" />} تأكيد استخدام الحجز
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={reset}
+                  className="flex-1 rounded-xl border border-border bg-white py-2.5 text-sm font-bold text-foreground hover:border-primary"
+                >
+                  تحقّق من حجز آخر
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function VRow({ icon: Icon, label, value, ltr }: { icon: any; label: string; value: string; ltr?: boolean }) {
+  return (
+    <div className="flex items-center justify-between gap-3 border-b border-emerald-200/60 pb-1.5 last:border-0">
+      <div className="flex items-center gap-2 text-xs font-bold text-emerald-700">
+        <Icon className="h-3.5 w-3.5" /> {label}
+      </div>
+      <div className="font-bold text-foreground" dir={ltr ? "ltr" : undefined}>{value}</div>
+    </div>
+  );
+}
+
 /* -------------------- Sales Results -------------------- */
 function WalletTab() {
   const [loading, setLoading] = useState(true);

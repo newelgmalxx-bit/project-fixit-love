@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { QRCodeSVG } from "qrcode.react";
-import { Check, MapPin, Phone, Calendar, Clock, Download, Printer, Home } from "lucide-react";
+import { Check, MapPin, Phone, Calendar, Clock, Download, Printer, Home, Clock3, XCircle, AlertCircle, PlayCircle, Star, UserX } from "lucide-react";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { useOffer } from "@/hooks/useCatalog";
@@ -36,7 +36,86 @@ type Booking = {
   paid?: boolean;
   paymentStatus?: string;
   paymentMethod?: string;
+  status?: string;
 };
+
+type StatusMeta = {
+  label: string;
+  subtitle: string;
+  badge: string;
+  Icon: React.ComponentType<{ className?: string; strokeWidth?: number }>;
+  iconWrap: string;
+  badgeClass: string;
+};
+
+function getStatusMeta(status?: string): StatusMeta {
+  switch (status) {
+    case "confirmed":
+      return {
+        label: "تم تأكيد حجزك بنجاح 🎉",
+        subtitle: "أظهر الباركود التالي عند وصولك للمنشأة لاستخدام الخدمة.",
+        badge: "مؤكد",
+        Icon: Check,
+        iconWrap: "bg-emerald-100 text-emerald-600 shadow-emerald-200",
+        badgeClass: "bg-emerald-100 text-emerald-700",
+      };
+    case "in_progress":
+      return {
+        label: "الخدمة قيد التنفيذ",
+        subtitle: "بدأ تقديم الخدمة في المنشأة.",
+        badge: "قيد التنفيذ",
+        Icon: PlayCircle,
+        iconWrap: "bg-sky-100 text-sky-600 shadow-sky-200",
+        badgeClass: "bg-sky-100 text-sky-700",
+      };
+    case "review":
+      return {
+        label: "بانتظار المراجعة",
+        subtitle: "تمت الخدمة وبانتظار تقييمك.",
+        badge: "مراجعة",
+        Icon: Star,
+        iconWrap: "bg-violet-100 text-violet-600 shadow-violet-200",
+        badgeClass: "bg-violet-100 text-violet-700",
+      };
+    case "completed":
+      return {
+        label: "تم إكمال الحجز",
+        subtitle: "شكراً لاستخدامك المنصة.",
+        badge: "مكتمل",
+        Icon: Check,
+        iconWrap: "bg-emerald-100 text-emerald-600 shadow-emerald-200",
+        badgeClass: "bg-emerald-100 text-emerald-700",
+      };
+    case "cancelled":
+      return {
+        label: "تم إلغاء الحجز",
+        subtitle: "تم إلغاء هذا الحجز ولن يتم تقديم الخدمة.",
+        badge: "ملغي",
+        Icon: XCircle,
+        iconWrap: "bg-rose-100 text-rose-600 shadow-rose-200",
+        badgeClass: "bg-rose-100 text-rose-700",
+      };
+    case "no_show":
+      return {
+        label: "لم يتم الحضور",
+        subtitle: "تم تسجيل عدم الحضور لهذا الحجز.",
+        badge: "لم يحضر",
+        Icon: UserX,
+        iconWrap: "bg-zinc-100 text-zinc-600 shadow-zinc-200",
+        badgeClass: "bg-zinc-100 text-zinc-700",
+      };
+    case "pending":
+    default:
+      return {
+        label: "حجزك قيد المراجعة",
+        subtitle: "سيتم تأكيد الحجز بعد إتمام الدفع أو مراجعة المنشأة.",
+        badge: "بانتظار التأكيد",
+        Icon: Clock3,
+        iconWrap: "bg-amber-100 text-amber-600 shadow-amber-200",
+        badgeClass: "bg-amber-100 text-amber-700",
+      };
+  }
+}
 
 // Format money keeping up to 2 decimals, no forced trailing zeros (e.g. 14.9 not 15).
 function fmtMoney(n?: number) {
@@ -117,6 +196,12 @@ function BookingConfirmation() {
     booking.paymentStatus === "deposit_paid";
   const hasDeposit = derivedDeposit > 0;
 
+  // Derive effective status: trust explicit booking.status, otherwise infer
+  // from payment state (paid → confirmed, otherwise pending).
+  const effectiveStatus = booking.status ?? (isPaid ? "confirmed" : "pending");
+  const statusMeta = getStatusMeta(effectiveStatus);
+  const StatusIcon = statusMeta.Icon;
+
   const demoPayload = {
     b: booking.bookingId,
     c: booking.verifyCode ?? "",
@@ -137,16 +222,16 @@ function BookingConfirmation() {
       <SiteHeader />
       <main className="flex-1 py-10">
         <div className="mx-auto max-w-3xl px-4 sm:px-6">
-          {/* Success badge */}
+          {/* Status badge */}
           <div className="mb-6 text-center">
-            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 shadow-lg shadow-emerald-200">
-              <Check className="h-8 w-8" strokeWidth={3} />
+            <div className={`mx-auto flex h-16 w-16 items-center justify-center rounded-full shadow-lg ${statusMeta.iconWrap}`}>
+              <StatusIcon className="h-8 w-8" strokeWidth={3} />
             </div>
             <h1 className="mt-4 text-2xl font-extrabold text-foreground sm:text-3xl">
-              تم تأكيد حجزك بنجاح 🎉
+              {statusMeta.label}
             </h1>
             <p className="mt-2 text-sm text-muted-foreground">
-              أظهر الباركود التالي عند وصولك للمنشأة لاستخدام الخدمة.
+              {statusMeta.subtitle}
             </p>
           </div>
 
@@ -159,8 +244,8 @@ function BookingConfirmation() {
                   <div className="text-xs font-bold uppercase tracking-wider opacity-80">رقم الحجز</div>
                   <div className="mt-1 text-2xl font-black tracking-wider" dir="ltr">{booking.bookingId}</div>
                 </div>
-                <div className="rounded-full bg-white/20 px-3 py-1 text-[11px] font-bold">
-                  {hasDeposit ? (isPaid ? "عربون مدفوع" : "بانتظار دفع العربون") : "مؤكد"}
+                <div className={`rounded-full px-3 py-1 text-[11px] font-bold ${statusMeta.badgeClass}`}>
+                  {statusMeta.badge}
                 </div>
               </div>
             </div>

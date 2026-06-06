@@ -195,7 +195,7 @@ function MyBookings() {
                     {isUnpaid && !b.cancelledAt && (
                       <Link
                         to="/booking/pay/$bookingId"
-                        params={{ bookingId: b.bookingId }}
+                        params={{ bookingId: b.bookingRef }}
                         className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-amber-500 px-4 py-2.5 text-xs font-bold text-white hover:bg-amber-600"
                       >
                         <Wallet className="h-4 w-4" /> إعادة الدفع
@@ -203,7 +203,7 @@ function MyBookings() {
                     )}
                     <Link
                       to="/booking/$bookingId"
-                      params={{ bookingId: b.bookingId }}
+                      params={{ bookingId: b.bookingRef }}
                       className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-primary bg-primary/5 px-4 py-2.5 text-xs font-bold text-primary hover:bg-primary/10"
                     >
                       <QrCode className="h-4 w-4" /> {t("account.bookings.actions.qr")}
@@ -217,7 +217,7 @@ function MyBookings() {
                           <Pencil className="h-3.5 w-3.5" /> {t("account.bookings.actions.edit")}
                         </button>
                         <button
-                          onClick={() => cancelBooking(b.bookingId)}
+                          onClick={() => cancelBooking(b.bookingRef)}
                           className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2.5 text-xs font-bold text-rose-700 hover:bg-rose-100"
                         >
                           <X className="h-3.5 w-3.5" /> {t("account.bookings.actions.cancel")}

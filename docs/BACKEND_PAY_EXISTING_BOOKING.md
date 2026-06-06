@@ -2,6 +2,18 @@
 
 Re-initiates a MyFatoorah hosted payment for an EXISTING booking (instead of creating a duplicate booking via `/checkout`).
 
+## Current frontend behavior / bug signal
+Frontend calls:
+`POST /bookings/{bookingId}/pay`
+
+If the response is `200` but does not include a non-empty payment link, the user will NOT be redirected to MyFatoorah.
+
+Required response field:
+- `data.paymentUrl` preferred
+- accepted aliases: `payment_url`, `invoiceUrl`, `invoice_url`, `PaymentURL`, `InvoiceURL`
+
+Do not return success without one of these URLs.
+
 ## Request
 `POST /bookings/{bookingId}/pay`
 

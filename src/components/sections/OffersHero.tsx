@@ -301,27 +301,64 @@ function SlideContent({
           </p>
 
           {/* Search */}
-          <form
-            onSubmit={onSearch}
-            suppressHydrationWarning
-            className="mt-4 flex max-w-xl items-center gap-2 rounded-full border border-border bg-card p-2 shadow-xl shadow-primary/10 ring-1 ring-black/5 sm:mt-8"
-          >
-            <Search className="ms-3 h-5 w-5 text-muted-foreground" />
-            <input
-              type="text"
-              value={q}
-              onChange={(e) => setQ(e.target.value)}
-              placeholder="ابحث عن خدمة، متجر، أو مدينة…"
+          <div ref={boxRef} className="relative mt-4 max-w-xl sm:mt-8">
+            <form
+              onSubmit={onSearch}
               suppressHydrationWarning
-              className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
-            />
-            <button
-              type="submit"
-              className={`shrink-0 rounded-full bg-gradient-to-r ${slide.gradient} px-6 py-2.5 text-sm font-bold text-white shadow-lg shadow-primary/25 transition hover:scale-[1.02]`}
+              className="flex items-center gap-2 rounded-full border border-border bg-card p-2 shadow-xl shadow-primary/10 ring-1 ring-black/5"
             >
-              ابحث
-            </button>
-          </form>
+              <Search className="ms-3 h-5 w-5 text-muted-foreground" />
+              <input
+                type="text"
+                value={q}
+                onChange={(e) => { setQ(e.target.value); setOpen(true); }}
+                onFocus={() => { onSearchFocus(); setOpen(true); }}
+                placeholder="ابحث عن خدمة، متجر، أو مدينة…"
+                suppressHydrationWarning
+                className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+              />
+              <button
+                type="submit"
+                className={`shrink-0 rounded-full bg-gradient-to-r ${slide.gradient} px-6 py-2.5 text-sm font-bold text-white shadow-lg shadow-primary/25 transition hover:scale-[1.02]`}
+              >
+                ابحث
+              </button>
+            </form>
+            {open && q.trim() && (
+              <div className="absolute z-30 mt-2 max-h-80 w-full overflow-auto rounded-2xl border border-border bg-card p-2 shadow-2xl">
+                {matches.length === 0 ? (
+                  <div className="px-3 py-4 text-center text-sm text-muted-foreground">
+                    لا توجد نتائج مطابقة
+                  </div>
+                ) : (
+                  matches.map((o: any) => {
+                    const title = o.title || o.titleAr || o.titleEn || "عرض";
+                    const sub = o.vendor?.name || o.partner?.vendorName || o.partnerName || o.vendorName || o.city || "";
+                    const img = o.image || o.imageUrl || o.coverImage || null;
+                    return (
+                      <Link
+                        key={o.id}
+                        to="/offers/$offerId"
+                        params={{ offerId: String(o.id) }}
+                        onClick={() => setOpen(false)}
+                        className="flex items-center gap-3 rounded-xl px-2 py-2 hover:bg-muted"
+                      >
+                        {img ? (
+                          <img src={img} alt="" className="h-10 w-10 shrink-0 rounded-lg object-cover" loading="lazy" />
+                        ) : (
+                          <div className="h-10 w-10 shrink-0 rounded-lg bg-muted" />
+                        )}
+                        <div className="min-w-0 flex-1">
+                          <div className="truncate text-sm font-bold text-foreground">{title}</div>
+                          {sub && <div className="truncate text-[11px] text-muted-foreground">{sub}</div>}
+                        </div>
+                      </Link>
+                    );
+                  })
+                )}
+              </div>
+            )}
+          </div>
 
           {/* Quick category pills */}
           <div className="mt-3 flex flex-wrap gap-2 sm:mt-6">

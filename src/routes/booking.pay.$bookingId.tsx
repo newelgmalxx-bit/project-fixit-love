@@ -51,6 +51,13 @@ const FALLBACK_METHODS: UiMethod[] = [
   { id: "myfatoorah", ...METHOD_META.myfatoorah },
 ];
 
+function firstString(...values: unknown[]): string | undefined {
+  for (const value of values) {
+    if (typeof value === "string" && value.trim()) return value.trim();
+  }
+  return undefined;
+}
+
 function BookingPayPage() {
   const { bookingId } = Route.useParams();
   const navigate = useNavigate();
@@ -192,9 +199,24 @@ function BookingPayPage() {
       }
 
       const data = res?.data ?? res ?? {};
-      const url: string | undefined = data.paymentUrl;
-      const bookingNumber: string | undefined = data.bookingNumber ?? data.orderNumber;
-      const serverBookingId: string | undefined = data.bookingId ?? data.orderId;
+      const nestedData = data?.data ?? {};
+      const firstBooking = Array.isArray(data?.bookings) ? data.bookings[0] : undefined;
+      const url = firstString(
+        data.paymentUrl,
+        data.payment_url,
+        data.invoiceUrl,
+        data.invoice_url,
+        data.PaymentURL,
+        data.InvoiceURL,
+        nestedData.paymentUrl,
+        nestedData.payment_url,
+        nestedData.invoiceUrl,
+        nestedData.invoice_url,
+        nestedData.PaymentURL,
+        nestedData.InvoiceURL,
+      );
+      const bookingNumber = firstString(data.bookingNumber, data.bookingNo, data.orderNumber, firstBooking?.bookingNo);
+      const serverBookingId = firstString(data.bookingId, data.orderId, firstBooking?.bookingId);
 
       try {
         const merged = {
@@ -211,8 +233,8 @@ function BookingPayPage() {
         return;
       }
 
-      // No redirect URL → go back to booking summary
-      navigate({ to: "/booking/$bookingId", params: { bookingId } });
+      alert("تم إنشاء طلب الدفع لكن الباك إند لم يرجع رابط الدفع paymentUrl");
+      setProcessing(false);
     } catch (e: any) {
       console.error("Pay error", e);
       alert(e?.message || "تعذّر بدء الدفع، حاول مرة أخرى");

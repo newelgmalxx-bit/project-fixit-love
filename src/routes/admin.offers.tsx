@@ -10,6 +10,7 @@ import {
   type AdminOffer, type AdminOfferInput, type OfferStatus, type AdminCategory,
 } from "@/lib/api/adminContent";
 import { adminAgreementsApi, type ApiPartnerAgreement } from "@/lib/api/adminAgreements";
+import { adminPartnersApi, partnerLabel, type AdminPartner } from "@/lib/api/adminPartners";
 import { PartnerSelect } from "@/components/admin/PartnerSelect";
 
 export const Route = createFileRoute("/admin/offers")({
@@ -45,8 +46,22 @@ function OffersPage() {
   const [editing, setEditing] = useState<AdminOffer | null>(null);
   const [openNew, setOpenNew] = useState(false);
   const [partnerAgreements, setPartnerAgreements] = useState<Record<string, ApiPartnerAgreement | null>>({});
+  const [partnersById, setPartnersById] = useState<Record<string, AdminPartner>>({});
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [bulkBusy, setBulkBusy] = useState(false);
+
+  const partnerDisplay = (o: AdminOffer, partners = partnersById) => {
+    const p: any = o.partner || partners[o.partnerId];
+    if (!p) return undefined;
+    const center = p.vendorName || p.vendor_name || p.vendorNameAr || p.nameAr || p.name || partnerLabel(p);
+    const owner = p.ownerName || p.owner_name || p.contactName || p.userName;
+    const city = p.city ? ` · ${p.city}` : "";
+    return owner ? `${center} — ${owner}${city}` : `${center}${city}`;
+  };
+
+  const categoryName = (o: AdminOffer) => (
+    o.category?.nameAr || categories.find((c) => String(c.id) === String(o.categoryId))?.nameAr || ""
+  );
 
   function toggleOne(id: string) {
     setSelected((prev) => {

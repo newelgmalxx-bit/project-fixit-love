@@ -108,6 +108,13 @@ function OffersPage() {
   useEffect(() => { loadCategories(); }, []);
   useEffect(() => { load(1); /* eslint-disable-next-line */ }, [status, categoryId]);
 
+  // Live search with debounce
+  useEffect(() => {
+    const t = setTimeout(() => { load(1); }, 350);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line
+  }, [q]);
+
   // Fetch latest agreement per unique partner shown, to display current commission/deposit
   useEffect(() => {
     const ids = Array.from(new Set(items.map((o) => o.partnerId).filter(Boolean)));
@@ -238,7 +245,13 @@ function OffersPage() {
               <PanelCard
                 key={o.id}
                 title={o.title}
-                subtitle={o.partner ? `${o.partner.vendorName}${o.partner.city ? " · " + o.partner.city : ""}` : o.partnerId}
+                subtitle={(() => {
+                  const p: any = o.partner;
+                  if (!p) return undefined;
+                  const owner = p.ownerName || p.owner_name || p.contactName || p.name;
+                  const city = p.city ? ` · ${p.city}` : "";
+                  return owner ? `${p.vendorName} — ${owner}${city}` : `${p.vendorName}${city}`;
+                })()}
                 action={
                   <div className="flex items-center gap-2">
                     <input

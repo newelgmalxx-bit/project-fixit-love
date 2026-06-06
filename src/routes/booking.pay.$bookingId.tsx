@@ -1,9 +1,10 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { ShieldCheck, Lock, ChevronLeft, Loader2, Wallet } from "lucide-react";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { SarIcon } from "@/components/ui/SarIcon";
+import { account } from "@/lib/api/account";
 import mada from "@/assets/payments/mada.png";
 import visaMc from "@/assets/payments/visa-mastercard.png";
 import applePay from "@/assets/payments/apple-pay.jpg";
@@ -20,6 +21,8 @@ export const Route = createFileRoute("/booking/pay/$bookingId")({
 
 type Booking = {
   bookingId: string;
+  bookingNumber?: string;
+  serverBookingId?: string;
   offerId: string;
   offerTitle?: string;
   date: string;
@@ -29,6 +32,7 @@ type Booking = {
   depositAmount?: number;
   remainingAmount?: number;
   depositPct?: number;
+  priceAfter?: number;
   customerName: string;
   customerPhone: string;
   customerEmail?: string;
@@ -58,32 +62,58 @@ function firstString(...values: unknown[]): string | undefined {
   return undefined;
 }
 
-function looksLikeBookingNumber(value: string | undefined) {
-  return Boolean(value && /^BK-[A-Z0-9]+$/i.test(value));
-}
-
 function BookingPayPage() {
   const { bookingId } = Route.useParams();
-  const navigate = useNavigate();
   const [booking, setBooking] = useState<Booking | null>(null);
   const [methods, setMethods] = useState<UiMethod[]>(FALLBACK_METHODS);
   const [method, setMethod] = useState<string>("myfatoorah");
   const [processing, setProcessing] = useState(false);
 
   useEffect(() => {
+    let cancelled = false;
     try {
       const raw = sessionStorage.getItem(`booking:${bookingId}`);
       if (raw) {
         setBooking(JSON.parse(raw));
-        return;
-      }
-      const all = localStorage.getItem("myBookings");
-      if (all) {
+      } else if (localStorage.getItem("myBookings")) {
+        const all = localStorage.getItem("myBookings");
         const list: Booking[] = JSON.parse(all);
         const b = list.find((x) => x.bookingId === bookingId);
         if (b) setBooking(b);
       }
     } catch {}
+
+    (async () => {
+      try {
+        const r: any = await account.bookingDetail(bookingId);
+        const row = r?.data?.booking ?? r?.booking ?? r?.data ?? null;
+        if (!row || cancelled) return;
+        const mapped: Booking = {
+          bookingId: String(row.qr_code ?? row.qrCode ?? row.booking_number ?? row.bookingNumber ?? row.id ?? bookingId),
+          bookingNumber: String(row.qr_code ?? row.qrCode ?? row.booking_number ?? row.bookingNumber ?? "") || undefined,
+          serverBookingId: String(row.id ?? row.booking_id ?? row.bookingId ?? bookingId),
+          offerId: String(row.offer_id ?? row.offerId ?? ""),
+          offerTitle: row.offer_title ?? row.offerTitle ?? undefined,
+          priceAfter: row.price_after != null ? Number(row.price_after) : undefined,
+          date: String(row.booking_date ?? row.bookingDate ?? row.date ?? ""),
+          time: String(row.booking_time ?? row.bookingTime ?? row.time ?? ""),
+          qty: row.qty != null ? Number(row.qty) : 1,
+          total: row.total_amount != null ? Number(row.total_amount) : (row.totalAmount != null ? Number(row.totalAmount) : undefined),
+          depositAmount: row.deposit_amount != null ? Number(row.deposit_amount) : (row.depositAmount != null ? Number(row.depositAmount) : undefined),
+          remainingAmount: row.remaining_amount != null ? Number(row.remaining_amount) : (row.remainingAmount != null ? Number(row.remainingAmount) : undefined),
+          depositPct: row.deposit_pct != null ? Number(row.deposit_pct) : (row.depositPct != null ? Number(row.depositPct) : undefined),
+          customerName: String(row.customer_name ?? row.customerName ?? ""),
+          customerPhone: String(row.customer_phone ?? row.customerPhone ?? ""),
+          customerEmail: row.customer_email ?? row.customerEmail ?? undefined,
+          createdAt: String(row.created_at ?? row.createdAt ?? ""),
+        };
+        setBooking(mapped);
+        try { sessionStorage.setItem(`booking:${bookingId}`, JSON.stringify(mapped)); } catch {}
+      } catch {
+        // First-time locally-created bookings do not exist on the server yet.
+      }
+    })();
+    return () => { cancelled = true; };
   }, [bookingId]);
 
   // Show only: MyFatoorah, Tabby, Tamara, STC Pay, Mada (in that order).

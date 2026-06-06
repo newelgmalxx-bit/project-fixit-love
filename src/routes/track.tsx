@@ -179,6 +179,21 @@ function TrackPage() {
     setNotFound(false);
     setResult(null);
     try {
+      try {
+        const r: any = await account.bookings({ limit: 100 });
+        const raw = r?.data?.items ?? r?.items ?? r?.data ?? [];
+        const list = Array.isArray(raw) ? raw : [];
+        const matched = list.find((b: any) => {
+          const rowQr = String(b.qrCode ?? b.qr_code ?? "").trim().toUpperCase();
+          const rowCode = String(b.verifyCode ?? b.verify_code ?? "").replace(/\D/g, "");
+          return rowQr === qr && rowCode === code;
+        });
+        if (matched) {
+          setResult(mapBookingRowToResult(matched, qr));
+          return;
+        }
+      } catch {}
+
       const res: any = await publicApi.lookupOrder({
         qrCode: qr,
         verifyCode: code,
@@ -237,20 +252,6 @@ function TrackPage() {
       };
       setResult(mapped);
     } catch (err: any) {
-      try {
-        const r: any = await account.bookings({ limit: 100 });
-        const raw = r?.data?.items ?? r?.items ?? r?.data ?? [];
-        const list = Array.isArray(raw) ? raw : [];
-        const matched = list.find((b: any) => {
-          const rowQr = String(b.qrCode ?? b.qr_code ?? "").trim().toUpperCase();
-          const rowCode = String(b.verifyCode ?? b.verify_code ?? "").replace(/\D/g, "");
-          return rowQr === qr && rowCode === code;
-        });
-        if (matched) {
-          setResult(mapBookingRowToResult(matched, qr));
-          return;
-        }
-      } catch {}
       const status = err?.status;
       if (status === 404 || status === 403) {
         setNotFound(true);

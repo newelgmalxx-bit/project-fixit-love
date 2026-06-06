@@ -142,6 +142,9 @@ export const publicApi = {
     const sp = new URLSearchParams();
     sp.set('qr_code', params.qrCode);
     sp.set('verify_code', params.verifyCode);
+    sp.set('qrCode', params.qrCode);
+    sp.set('orderNumber', params.qrCode);
+    sp.set('verifyCode', params.verifyCode);
     return request<ApiResponse<{ order: any; items?: any[]; timeline?: any[]; partner?: any }>>(
       `/lookup-booking?${sp.toString()}`
     );

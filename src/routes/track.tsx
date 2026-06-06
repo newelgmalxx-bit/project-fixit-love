@@ -7,6 +7,7 @@ import { SiteHeader } from "@/components/layout/SiteHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { FeaturedOffers } from "@/components/sections/FeaturedOffers";
 import { publicApi } from "@/lib/api/public";
+import { account } from "@/lib/api/account";
 import { useLang } from "@/i18n/LanguageProvider";
 import type { TKey } from "@/i18n/translations";
 
@@ -83,6 +84,54 @@ function computeStageIndex(order: { status?: string; paymentStatus?: string }): 
   return 0;
 }
 
+function mapBookingRowToResult(row: any, qr: string): Result {
+  const status = String(row.status ?? "pending");
+  const paymentStatus = String(row.paymentStatus ?? row.payment_status ?? "pending");
+  const paymentMethod = row.paymentMethod ?? row.payment_method;
+  const createdAt = row.createdAt ?? row.created_at;
+  const updatedAt = row.updatedAt ?? row.updated_at ?? createdAt;
+  const title = String(row.offerTitle ?? row.offer_title ?? row.title ?? "");
+  const date = String(row.date ?? row.booking_date ?? "");
+  const time = String(row.time ?? row.booking_time ?? "");
+  const total = Number(row.total ?? row.total_amount ?? 0);
+  const depositPaid = Number(row.depositAmount ?? row.deposit_amount ?? 0);
+  const remaining = Number(row.remainingAmount ?? row.remaining_amount ?? Math.max(total - depositPaid, 0));
+
+  return {
+    order: {
+      number: String(row.qrCode ?? row.qr_code ?? qr),
+      status,
+      paymentStatus,
+      paymentMethod,
+      subtotal: total,
+      vat: 0,
+      total,
+      depositPaid,
+      remaining,
+      verificationCode: row.verifyCode ?? row.verify_code ?? undefined,
+      qrData: row.qrCode ?? row.qr_code ?? qr,
+      couponDiscount: 0,
+      currency: row.currency ?? "SAR",
+      notes: row.notes ?? undefined,
+      createdAt,
+      updatedAt,
+      confirmedAt: row.confirmedAt ?? row.confirmed_at ?? undefined,
+    },
+    items: title ? [{ title, planName: date || time ? `موعد: ${date}${time ? ` · ${time}` : ""}` : null, qty: 1, price: total }] : [],
+    timeline: [
+      { status: "pending", label: "تم استلام طلب الحجز", at: createdAt },
+      ...(paymentStatus === "paid" || paymentStatus === "deposit_paid" ? [{ status: paymentStatus, label: paymentStatus === "paid" ? "تم سداد المبلغ كاملاً" : "دفع العربون أونلاين", at: updatedAt }] : []),
+      ...(status !== "pending" ? [{ status, label: status, at: updatedAt }] : []),
+    ],
+    partner: {
+      name: String(row.vendorName ?? row.partner_name ?? ""),
+      address: String(row.vendorAddress ?? row.partner_address ?? row.vendorCity ?? row.partner_city ?? ""),
+      phone: String(row.vendorPhone ?? row.partner_phone ?? ""),
+      mapsUrl: row.vendorMapsUrl ?? row.partner_maps_url ?? null,
+    },
+  };
+}
+
 function TrackPage() {
   const { t, lang, dir } = useLang();
   const navigate = useNavigate();
@@ -130,13 +179,28 @@ function TrackPage() {
     setNotFound(false);
     setResult(null);
     try {
+      try {
+        const r: any = await account.bookings({ limit: 100 });
+        const raw = r?.data?.items ?? r?.items ?? r?.data ?? [];
+        const list = Array.isArray(raw) ? raw : [];
+        const matched = list.find((b: any) => {
+          const rowQr = String(b.qrCode ?? b.qr_code ?? "").trim().toUpperCase();
+          const rowCode = String(b.verifyCode ?? b.verify_code ?? "").replace(/\D/g, "");
+          return rowQr === qr && rowCode === code;
+        });
+        if (matched) {
+          setResult(mapBookingRowToResult(matched, qr));
+          return;
+        }
+      } catch {}
+
       const res: any = await publicApi.lookupOrder({
         qrCode: qr,
         verifyCode: code,
       });
       const data: any = res?.data ?? res ?? {};
-      const o: any = data.order ?? data;
-      if (!o || (!o.number && !o.order_number && !o.id)) {
+      const o: any = data.order ?? data.booking ?? data;
+      if (!o || (!o.qrCode && !o.qr_code && !o.number && !o.order_number && !o.bookingNumber && !o.booking_number && !o.id)) {
         setNotFound(true);
         setLoading(false);
         return;
@@ -146,7 +210,7 @@ function TrackPage() {
       const p: any = data.partner ?? o.partner ?? null;
       const mapped: Result = {
         order: {
-          number: String(o.number ?? o.order_number ?? o.id ?? ""),
+          number: String(o.qrCode ?? o.qr_code ?? o.number ?? o.order_number ?? o.bookingNumber ?? o.booking_number ?? o.id ?? qr),
           status: String(o.status ?? ""),
           paymentStatus: o.paymentStatus ?? o.payment_status,
           paymentMethod: o.paymentMethod ?? o.payment_method,
@@ -156,7 +220,7 @@ function TrackPage() {
           depositPaid: Number(o.depositPaid ?? o.deposit_paid ?? 0),
           remaining: Number(o.remaining ?? o.remaining_amount ?? 0),
           verificationCode: o.verificationCode ?? o.verification_code ?? undefined,
-          qrData: o.qrData ?? o.qr_data ?? undefined,
+          qrData: o.qrData ?? o.qr_data ?? o.qrCode ?? o.qr_code ?? undefined,
           couponDiscount: Number(o.couponDiscount ?? o.coupon_discount ?? 0),
           currency: o.currency ?? "SAR",
           notes: o.notes ?? undefined,

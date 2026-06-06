@@ -162,8 +162,6 @@ function BookingPayPage() {
       const serverBookingRef = firstString(
         (booking as any).bookingNumber,
         (booking as any).serverBookingId,
-        looksLikeBookingNumber(booking.bookingId) ? booking.bookingId : undefined,
-        looksLikeBookingNumber(bookingId) ? bookingId : undefined,
       );
 
       let res: any;

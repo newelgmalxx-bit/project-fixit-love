@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Calendar, Clock, MapPin, QrCode, CheckCircle2, Ticket, X, Pencil } from "lucide-react";
+import { Calendar, Clock, MapPin, QrCode, CheckCircle2, Ticket, X, Pencil, Wallet } from "lucide-react";
 import { toast } from "sonner";
 import { AccountLayout } from "@/components/account/AccountLayout";
 import { useLang } from "@/i18n/LanguageProvider";
@@ -29,6 +29,8 @@ type StoredBooking = {
   redeemedAt?: string;
   cancelledAt?: string;
   createdAt: string;
+  status?: string;
+  paymentStatus?: string;
 };
 
 function normalizeRow(r: any): StoredBooking {
@@ -49,6 +51,8 @@ function normalizeRow(r: any): StoredBooking {
     redeemedAt: r.redeemed_at ?? r.redeemedAt ?? undefined,
     cancelledAt: r.cancelled_at ?? r.cancelledAt ?? undefined,
     createdAt: String(r.created_at ?? r.createdAt ?? ""),
+    status: r.status ?? undefined,
+    paymentStatus: r.payment_status ?? r.paymentStatus ?? undefined,
   };
 }
 

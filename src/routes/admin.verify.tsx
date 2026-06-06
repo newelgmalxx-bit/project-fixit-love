@@ -3,7 +3,7 @@ import { AdminLayout } from "@/components/admin/AdminLayout";
 import { useEffect, useState } from "react";
 import {
   ShieldCheck, Search, Loader2, CheckCircle2, XCircle,
-  User as UserIcon, Phone, Calendar, Clock, Tag,
+  User as UserIcon, Phone, Calendar, Clock, Tag, Hash, Wallet, Banknote, CreditCard, MapPin, Building2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { adminBookingsApi, type AdminBooking } from "@/lib/api/adminBookings";
@@ -51,7 +51,29 @@ function pickDate(b: any): string {
   return "";
 }
 function pickTime(b: any): string {
-  return String(b?.booking_time || b?.bookingTime || (b?.scheduledAt ? new Date(b.scheduledAt).toLocaleTimeString() : "") || "");
+  const raw = String(b?.booking_time || b?.bookingTime || "");
+  if (raw) {
+    const m = raw.match(/^(\d{1,2}):(\d{2})/);
+    if (m) {
+      const hh = parseInt(m[1]);
+      const mm = m[2];
+      const ampm = hh >= 12 ? "م" : "ص";
+      const h12 = ((hh + 11) % 12) + 1;
+      return `${h12}:${mm} ${ampm}`;
+    }
+    return raw;
+  }
+  if (b?.scheduledAt) {
+    const d = new Date(b.scheduledAt);
+    if (!isNaN(d.getTime())) {
+      const hh = d.getHours();
+      const mm = String(d.getMinutes()).padStart(2, "0");
+      const ampm = hh >= 12 ? "م" : "ص";
+      const h12 = ((hh + 11) % 12) + 1;
+      return `${h12}:${mm} ${ampm}`;
+    }
+  }
+  return "";
 }
 function pickCustomerName(b: any): string {
   return b?.customerName || b?.customer_name || "";
@@ -72,6 +94,42 @@ function pickStatus(b: any): string {
 }
 function pickRedeemedAt(b: any): string | null {
   return b?.redeemed_at || b?.redeemedAt || null;
+}
+function pickPaymentStatus(b: any): string {
+  return String(b?.payment_status || b?.paymentStatus || "").toLowerCase();
+}
+function pickPaymentMethod(b: any): string {
+  return String(b?.payment_method || b?.paymentMethod || "").toLowerCase();
+}
+function pickPartnerName(b: any): string {
+  return b?.partner_name || b?.partnerName || b?.vendor_name || b?.vendorName || b?.partner?.name || "";
+}
+function pickPartnerCity(b: any): string {
+  return b?.partner_city || b?.partnerCity || b?.city || b?.partner?.city || "";
+}
+function statusBadge(st: string): { label: string; cls: string } {
+  if (st === "completed" || st === "redeemed") return { label: "مكتمل", cls: "bg-emerald-100 text-emerald-800 border-emerald-300" };
+  if (st === "cancelled" || st === "canceled") return { label: "ملغي", cls: "bg-rose-100 text-rose-800 border-rose-300" };
+  if (st === "confirmed") return { label: "مؤكد", cls: "bg-emerald-100 text-emerald-800 border-emerald-300" };
+  if (st === "pending") return { label: "قيد الانتظار", cls: "bg-amber-100 text-amber-800 border-amber-300" };
+  if (st === "no_show") return { label: "لم يحضر", cls: "bg-rose-100 text-rose-800 border-rose-300" };
+  return { label: st || "—", cls: "bg-slate-100 text-slate-800 border-slate-300" };
+}
+function payBadge(ps: string, remaining: number | null): { label: string; cls: string } {
+  if (ps === "paid" || ps === "completed" || ps === "success") return { label: "مدفوع بالكامل", cls: "bg-emerald-100 text-emerald-800 border-emerald-300" };
+  if (ps === "deposit_paid" || (remaining != null && remaining > 0 && ps && ps !== "unpaid" && ps !== "pending")) return { label: "عربون مدفوع", cls: "bg-amber-100 text-amber-800 border-amber-300" };
+  if (ps === "pending") return { label: "قيد الدفع", cls: "bg-amber-100 text-amber-800 border-amber-300" };
+  if (ps === "failed") return { label: "فشل الدفع", cls: "bg-rose-100 text-rose-800 border-rose-300" };
+  if (ps === "refunded") return { label: "مُسترجَع", cls: "bg-slate-100 text-slate-800 border-slate-300" };
+  return { label: "غير مدفوع", cls: "bg-rose-100 text-rose-800 border-rose-300" };
+}
+function methodLabel(m: string): string {
+  if (m === "tamara") return "تمارا";
+  if (m === "tabby") return "تابي";
+  if (m === "myfatoorah") return "ماي فاتورة";
+  if (m === "cod") return "الدفع عند الخدمة";
+  if (!m) return "—";
+  return m;
 }
 
 function matchBooking(x: any, rawIdQ: string, idQ: string): boolean {
@@ -251,17 +309,60 @@ function AdminVerifyPage() {
                 </div>
               </div>
               <div className="space-y-2 p-4 text-sm">
+                {(() => {
+                  const st = pickStatus(b);
+                  const ps = pickPaymentStatus(b);
+                  const sb = statusBadge(st);
+                  const pb = payBadge(ps, remaining);
+                  return (
+                    <div className="mb-2 grid grid-cols-2 gap-2">
+                      <div className={`flex items-center justify-between rounded-xl border px-3 py-2 ${sb.cls}`}>
+                        <span className="text-[11px] font-bold">حالة الحجز</span>
+                        <span className="text-xs font-extrabold">{sb.label}</span>
+                      </div>
+                      <div className={`flex items-center justify-between rounded-xl border px-3 py-2 ${pb.cls}`}>
+                        <span className="text-[11px] font-bold">حالة الدفع</span>
+                        <span className="text-xs font-extrabold">{pb.label}</span>
+                      </div>
+                    </div>
+                  );
+                })()}
+                <VRow icon={Hash} label="رقم الحجز" value={pickRef(b) || String(b?.id || "—")} ltr />
                 <VRow icon={UserIcon} label="العميل" value={pickCustomerName(b) || "—"} />
                 <VRow icon={Tag} label="العرض" value={pickOfferTitle(b) || "—"} />
                 <VRow icon={Phone} label="الجوال" value={pickCustomerPhone(b) || "—"} ltr />
                 <VRow icon={Calendar} label="التاريخ" value={pickDate(b) || "—"} ltr />
                 <VRow icon={Clock} label="الوقت" value={pickTime(b) || "—"} ltr />
-                {remaining != null && remaining > 0 ? (
-                  <div className="mt-3 flex items-center justify-between rounded-xl bg-amber-50 px-3 py-2 text-amber-800">
-                    <span className="text-xs font-bold">يتبقى عند الخدمة</span>
-                    <span dir="ltr" className="font-extrabold">{remaining} ر.س</span>
+                {pickPartnerName(b) && (
+                  <VRow icon={Building2} label="المركز" value={pickPartnerName(b)} />
+                )}
+                {pickPartnerCity(b) && (
+                  <VRow icon={MapPin} label="المدينة" value={pickPartnerCity(b)} />
+                )}
+                {pickPaymentMethod(b) && (
+                  <VRow icon={CreditCard} label="طريقة الدفع" value={methodLabel(pickPaymentMethod(b))} />
+                )}
+
+                <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
+                  <div className="rounded-xl border border-emerald-200 bg-white px-3 py-2">
+                    <div className="text-[11px] font-bold text-emerald-700">إجمالي الحجز</div>
+                    <div dir="ltr" className="mt-0.5 text-sm font-extrabold text-foreground">
+                      {totalWithVat != null ? `${totalWithVat} ر.س` : "—"}
+                    </div>
                   </div>
-                ) : null}
+                  <div className="rounded-xl border border-emerald-200 bg-white px-3 py-2">
+                    <div className="text-[11px] font-bold text-emerald-700">العربون المدفوع</div>
+                    <div dir="ltr" className="mt-0.5 text-sm font-extrabold text-foreground">
+                      {paidOnline > 0 ? `${paidOnline} ر.س` : "0 ر.س"}
+                    </div>
+                  </div>
+                  <div className={`rounded-xl border px-3 py-2 ${remaining != null && remaining > 0 ? "border-amber-300 bg-amber-50" : "border-emerald-200 bg-white"}`}>
+                    <div className={`text-[11px] font-bold ${remaining != null && remaining > 0 ? "text-amber-700" : "text-emerald-700"}`}>المتبقي عند المركز</div>
+                    <div dir="ltr" className={`mt-0.5 text-sm font-extrabold ${remaining != null && remaining > 0 ? "text-amber-800" : "text-foreground"}`}>
+                      {remaining != null ? `${remaining} ر.س` : "—"}
+                    </div>
+                  </div>
+                </div>
                 <div className="flex gap-2 pt-3">
                   {!result.alreadyRedeemed && (
                     <button

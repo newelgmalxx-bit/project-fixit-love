@@ -62,6 +62,11 @@ function firstString(...values: unknown[]): string | undefined {
   return undefined;
 }
 
+function toMoney(value: unknown) {
+  const n = Number(value);
+  return Number.isFinite(n) ? Math.round(n * 100) / 100 : 0;
+}
+
 function BookingPayPage() {
   const { bookingId } = Route.useParams();
   const [booking, setBooking] = useState<Booking | null>(null);
@@ -75,8 +80,9 @@ function BookingPayPage() {
       const raw = sessionStorage.getItem(`booking:${bookingId}`);
       if (raw) {
         setBooking(JSON.parse(raw));
-      } else if (localStorage.getItem("myBookings")) {
+      } else {
         const all = localStorage.getItem("myBookings");
+        if (!all) return;
         const list: Booking[] = JSON.parse(all);
         const b = list.find((x) => x.bookingId === bookingId);
         if (b) setBooking(b);
@@ -281,7 +287,14 @@ function BookingPayPage() {
   }
 
   const offer = booking.offerTitle ? { title: booking.offerTitle } : null;
-  const deposit = booking.depositAmount ?? 0;
+  const savedDeposit = toMoney(booking.depositAmount);
+  const totalForDeposit = toMoney(booking.total ?? booking.priceAfter);
+  const pctForDeposit = toMoney(booking.depositPct);
+  const deposit = savedDeposit > 0
+    ? savedDeposit
+    : totalForDeposit > 0 && pctForDeposit > 0
+      ? toMoney((totalForDeposit * pctForDeposit) / 100)
+      : 0;
 
   return (
     <div dir="rtl" className="flex min-h-screen flex-col bg-background">

@@ -5,10 +5,10 @@
   "type": "module",
   "scripts": {
     "dev": "vite dev",
-    "clean": "rm -rf dist node_modules/.vite .tanstack .nitro .output",
-    "prebuild": "rm -rf dist node_modules/.vite .tanstack .nitro .output",
+    "clean": "node -e \"const fs=require('fs');for(const p of ['dist','node_modules/.vite','.tanstack','.nitro','.output'])fs.rmSync(p,{recursive:true,force:true});\"",
+    "prebuild": "npm run clean",
     "build": "vite build",
-    "build:dev": "rm -rf dist node_modules/.vite .tanstack .nitro .output && vite build --mode development",
+    "build:dev": "npm run clean && vite build --mode development",
     "build:static": "vite build",
     "preview": "vite preview",
     "lint": "eslint .",

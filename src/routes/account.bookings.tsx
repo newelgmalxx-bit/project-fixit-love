@@ -33,7 +33,7 @@ type StoredBooking = {
 
 function normalizeRow(r: any): StoredBooking {
   return {
-    bookingId: String(r.booking_number ?? r.bookingNumber ?? r.id ?? ""),
+    bookingId: String(r.qr_code ?? r.qrCode ?? r.booking_number ?? r.bookingNumber ?? r.id ?? ""),
     verifyCode: String(r.verify_code ?? r.verifyCode ?? ""),
     offerId: String(r.offer_id ?? r.offerId ?? ""),
     offerTitle: r.offer_title ?? r.offerTitle ?? undefined,

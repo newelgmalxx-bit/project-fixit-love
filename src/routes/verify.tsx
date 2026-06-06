@@ -6,6 +6,22 @@ import { SiteFooter } from "@/components/layout/SiteFooter";
 import { pushVerifyEvent, playSuccessChime } from "@/lib/verifyFeed";
 
 
+function formatDate(s: string): string {
+  if (!s) return "";
+  const iso = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+  if (iso) {
+    const [, y, m, d] = iso;
+    return `${d.padStart(2, "0")}/${m.padStart(2, "0")}/${y}`;
+  }
+  const dmy = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})/);
+  if (dmy) {
+    const [, d, m, y] = dmy;
+    const yy = y.length === 2 ? `20${y}` : y;
+    return `${d.padStart(2, "0")}/${m.padStart(2, "0")}/${yy}`;
+  }
+  return s;
+}
+
 export const Route = createFileRoute("/verify")({
   head: () => ({ meta: [{ title: "التحقق من حجز | بوكينج" }] }),
   validateSearch: (s: Record<string, unknown>) => ({

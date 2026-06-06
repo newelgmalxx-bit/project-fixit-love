@@ -75,14 +75,13 @@ function MyBookings() {
       const r: any = await account.bookings({ limit: 100 });
       const raw = r?.data?.items ?? r?.items ?? r?.data ?? [];
       const list: StoredBooking[] = Array.isArray(raw) ? raw.map(normalizeRow) : [];
-      // Merge any local-only (unpaid) bookings not yet on server
-      const local = loadLocal();
-      const known = new Set(list.map((b) => b.bookingId));
-      for (const lb of local) if (lb.bookingId && !known.has(lb.bookingId)) list.push(lb);
+      // Server is the source of truth. Drop any stale local cache from old flows.
+      try { localStorage.removeItem("myBookings"); } catch {}
       setItems(list.sort((a, b) => (b.createdAt || "").localeCompare(a.createdAt || "")));
     } catch (e) {
-      const local = loadLocal();
-      setItems(local.sort((a, b) => (b.createdAt || "").localeCompare(a.createdAt || "")));
+      console.error("[account.bookings] fetch failed", e);
+      toast.error("تعذّر تحميل الحجوزات من السيرفر");
+      setItems([]);
     } finally {
       setLoading(false);
     }

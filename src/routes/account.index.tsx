@@ -4,6 +4,7 @@ import { Ticket, CheckCircle2, Clock, ArrowLeft, ArrowRight, Calendar, QrCode, S
 import { AccountLayout } from "@/components/account/AccountLayout";
 import { useLang } from "@/i18n/LanguageProvider";
 import { useAuth } from "@/hooks/useAuth";
+import { account } from "@/lib/api/account";
 
 
 export const Route = createFileRoute("/account/")({
@@ -20,6 +21,7 @@ type StoredBooking = {
   time: string;
   customerName: string;
   redeemedAt?: string;
+  cancelledAt?: string;
   createdAt: string;
 };
 
@@ -29,15 +31,33 @@ function AccountHome() {
   const [items, setItems] = useState<StoredBooking[]>([]);
 
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem("myBookings");
-      const list: StoredBooking[] = raw ? JSON.parse(raw) : [];
-      setItems(list.sort((a, b) => (b.createdAt || "").localeCompare(a.createdAt || "")));
-    } catch {}
+    (async () => {
+      try {
+        const r: any = await account.bookings({ limit: 100 });
+        const raw = r?.data?.items ?? r?.items ?? r?.data ?? [];
+        const list: StoredBooking[] = (Array.isArray(raw) ? raw : []).map((x: any) => ({
+          bookingId: String(x.qr_code ?? x.qrCode ?? x.booking_number ?? x.id ?? ""),
+          verifyCode: String(x.verify_code ?? x.verifyCode ?? ""),
+          offerId: String(x.offer_id ?? x.offerId ?? ""),
+          offerTitle: x.offer_title ?? x.offerTitle ?? undefined,
+          date: String(x.booking_date ?? x.date ?? ""),
+          time: String(x.booking_time ?? x.time ?? ""),
+          customerName: String(x.customer_name ?? x.customerName ?? ""),
+          redeemedAt: x.redeemed_at ?? x.redeemedAt ?? undefined,
+          cancelledAt: x.cancelled_at ?? x.cancelledAt ?? undefined,
+          createdAt: String(x.created_at ?? x.createdAt ?? ""),
+        }));
+        try { localStorage.removeItem("myBookings"); } catch {}
+        setItems(list.sort((a, b) => (b.createdAt || "").localeCompare(a.createdAt || "")));
+      } catch (e) {
+        console.error("[account.index] fetch bookings failed", e);
+        setItems([]);
+      }
+    })();
   }, []);
 
   const total = items.length;
-  const upcoming = items.filter((b) => !b.redeemedAt).length;
+  const upcoming = items.filter((b) => !b.redeemedAt && !b.cancelledAt).length;
   const done = items.filter((b) => b.redeemedAt).length;
   const Arrow = dir === "rtl" ? ArrowLeft : ArrowRight;
   const firstName = (user?.name || "").split(" ")[0] || t("account.home.greetingFallback");

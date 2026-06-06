@@ -118,7 +118,7 @@ function MyBookings() {
     if (!edit) return;
     if (!editDate || !editTime) { toast.error(t("account.bookings.toast.pickDate")); return; }
     try {
-      await account.updateBooking(edit.bookingId, { date: editDate, time: editTime });
+      await account.updateBooking(edit.bookingRef, { date: editDate, time: editTime });
       toast.success(t("account.bookings.toast.modified"));
       setEdit(null);
       refresh();

@@ -58,6 +58,10 @@ function firstString(...values: unknown[]): string | undefined {
   return undefined;
 }
 
+function looksLikeBookingNumber(value: string | undefined) {
+  return Boolean(value && /^BK-[A-Z0-9]+$/i.test(value));
+}
+
 function BookingPayPage() {
   const { bookingId } = Route.useParams();
   const navigate = useNavigate();
@@ -161,16 +165,16 @@ function BookingPayPage() {
       // Two flows:
       // 1) Booking already exists on server (re-pay) → POST /bookings/{id}/pay
       // 2) First-time pay (booking only exists locally) → POST /checkout to create + pay
-      const hasServerBooking = Boolean(
-        (booking as any).serverBookingId || (booking as any).bookingNumber,
+      const serverBookingRef = firstString(
+        (booking as any).bookingNumber,
+        (booking as any).serverBookingId,
+        looksLikeBookingNumber(booking.bookingId) ? booking.bookingId : undefined,
+        looksLikeBookingNumber(bookingId) ? bookingId : undefined,
       );
 
       let res: any;
-      if (hasServerBooking) {
-        res = await checkout.payExistingBooking(
-          (booking as any).bookingNumber || (booking as any).serverBookingId || bookingId,
-          paymentMethodId,
-        );
+      if (serverBookingRef) {
+        res = await checkout.payExistingBooking(serverBookingRef, paymentMethodId);
       } else {
         const backendMethod: string =
           method === "cod" ? "cod"

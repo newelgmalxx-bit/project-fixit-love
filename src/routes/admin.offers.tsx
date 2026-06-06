@@ -101,8 +101,8 @@ function OffersPage() {
       const data = await adminOffersApi.list({
         page: p,
         limit: needsClientFilter ? 500 : 20,
-        status: status || undefined,
-        category: categoryId || undefined,
+        status: needsClientFilter ? undefined : status || undefined,
+        category: needsClientFilter ? undefined : categoryId || undefined,
       });
       const partnerSeed: Record<string, AdminPartner> = { ...partnersById };
       for (const offer of data.items || []) {

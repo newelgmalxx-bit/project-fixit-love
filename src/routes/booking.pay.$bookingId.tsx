@@ -148,12 +148,6 @@ function BookingPayPage() {
     try {
       const updated = { ...booking, paymentMethod: method };
       sessionStorage.setItem(`booking:${bookingId}`, JSON.stringify(updated));
-      const raw = localStorage.getItem("myBookings");
-      const list = raw ? JSON.parse(raw) : [];
-      const idx = list.findIndex((x: any) => x.bookingId === bookingId);
-      if (idx >= 0) list[idx] = updated;
-      else list.push(updated);
-      localStorage.setItem("myBookings", JSON.stringify(list));
     } catch {}
 
     // Map UI method → backend value. Backend (checkout.php) accepts:

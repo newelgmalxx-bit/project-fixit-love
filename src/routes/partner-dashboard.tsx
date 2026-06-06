@@ -7,6 +7,7 @@ import {
   CalendarDays, UserCog, Crown, LifeBuoy, Send, Phone, Mail, Shield,
   Sparkles, ChevronLeft, ChevronRight, Zap, Menu, ExternalLink, Percent, FileText, Eye,
   ShieldCheck, CheckCircle2, XCircle, Search, User as UserIcon, Power, PowerOff,
+  Hash, CreditCard, Building2, MapPin,
 } from "lucide-react";
 import { toast } from "sonner";
 import { partnerApi, partnerAuth, getStoredPartner, setStoredPartner, type PartnerProfile as ApiPartnerProfile } from "@/lib/api/partner";

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import useEmblaCarousel from "embla-carousel-react";
 import Autoplay from "embla-carousel-autoplay";
 import { Link, useNavigate } from "@tanstack/react-router";
@@ -132,7 +132,7 @@ export function OffersHero() {
   const [q, setQ] = useState("");
   const [emblaRef, emblaApi] = useEmblaCarousel(
     { loop: true, direction: "rtl", align: "start" },
-    [Autoplay({ delay: 6000, stopOnInteraction: false })]
+    [Autoplay({ delay: 6000, stopOnInteraction: false, stopOnMouseEnter: true, stopOnFocusIn: true })]
   );
   const [selected, setSelected] = useState(0);
 
@@ -148,9 +148,28 @@ export function OffersHero() {
 
   const scrollTo = useCallback((i: number) => emblaApi?.scrollTo(i), [emblaApi]);
 
+  // Live search across offers
+  const [allOffers, setAllOffers] = useState<any[]>([]);
+  const [loadedOffers, setLoadedOffers] = useState(false);
+  const ensureOffersLoaded = useCallback(async () => {
+    if (loadedOffers) return;
+    try {
+      const data: any = await publicApi.getOffers({ pageSize: 200 } as any);
+      const items: any[] = Array.isArray(data)
+        ? data
+        : data?.items || data?.offers || data?.data || [];
+      setAllOffers(items);
+    } catch { /* ignore */ }
+    finally { setLoadedOffers(true); }
+  }, [loadedOffers]);
+
   const onSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    navigate({ to: "/", hash: "featured-offers" });
+    if (q.trim()) {
+      navigate({ to: "/offers", search: { q: q.trim() } as any });
+    } else {
+      navigate({ to: "/offers" as any });
+    }
   };
 
   return (
@@ -170,6 +189,8 @@ export function OffersHero() {
                 setQ={setQ}
                 onSearch={onSearch}
                 active={selected === i}
+                offers={allOffers}
+                onSearchFocus={ensureOffersLoaded}
               />
             </div>
           ))}

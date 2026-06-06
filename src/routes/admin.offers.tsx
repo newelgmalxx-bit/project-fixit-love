@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AdminLayout, PanelCard, Pill, PrimaryButton } from "@/components/admin/AdminLayout";
 import { toast } from "sonner";
 import { Loader2, Trash2, Plus, Pencil, ChevronLeft, ChevronRight, Search, Eye } from "lucide-react";
@@ -10,6 +10,7 @@ import {
   type AdminOffer, type AdminOfferInput, type OfferStatus, type AdminCategory,
 } from "@/lib/api/adminContent";
 import { adminAgreementsApi, type ApiPartnerAgreement } from "@/lib/api/adminAgreements";
+import { adminPartnersApi, partnerLabel, type AdminPartner } from "@/lib/api/adminPartners";
 import { PartnerSelect } from "@/components/admin/PartnerSelect";
 
 export const Route = createFileRoute("/admin/offers")({
@@ -45,8 +46,23 @@ function OffersPage() {
   const [editing, setEditing] = useState<AdminOffer | null>(null);
   const [openNew, setOpenNew] = useState(false);
   const [partnerAgreements, setPartnerAgreements] = useState<Record<string, ApiPartnerAgreement | null>>({});
+  const [partnersById, setPartnersById] = useState<Record<string, AdminPartner>>({});
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [bulkBusy, setBulkBusy] = useState(false);
+  const loadSeq = useRef(0);
+
+  const partnerDisplay = (o: AdminOffer, partners = partnersById) => {
+    const p: any = o.partner || partners[o.partnerId];
+    if (!p) return undefined;
+    const center = p.vendorName || p.vendor_name || p.vendorNameAr || p.nameAr || p.name || partnerLabel(p);
+    const owner = p.ownerName || p.owner_name || p.contactName || p.userName;
+    const city = p.city ? ` · ${p.city}` : "";
+    return owner ? `${center} — ${owner}${city}` : `${center}${city}`;
+  };
+
+  const categoryName = (o: AdminOffer) => (
+    o.category?.nameAr || categories.find((c) => String(c.id) === String(o.categoryId))?.nameAr || ""
+  );
 
   function toggleOne(id: string) {
     setSelected((prev) => {
@@ -77,24 +93,58 @@ function OffersPage() {
 
 
   async function load(p = page) {
+    const seq = ++loadSeq.current;
     setLoading(true);
     try {
+      const search = q.trim().toLowerCase();
+      const needsClientFilter = !!(search || status || categoryId);
       const data = await adminOffersApi.list({
-        page: p,
-        limit: 20,
-        status: status || undefined,
-        category: categoryId || undefined,
-        q: q.trim() || undefined,
+        page: needsClientFilter ? 1 : p,
+        limit: needsClientFilter ? 500 : 20,
+        status: needsClientFilter ? undefined : status || undefined,
+        category: needsClientFilter ? undefined : categoryId || undefined,
       });
-      setItems(data.items || []);
-      setTotalPages(data.totalPages || 1);
-      setTotal(data.total || 0);
-      setPage(data.page || p);
+      const partnerSeed: Record<string, AdminPartner> = { ...partnersById };
+      for (const offer of data.items || []) {
+        if (offer.partnerId && offer.partner) partnerSeed[offer.partnerId] = offer.partner as any;
+      }
+      const missingPartnerIds = Array.from(new Set((data.items || []).map((o) => o.partnerId).filter(Boolean)))
+        .filter((id) => !partnerSeed[id]);
+      const fetchedPartners = await Promise.all(missingPartnerIds.map(async (id) => {
+        try { return [id, await adminPartnersApi.get(id)] as const; }
+        catch { return [id, null] as const; }
+      }));
+      for (const [id, partner] of fetchedPartners) if (partner) partnerSeed[id] = partner;
+      if (seq !== loadSeq.current) return;
+      setPartnersById(partnerSeed);
+
+      const filtered = (data.items || []).filter((offer) => {
+        if (status && offer.status !== status) return false;
+        if (categoryId && String(offer.categoryId) !== String(categoryId)) return false;
+        if (!search) return true;
+        const haystack = [
+          offer.title,
+          offer.titleEn,
+          offer.description,
+          offer.descriptionEn,
+          categoryName(offer),
+          partnerDisplay(offer, partnerSeed),
+        ].filter(Boolean).join(" ").toLowerCase();
+        return haystack.includes(search);
+      });
+      const pageSize = needsClientFilter ? 20 : (data.pageSize || 20);
+      const visible = needsClientFilter ? filtered.slice((p - 1) * pageSize, p * pageSize) : filtered;
+      setSelected(new Set());
+      setItems(visible);
+      setTotalPages(needsClientFilter ? Math.max(1, Math.ceil(filtered.length / pageSize)) : (data.totalPages || 1));
+      setTotal(needsClientFilter ? filtered.length : (data.total || filtered.length));
+      setPage(p);
     } catch (e: any) {
+      if (seq !== loadSeq.current) return;
       toast.error(e?.message || "تعذّر تحميل العروض");
       setItems([]);
     } finally {
-      setLoading(false);
+      if (seq === loadSeq.current) setLoading(false);
     }
   }
 
@@ -106,14 +156,11 @@ function OffersPage() {
   }
 
   useEffect(() => { loadCategories(); }, []);
-  useEffect(() => { load(1); /* eslint-disable-next-line */ }, [status, categoryId]);
-
-  // Live search with debounce
   useEffect(() => {
     const t = setTimeout(() => { load(1); }, 350);
     return () => clearTimeout(t);
     // eslint-disable-next-line
-  }, [q]);
+  }, [q, status, categoryId]);
 
   // Fetch latest agreement per unique partner shown, to display current commission/deposit
   useEffect(() => {
@@ -193,7 +240,7 @@ function OffersPage() {
               value={q}
               onChange={(e) => setQ(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && load(1)}
-              placeholder="بحث بالعنوان..."
+              placeholder="بحث باسم العرض أو المركز أو التصنيف..."
               className="w-full rounded-xl border border-border bg-background ps-9 pe-3 py-2 text-sm"
             />
           </div>
@@ -213,9 +260,6 @@ function OffersPage() {
               <option key={c.id} value={c.id}>{c.nameAr}</option>
             ))}
           </select>
-          <button onClick={() => load(1)} className="rounded-full bg-primary px-4 py-1.5 text-xs font-bold text-primary-foreground">
-            بحث
-          </button>
         </div>
       </PanelCard>
 
@@ -245,13 +289,7 @@ function OffersPage() {
               <PanelCard
                 key={o.id}
                 title={o.title}
-                subtitle={(() => {
-                  const p: any = o.partner;
-                  if (!p) return undefined;
-                  const owner = p.ownerName || p.owner_name || p.contactName || p.name;
-                  const city = p.city ? ` · ${p.city}` : "";
-                  return owner ? `${p.vendorName} — ${owner}${city}` : `${p.vendorName}${city}`;
-                })()}
+                subtitle={partnerDisplay(o)}
                 action={
                   <div className="flex items-center gap-2">
                     <input
@@ -270,7 +308,7 @@ function OffersPage() {
                     <img src={o.image} alt={o.title} className="h-24 w-24 rounded-xl object-cover border border-border" />
                   )}
                   <div className="flex-1 space-y-1 text-sm">
-                    {o.category && <div className="text-xs text-muted-foreground">التصنيف: {o.category.nameAr}</div>}
+                    {categoryName(o) && <div className="text-xs text-muted-foreground">التصنيف: {categoryName(o)}</div>}
                     <div className="font-extrabold text-primary">
                       {o.priceAfter} ر.س
                       {o.priceBefore && o.priceBefore > o.priceAfter && (

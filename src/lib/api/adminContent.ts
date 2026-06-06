@@ -9,7 +9,7 @@ import type { ApiResponse } from "./types";
 
 // ---------- Types ----------
 export type AdminCategory = {
-  id: number;
+  id: number | string;
   slug: string;
   nameAr: string;
   nameEn: string;
@@ -37,12 +37,20 @@ export type AdminCity = {
 export type AdminOfferPartner = {
   id: string;
   vendorName: string;
+  vendorNameAr?: string;
+  vendorNameEn?: string;
+  ownerName?: string;
+  owner_name?: string;
+  contactName?: string;
+  name?: string;
+  nameAr?: string;
+  nameEn?: string;
   city?: string;
   status?: string;
 };
 
 export type AdminOfferCategory = {
-  id: number;
+  id: number | string;
   slug: string;
   nameAr: string;
   nameEn: string;
@@ -172,28 +180,48 @@ function qs(params?: Record<string, any>): string {
   return s ? "?" + s : "";
 }
 
+function normalizeCategory(raw: any): AdminCategory {
+  return {
+    id: raw?.id,
+    slug: raw?.slug ?? "",
+    nameAr: raw?.nameAr ?? raw?.name_ar ?? raw?.name ?? "",
+    nameEn: raw?.nameEn ?? raw?.name_en ?? "",
+    icon: raw?.icon ?? null,
+    color: raw?.color ?? null,
+    cover: raw?.cover ?? null,
+    descriptionAr: raw?.descriptionAr ?? raw?.description_ar ?? null,
+    descriptionEn: raw?.descriptionEn ?? raw?.description_en ?? null,
+    isActive: typeof raw?.isActive === "boolean" ? raw.isActive : raw?.is_active === 1 || raw?.is_active === true || raw?.is_active === "1",
+    sortOrder: Number(raw?.sortOrder ?? raw?.sort_order ?? 0),
+    offersCount: raw?.offersCount ?? raw?.offers_count,
+    createdAt: raw?.createdAt ?? raw?.created_at,
+    updatedAt: raw?.updatedAt ?? raw?.updated_at,
+  };
+}
+
 // ---------- Categories ----------
 export const adminCategoriesApi = {
   list: async (params?: { inactive?: boolean; q?: string }) => {
     const r = await request<ApiResponse<{ items: AdminCategory[]; total: number }>>(
       `/admin/categories${qs(params)}`,
     );
-    return r.data;
+    const items = ((r.data as any)?.items || []).map(normalizeCategory);
+    return { ...r.data, items };
   },
   create: (body: Partial<AdminCategory>) =>
     request<ApiResponse<{ category: AdminCategory }>>("/admin/categories", {
       method: "POST",
       body: JSON.stringify(body),
     }),
-  update: (id: number, body: Partial<AdminCategory>) =>
+  update: (id: number | string, body: Partial<AdminCategory>) =>
     request<ApiResponse<{ category: AdminCategory }>>(`/admin/categories/${id}`, {
       method: "PUT",
       body: JSON.stringify(body),
     }),
-  remove: (id: number) =>
+  remove: (id: number | string) =>
     request<ApiResponse<unknown>>(`/admin/categories/${id}`, { method: "DELETE" }),
   // Backend: PUT /admin/categories/{id}/status with { status: 1|0 }.
-  toggle: (id: number, isActive?: boolean) =>
+  toggle: (id: number | string, isActive?: boolean) =>
     request<ApiResponse<unknown>>(`/admin/categories/${id}/status`, {
       method: "PUT",
       body: JSON.stringify({ status: isActive === false ? 0 : 1 }),
@@ -285,9 +313,14 @@ function normalizeOffer(raw: any): AdminOffer {
   return {
     id: raw?.id,
     partnerId: raw?.partnerId ?? raw?.partner_id ?? "",
-    partner: raw?.partner,
+    partner: raw?.partner ? {
+      ...raw.partner,
+      vendorName: raw.partner.vendorName ?? raw.partner.vendor_name ?? raw.partner.vendorNameAr ?? raw.partner.nameAr ?? raw.partner.name ?? "",
+      ownerName: raw.partner.ownerName ?? raw.partner.owner_name ?? raw.partner.contactName,
+      city: raw.partner.city ?? raw.partner.cityName ?? raw.partner.city_name,
+    } : undefined,
     categoryId: raw?.categoryId ?? raw?.category_id ?? null,
-    category: raw?.category ?? null,
+    category: raw?.category ? normalizeCategory(raw.category) : null,
     title: raw?.title ?? raw?.titleAr ?? raw?.title_ar ?? "",
     titleEn: raw?.titleEn ?? raw?.title_en ?? null,
     description: raw?.description ?? raw?.descriptionAr ?? raw?.description_ar ?? null,
@@ -361,6 +394,12 @@ function offerPayload(body: Partial<AdminOfferInput> & { isFeatured?: boolean })
 
 export const adminOffersApi = {
   list: async (params?: OfferListParams) => {
+    const query = params ? {
+      ...params,
+      categoryId: params.category,
+      category_id: params.category,
+      partner_id: params.partnerId,
+    } : undefined;
     const r = await request<
       ApiResponse<{
         items: any[];
@@ -369,7 +408,7 @@ export const adminOffersApi = {
         pageSize: number;
         totalPages: number;
       }>
-    >(`/admin/offers${qs(params)}`);
+    >(`/admin/offers${qs(query)}`);
     const items = (r.data?.items || []).map(normalizeOffer);
     return { ...r.data, items };
   },

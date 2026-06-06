@@ -24,8 +24,31 @@ function pickVerifyCode(b: any): string {
 function pickOfferTitle(b: any): string | undefined {
   return b?.offerTitle || b?.offer_title || b?.offer?.title || b?.offer?.titleAr;
 }
+function formatDate(s: string): string {
+  if (!s) return "";
+  const iso = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+  if (iso) {
+    const [, y, m, d] = iso;
+    return `${d.padStart(2, "0")}/${m.padStart(2, "0")}/${y}`;
+  }
+  const dmy = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})/);
+  if (dmy) {
+    const [, d, m, y] = dmy;
+    const yy = y.length === 2 ? `20${y}` : y;
+    return `${d.padStart(2, "0")}/${m.padStart(2, "0")}/${yy}`;
+  }
+  return s;
+}
 function pickDate(b: any): string {
-  return String(b?.booking_date || b?.bookingDate || (b?.scheduledAt ? new Date(b.scheduledAt).toLocaleDateString() : "") || "");
+  const raw = String(b?.booking_date || b?.bookingDate || "");
+  if (raw) return formatDate(raw);
+  if (b?.scheduledAt) {
+    const d = new Date(b.scheduledAt);
+    if (!isNaN(d.getTime())) {
+      return `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}/${d.getFullYear()}`;
+    }
+  }
+  return "";
 }
 function pickTime(b: any): string {
   return String(b?.booking_time || b?.bookingTime || (b?.scheduledAt ? new Date(b.scheduledAt).toLocaleTimeString() : "") || "");

@@ -149,12 +149,22 @@ export function CtaBanner() {
                                 {o ? o.price : "—"} <span className="text-[10px] font-bold">ر.س</span>
                               </span>
                             </div>
-                            <Link
-                              to={"/offers" as any}
-                              className="inline-flex h-8 items-center gap-1 rounded-full bg-white px-3 text-[11px] font-extrabold text-primary transition hover:bg-secondary"
-                            >
-                              احجزي الآن <ArrowLeft className={`h-3 w-3 ${dir === "ltr" ? "rotate-180" : ""}`} />
-                            </Link>
+                            {o ? (
+                              <Link
+                                to="/offers/$offerId"
+                                params={{ offerId: String(o.id) }}
+                                className="inline-flex h-8 items-center gap-1 rounded-full bg-white px-3 text-[11px] font-extrabold text-primary transition hover:bg-secondary"
+                              >
+                                احجزي الآن <ArrowLeft className={`h-3 w-3 ${dir === "ltr" ? "rotate-180" : ""}`} />
+                              </Link>
+                            ) : (
+                              <Link
+                                to={"/offers" as any}
+                                className="inline-flex h-8 items-center gap-1 rounded-full bg-white px-3 text-[11px] font-extrabold text-primary transition hover:bg-secondary"
+                              >
+                                احجزي الآن <ArrowLeft className={`h-3 w-3 ${dir === "ltr" ? "rotate-180" : ""}`} />
+                              </Link>
+                            )}
                           </div>
                         </div>
                       </div>

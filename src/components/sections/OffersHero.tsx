@@ -540,7 +540,7 @@ function SlideVisual({ slide, slideIndex }: { slide: Slide; slideIndex: number }
           </div>
         )}
 
-        {ad?.offer_id && offer ? (
+        {ad?.offer_id ? (
           <Link
             to="/offers/$offerId"
             params={{ offerId: ad.offer_id }}

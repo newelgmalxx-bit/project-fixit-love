@@ -1,11 +1,11 @@
 import { Link } from "@tanstack/react-router";
-import { Phone, Mail, MapPin, Facebook, Instagram, Twitter, Linkedin, Music2 } from "lucide-react";
+import { Phone, Mail, MapPin, Instagram, Music2, Ghost, MessageCircle } from "lucide-react";
 import logo from "@/assets/booking-logo.png";
 import visaMc from "@/assets/payments/visa-mastercard.png";
 import applePay from "@/assets/payments/apple-pay.jpg";
 import mada from "@/assets/payments/mada.png";
 import stcPay from "@/assets/payments/stc-pay.png";
-import { useSiteSettings } from "@/hooks/useSiteSettings";
+import { useSiteSettings, waHref } from "@/hooks/useSiteSettings";
 import { useCategories } from "@/hooks/useCatalog";
 import { renderCategoryIcon } from "@/lib/categoryIcon";
 
@@ -20,11 +20,10 @@ export function SiteFooter() {
   const site = useSiteSettings();
   const { categories } = useCategories();
   const socials = ([
-    [site.facebook, Facebook],
     [site.instagram, Instagram],
-    [site.twitter, Twitter],
-    [site.linkedin, Linkedin],
     [site.tiktok, Music2],
+    [site.snapchat, Ghost],
+    [site.whatsapp ? (waHref(site.whatsapp) || site.whatsapp) : undefined, MessageCircle],
   ] as const).filter(([u]) => !!u);
 
   const quickLinks: { label: string; to: any; hash?: string }[] = [

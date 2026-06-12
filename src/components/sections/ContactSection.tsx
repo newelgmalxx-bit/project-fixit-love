@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Phone, Mail, MessageCircle, MapPin, Clock, Instagram, Twitter, Linkedin, Facebook, Youtube, Music2, Clock3, Sparkles, Send, Loader2 } from "lucide-react";
+import { Phone, Mail, MessageCircle, MapPin, Clock, Instagram, Music2, Ghost, Clock3, Sparkles, Send, Loader2 } from "lucide-react";
 import { useLang } from "@/i18n/LanguageProvider";
 import { contact as contactApi } from "@/lib/api";
 import { toast } from "sonner";
@@ -80,17 +80,15 @@ export function ContactSection() {
               </div>
             )}
 
-            {(site.instagram || site.twitter || site.linkedin || site.facebook || site.youtube || site.tiktok) && (
+            {(site.instagram || site.tiktok || site.snapchat || site.whatsapp) && (
               <div className="mt-6">
                 <p className="text-[11px] text-white/70">{t("contactForm.info.follow")}</p>
                 <div className="mt-3 flex items-center gap-2">
                   {([
                     [site.instagram, Instagram],
-                    [site.twitter, Twitter],
-                    [site.linkedin, Linkedin],
-                    [site.facebook, Facebook],
-                    [site.youtube, Youtube],
                     [site.tiktok, Music2],
+                    [site.snapchat, Ghost],
+                    [site.whatsapp ? (waHref(site.whatsapp) || site.whatsapp) : undefined, MessageCircle],
                   ] as const).filter(([u]) => !!u).map(([u, Icon], i) => (
                     <a
                       key={i}

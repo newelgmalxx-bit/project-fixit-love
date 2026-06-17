@@ -102,12 +102,13 @@ async function ensureFixedTemplate(): Promise<Template | null> {
   }
 }
 
-async function persistPartnerRate(partnerId: string, rate: number) {
-  await adminPartnersApi.update(partnerId, {
-    commissionPct: rate,
-    depositPct: rate,
-  } as Partial<AdminPartner>);
-}
+// NOTE: We intentionally do NOT call PUT /admin/partners/{id} to sync the rate.
+// The agreement create/update endpoints already sync commission_pct / deposit_pct
+// on the partners row (only those two columns). Calling the generic partner-update
+// endpoint with a partial body triggers a backend bug (admin_14.php line ~4122)
+// that converts empty/missing partner columns to NULL and wipes the partner data
+// (name, email, phone, address, working hours...). Do not re-introduce this call
+// until the backend bug is fixed.
 
 function AgreementsPage() {
   return (

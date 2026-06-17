@@ -1,5 +1,75 @@
 # Backend bug — Creating an agreement wipes partner fields
 
+> **STATUS: NOT FIXED — reproduced again on 2026-06-17 08:09 UTC**
+> Partner `72834de3-0044-4193-836d-aeb946399d5e` was wiped after
+> `POST /api/admin/partners/72834de3-0044-4193-836d-aeb946399d5e/agreements`.
+> `updatedAt` jumped from `2026-06-17 08:07:45` to `2026-06-17 08:09:09`.
+> `commission_pct` / `deposit_pct` were set to `6/6` (intentional) but every
+> other column (`vendor_name_ar`, `name`, `owner_name`, `email`, `phone`,
+> `address`, `commercial_number`, `working_hours`, …) was overwritten with
+> `''` / `NULL`. Whatever "fix" was deployed in `admin_14.php` is either NOT
+> live on production or is being bypassed by another code path.
+
+## What to verify on the server RIGHT NOW
+
+1. `php -v` and `ls -la /home/u420244017/domains/koswmat.com/public_html/api/`
+   — confirm which `admin_*.php` file is actually included by the active
+   router. Print the file path with `error_log(__FILE__)` inside the agreement
+   handler and trigger the endpoint; check the log.
+2. Search ALL PHP files for any `UPDATE partners` or `save_partner(` /
+   `updatePartner(` call reachable from the agreement create/update/resend
+   routes:
+   ```bash
+   grep -RIn "UPDATE partners\|updatePartner\|save_partner\|partners\s*SET" \
+     /home/u420244017/domains/koswmat.com/public_html/api/
+   ```
+   There MUST be exactly one statement under the agreement route, and it must
+   touch only `commission_pct, deposit_pct, updated_at`.
+3. Enable the MySQL general log for 60 seconds, hit the endpoint once, and
+   paste every `UPDATE partners ...` statement that ran. That will prove
+   which query is doing the damage.
+4. Check for a DB trigger on `partner_agreements` that writes back to
+   `partners`:
+   ```sql
+   SHOW TRIGGERS WHERE `Table` IN ('partner_agreements','partners');
+   ```
+
+## Reproduction payload (confirmed)
+
+Before (`GET /api/admin/partners?...`):
+```
+id: 72834de3-...
+vendorNameAr: "تيسست"
+ownerName: "احمد الجمال"
+email: "neweeeer@gmail.com"
+phone: "0987654"
+address: "دمياط"
+commercialNumber: "987654"
+workingHours: [7 days populated]
+commissionPct: 10, depositPct: 25
+updatedAt: 2026-06-17 08:07:45
+```
+
+Request:
+```
+POST /api/admin/partners/72834de3-0044-4193-836d-aeb946399d5e/agreements
+{ "templateId":"fixed-tpl", "commissionPct":6, "depositPct":6,
+  "customTitle":null, "customBody":null, "adminNotes":null }
+```
+
+After:
+```
+vendorNameAr: ""           ← wiped
+ownerName: null            ← wiped
+email: null                ← wiped
+phone: null                ← wiped
+address: null              ← wiped
+commercialNumber: null     ← wiped
+workingHours: null         ← wiped
+commissionPct: 6, depositPct: 6   ← OK
+updatedAt: 2026-06-17 08:09:09    ← proof the agreement endpoint wrote here
+```
+
 ## Symptom
 
 Before `POST /api/admin/partners/{partnerId}/agreements` the partner row is fine:

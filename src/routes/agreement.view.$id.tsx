@@ -1,7 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { publicApi } from "@/lib/api/public";
-import { getStoredPartner } from "@/lib/api/partner";
 import { Loader2, Printer } from "lucide-react";
 import {
   buildAgreementHtmlForPartner,
@@ -19,6 +18,7 @@ function AgreementPdfView() {
   const { id } = Route.useParams();
   const [loading, setLoading] = useState(true);
   const [agreement, setAgreement] = useState<MockAgreement | null>(null);
+  const [partnerData, setPartnerData] = useState<any | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -38,25 +38,32 @@ function AgreementPdfView() {
         admin_notes: null,
         created_at: ag.createdAt || new Date().toISOString(),
       });
+      if (ag.partnerId) {
+        try {
+          const p = await publicApi.getPartner(ag.partnerId);
+          setPartnerData(p);
+        } catch { /* ignore */ }
+      }
       setLoading(false);
     })();
   }, [id]);
 
   const partner: MockPartner = useMemo(() => {
-    const p = getStoredPartner() as any;
+    const p: any = partnerData || {};
     return {
       id: String(p?.id ?? agreement?.partner_id ?? ""),
-      vendor_name: p?.vendorName || p?.name || "—",
-      owner_name: p?.ownerName || "—",
-      city: p?.city || p?.address || "—",
+      vendor_name:
+        p?.vendorNameAr || p?.vendorName || p?.nameAr || p?.name || p?.vendor_name || "—",
+      owner_name: p?.ownerName || p?.owner_name || "—",
+      city: p?.cityName || p?.city || p?.address || "—",
       phone: p?.phone || "—",
       email: p?.email || null,
-      commercial_number: p?.commercialNumber || null,
+      commercial_number: p?.commercialNumber || p?.commercial_number || null,
       status: p?.status || "active",
       commission_pct: agreement?.commission_pct ?? null,
       deposit_pct: agreement?.deposit_pct ?? null,
     };
-  }, [agreement]);
+  }, [agreement, partnerData]);
 
   const html = useMemo(
     () => (agreement ? buildAgreementHtmlForPartner(partner, agreement, null) : ""),

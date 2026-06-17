@@ -103,6 +103,58 @@ function pickOfferTitle(b: any): string | undefined {
   return b?.offerTitle || b?.offer_title || b?.offer?.title || b?.offer?.titleAr || b?.offerName || b?.offer_name;
 }
 
+type DateTimeParts = { year: number; month: number; day: number; hour?: number; minute?: number };
+
+function parseDateTimeParts(value?: string | null): DateTimeParts | null {
+  if (!value) return null;
+  const raw = String(value).trim();
+  const ymd = raw.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})(?:[T\s]+(\d{1,2}):(\d{2})(?::\d{2})?)?/);
+  if (ymd) {
+    return {
+      year: Number(ymd[1]),
+      month: Number(ymd[2]),
+      day: Number(ymd[3]),
+      hour: ymd[4] ? Number(ymd[4]) : undefined,
+      minute: ymd[5] ? Number(ymd[5]) : undefined,
+    };
+  }
+  const dmy = raw.match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{2,4})(?:[T\s]+(\d{1,2}):(\d{2})(?::\d{2})?)?/);
+  if (dmy) {
+    const year = Number(dmy[3]) < 100 ? Number(dmy[3]) + 2000 : Number(dmy[3]);
+    return {
+      year,
+      month: Number(dmy[2]),
+      day: Number(dmy[1]),
+      hour: dmy[4] ? Number(dmy[4]) : undefined,
+      minute: dmy[5] ? Number(dmy[5]) : undefined,
+    };
+  }
+  return null;
+}
+
+function formatAdminDateTime(value?: string | null, lang = "ar"): string {
+  const parts = parseDateTimeParts(value);
+  if (!parts) return "—";
+  const pad = (n: number) => String(n).padStart(2, "0");
+  const date = `${pad(parts.day)}/${pad(parts.month)}/${parts.year}`;
+  if (parts.hour == null || parts.minute == null) return date;
+  const hour12 = ((parts.hour + 11) % 12) + 1;
+  const suffix = lang === "en" ? (parts.hour >= 12 ? "PM" : "AM") : (parts.hour >= 12 ? "م" : "ص");
+  return `${date} - ${pad(hour12)}:${pad(parts.minute)} ${suffix}`;
+}
+
+function pickString(...values: unknown[]): string | undefined {
+  const value = values.find((v) => typeof v === "string" && v.trim());
+  return typeof value === "string" ? value : undefined;
+}
+
+function pickScheduleAt(b: AdminBooking & Record<string, unknown>): string | undefined {
+  const date = pickString(b.scheduledAt, b.scheduled_at, b.bookingDate, b.booking_date, b.date);
+  const time = pickString(b.bookingTime, b.booking_time, b.time);
+  if (date && time && !String(date).includes(":")) return `${date} ${time}`;
+  return date;
+}
+
 function pickRef(b: any): string | undefined {
   return b?.qrCode || b?.qr_code || b?.bookingNumber || b?.booking_number || b?.bookingNo || b?.booking_no || b?.reference || b?.referenceCode || b?.reference_code || b?.confirmationCode || b?.confirmation_code || b?.code;
 }
@@ -325,7 +377,7 @@ function BookingsPage() {
                   <td className="px-3 py-3 text-xs">{pickOfferTitle(b) || "—"}</td>
                   
                   <td className="px-3 py-3 text-xs font-bold" dir="ltr">{pickServicesValue(b) ?? "—"}</td>
-                  <td className="px-3 py-3 text-xs" dir="ltr">{b.scheduledAt ? new Date(b.scheduledAt).toLocaleString() : "—"}</td>
+                  <td className="px-3 py-3 text-xs" dir="ltr">{formatAdminDateTime(pickScheduleAt(b), lang)}</td>
                   <td className="px-3 py-3 text-xs font-bold" dir="ltr">
                     {pickDeposit(b) ?? "—"}
                     {pickDepositPct(b) != null && <span className="ms-1 text-[10px] font-normal text-muted-foreground">({pickDepositPct(b)}%)</span>}
@@ -426,10 +478,10 @@ function BookingsPage() {
                 <Info label={L("المركز", "Center")}>{pickPartnerName(viewing) || "—"}</Info>
                 <Info label={L("العرض", "Offer")}>{pickOfferTitle(viewing) || "—"}</Info>
                 <Info label={L("الموعد", "Schedule")}>
-                  <span dir="ltr">{viewing.scheduledAt ? new Date(viewing.scheduledAt).toLocaleString() : "—"}</span>
+                  <span dir="ltr">{formatAdminDateTime(pickScheduleAt(viewing), lang)}</span>
                 </Info>
                 <Info label={L("أنشئ في", "Created")}>
-                  <span dir="ltr">{viewing.createdAt ? new Date(viewing.createdAt).toLocaleString() : "—"}</span>
+                  <span dir="ltr">{formatAdminDateTime(pickString(viewing.createdAt, viewing.created_at), lang)}</span>
                 </Info>
               </div>
 

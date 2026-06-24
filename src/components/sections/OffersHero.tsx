@@ -24,6 +24,7 @@ import heroBlowdry from "@/assets/hero-blowdry.jpg";
 import heroMedical from "@/assets/hero-medical-1.jpg";
 import heroFitness from "@/assets/hero-fitness-1.jpg";
 import heroCarwash from "@/assets/hero-carwash.jpg";
+import heroTintingAsset from "@/assets/hero-tinting.webp.asset.json";
 
 type Slide = {
   kicker: string;

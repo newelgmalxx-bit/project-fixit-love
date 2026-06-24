@@ -1,10 +1,9 @@
-import { useEffect, useState } from "react";
 import useEmblaCarousel from "embla-carousel-react";
 import Autoplay from "embla-carousel-autoplay";
 import { Megaphone, ArrowLeft, CalendarCheck } from "lucide-react";
 import { Link } from "@tanstack/react-router";
-import { publicApi } from "@/lib/api/public";
 import { useLang } from "@/i18n/LanguageProvider";
+import { useSponsoredAdsBundle } from "@/hooks/useSponsoredAds";
 
 type Ad = {
   id: string;
@@ -20,58 +19,39 @@ type Ad = {
 
 export function SponsoredAdsBanner() {
   const { dir } = useLang();
-  const [ads, setAds] = useState<Ad[]>([]);
+  const { ads: rawAds, offers } = useSponsoredAdsBundle();
   const [emblaRef] = useEmblaCarousel(
     { loop: true, direction: dir, align: "start" },
     [Autoplay({ delay: 5000, stopOnInteraction: false })]
   );
 
-  useEffect(() => {
-    let alive = true;
-    (async () => {
-      try {
-        const data = await publicApi.getSponsoredAds();
-        if (!alive || !data) return;
-        const base: Ad[] = data.map((a: any) => ({
-          id: a.id,
-          title: a.titleAr || a.titleEn || a.title || "",
-          subtitle: a.subtitle ?? null,
-          image_url: a.image || a.imageUrl || null,
-          link_url: a.linkUrl || null,
-          cta_label: a.ctaLabel ?? null,
-          offer_id: a.offerId || a.offer_id || null,
-        }));
-
-        const resolved = await Promise.all(
-          base.map(async (ad) => {
-            if (!ad.offer_id) return ad;
-            try {
-              const o: any = await publicApi.getOffer(ad.offer_id);
-              if (!o) return ad;
-              return {
-                ...ad,
-                title: o.titleAr || o.titleEn || o.title || ad.title,
-                subtitle:
-                  o.descriptionAr ||
-                  o.descriptionEn ||
-                  o.shortDescription ||
-                  o.description ||
-                  ad.subtitle,
-                image_url: o.image || o.imageUrl || ad.image_url,
-                priceBefore: Number(o.priceBefore ?? 0) || null,
-                priceAfter: Number(o.priceAfter ?? 0) || null,
-                link_url: null,
-              } as Ad;
-            } catch {
-              return ad;
-            }
-          })
-        );
-        if (alive) setAds(resolved);
-      } catch { /* ignore */ }
-    })();
-    return () => { alive = false; };
-  }, []);
+  const ads: Ad[] = rawAds.map((a) => {
+    const o: any = a.offer_id ? offers[a.offer_id] : null;
+    const base: Ad = {
+      id: a.id,
+      title: a.title,
+      subtitle: a.subtitle,
+      image_url: a.image_url,
+      link_url: a.link_url,
+      cta_label: a.cta_label,
+      offer_id: a.offer_id,
+    };
+    if (!o) return base;
+    return {
+      ...base,
+      title: o.titleAr || o.titleEn || o.title || base.title,
+      subtitle:
+        o.descriptionAr ||
+        o.descriptionEn ||
+        o.shortDescription ||
+        o.description ||
+        base.subtitle,
+      image_url: o.image || o.imageUrl || base.image_url,
+      priceBefore: Number(o.priceBefore ?? 0) || null,
+      priceAfter: Number(o.priceAfter ?? 0) || null,
+      link_url: null,
+    };
+  });
 
   if (ads.length === 0) return null;
 

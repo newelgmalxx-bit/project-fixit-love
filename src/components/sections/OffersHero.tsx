@@ -415,50 +415,15 @@ function SlideContent({
 }
 
 function SlideVisual({ slide, slideIndex }: { slide: Slide; slideIndex: number }) {
-  const [ad, setAd] = useState<SponsoredAd | null>(null);
-  const [offer, setOffer] = useState<any | null>(null);
-  const [partner, setPartner] = useState<any | null>(null);
+  const { ads, offers, partners } = useSponsoredAdsBundle();
+  const ad =
+    ads.find((a) => Number(a.slide_index) === slideIndex + 1) ||
+    ads.find((a) => a.slide_index == null || Number(a.slide_index) === 0) ||
+    null;
+  const offer = ad?.offer_id ? offers[ad.offer_id] ?? null : null;
+  const partner = offer?.partnerId ? partners[offer.partnerId] ?? null : null;
 
-  useEffect(() => {
-    let alive = true;
-    (async () => {
-      try {
-        const data = await publicApi.getSponsoredAds();
-        if (!alive || !data) return;
-        const mapped = (data as any[]).map((a: any) => ({
-          id: a.id,
-          title: a.titleAr || a.titleEn || a.title || "",
-          subtitle: a.subtitle ?? null,
-          image_url: a.image || a.imageUrl || null,
-          link_url: a.linkUrl || null,
-          cta_label: a.ctaLabel ?? null,
-          slide_index: a.slideIndex ?? null,
-          offer_id: a.offerId ?? null,
-        })) as SponsoredAd[];
-        const match =
-          mapped.find((a) => Number(a.slide_index) === slideIndex + 1) ||
-          mapped.find((a) => a.slide_index == null || Number(a.slide_index) === 0) ||
-          null;
-        if (!alive) return;
-        setAd(match);
-        if (match?.offer_id) {
-          try {
-            const o = await publicApi.getOffer(match.offer_id);
-            if (!alive) return;
-            setOffer(o);
-            const pid = (o as any)?.partnerId;
-            if (pid) {
-              try {
-                const p = await publicApi.getPartner(pid);
-                if (alive) setPartner(p);
-              } catch { /* ignore */ }
-            }
-          } catch { /* ignore */ }
-        }
-      } catch { /* ignore */ }
-    })();
-    return () => { alive = false; };
-  }, [slideIndex]);
+
 
   const offerImage = offer?.image || offer?.imageUrl || offer?.coverImage || ad?.image_url || null;
   const useOfferImage = !!offerImage && (!!ad?.offer_id || !!ad?.image_url);

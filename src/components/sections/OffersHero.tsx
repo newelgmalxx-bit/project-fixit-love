@@ -122,7 +122,7 @@ const slides: Slide[] = [
     titleLine2: "مع أفضل مراكز العزل الحراري",
     description:
       "تظليل حراري، عوازل عالية الجودة، وحماية متكاملة من أشعة الشمس من مراكز معتمدة بخصومات حصرية.",
-    image: heroTintingAsset.url,
+    image: heroTinting,
     badge: { value: "40%", label: "خصم التظليل" },
     gradient: "from-[#0f172a] via-[#334155] to-[#64748b]",
     ambient: "bg-[#334155]/25",

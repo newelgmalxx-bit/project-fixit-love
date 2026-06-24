@@ -12,6 +12,7 @@ import { CtaBanner } from "@/components/sections/CtaBanner";
 import { buildSeo, organizationJsonLd, websiteJsonLd } from "@/lib/seo";
 import { Reveal } from "@/components/Reveal";
 import { useLang } from "@/i18n/LanguageProvider";
+import { useHomeData } from "@/hooks/useHomeData";
 
 export const Route = createFileRoute("/")({
   head: () => {

@@ -20,7 +20,7 @@ export const Route = createFileRoute("/admin/sponsored-ads")({
   component: SponsoredAdsAdmin,
 });
 
-const SLIDE_COUNT = 8;
+const SLIDE_COUNT = 9;
 
 const empty: Partial<SponsoredAd> = {
   title: "",

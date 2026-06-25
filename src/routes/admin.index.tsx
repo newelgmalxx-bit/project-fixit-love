@@ -102,18 +102,18 @@ function AdminDashboard() {
   async function approvePartner(p: any) {
     if (p._real) {
       try { await adminPartnersApi.setStatus(p.id, "active"); }
-      catch { toast.error("تعذّر اعتماد المركز"); return; }
+      catch { toast.error(L("تعذّر اعتماد المركز", "Failed to approve partner")); return; }
     }
     setPendingPartners((arr) => arr.filter((x) => x.id !== p.id));
-    toast.success(`تم اعتماد ${p.name}`);
+    toast.success(L(`تم اعتماد ${p.name}`, `${p.name} approved`));
   }
   async function rejectPartner(p: any) {
     if (p._real) {
       try { await adminPartnersApi.setStatus(p.id, "rejected"); }
-      catch { toast.error("تعذّر رفض الطلب"); return; }
+      catch { toast.error(L("تعذّر رفض الطلب", "Failed to reject request")); return; }
     }
     setPendingPartners((arr) => arr.filter((x) => x.id !== p.id));
-    toast.success(`تم رفض طلب ${p.name}`);
+    toast.success(L(`تم رفض طلب ${p.name}`, `${p.name} request rejected`));
   }
 
 
@@ -185,7 +185,7 @@ function AdminDashboard() {
         const catList: any[] = catRes?.data?.items || catRes?.items || [];
         const catNameById = new Map<string, string>();
         for (const c of catList) {
-          if (c?.id) catNameById.set(String(c.id), c.nameAr || c.nameEn || c.name || "غير مصنف");
+          if (c?.id) catNameById.set(String(c.id), c.nameAr || c.nameEn || c.name || L("غير مصنف", "Uncategorized"));
         }
         const all = ((bRes?.data?.items) || bRes?.items || []) as any[];
         const offersList: any[] = offersRes?.items || [];
@@ -287,12 +287,12 @@ function AdminDashboard() {
         for (const o of offersList) {
           if (!o.id) continue;
           const byId = o.categoryId ? catNameById.get(String(o.categoryId)) : null;
-          const catName = byId || o.category?.nameAr || o.category?.nameEn || o.categoryName || o.categoryAr || "غير مصنف";
+          const catName = byId || o.category?.nameAr || o.category?.nameEn || o.categoryName || o.categoryAr || L("غير مصنف", "Uncategorized");
           offerCategoryById.set(String(o.id), catName);
         }
         const catMap = new Map<string, number>();
         for (const o of booked) {
-          const cat = offerCategoryById.get(String(o.offerId)) || o.category || o.offerCategory || "أخرى";
+          const cat = offerCategoryById.get(String(o.offerId)) || o.category || o.offerCategory || L("أخرى", "Other");
           catMap.set(cat, (catMap.get(cat) || 0) + totalOf(o));
         }
         const palette = ["#00AEC6", "#3a7fbe", "#5fa1d9", "#9bc4e8", "#cbe0f0", "#7c3aed", "#f59e0b"];

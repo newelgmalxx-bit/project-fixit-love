@@ -345,7 +345,9 @@ function OfferDetailPage() {
   const depositAmount = depositPct != null ? +((total * depositPct) / 100).toFixed(2) : 0;
   const remainingAmount = depositPct != null ? +(total - depositAmount).toFixed(2) : total;
   const { add: addToCartHook } = useCart();
-  const { lang: _lang } = useLang();
+  const { lang, dir } = useLang();
+  const L = (a: string, e: string) => (lang === "en" ? e : a);
+  const FAQ = lang === "en" ? FAQ_EN : FAQ_AR;
 
   // ===== Abandoned-cart tracking (persisted to backend) =====
   // Once the visitor has filled in their contact details + a date/time we

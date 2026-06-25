@@ -185,7 +185,7 @@ function AdminDashboard() {
         const catList: any[] = catRes?.data?.items || catRes?.items || [];
         const catNameById = new Map<string, string>();
         for (const c of catList) {
-          if (c?.id) catNameById.set(String(c.id), c.nameAr || c.nameEn || c.name || "غير مصنف");
+          if (c?.id) catNameById.set(String(c.id), c.nameAr || c.nameEn || c.name || L("غير مصنف", "Uncategorized"));
         }
         const all = ((bRes?.data?.items) || bRes?.items || []) as any[];
         const offersList: any[] = offersRes?.items || [];

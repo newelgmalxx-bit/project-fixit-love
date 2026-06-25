@@ -9,6 +9,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { useLang } from "@/i18n/LanguageProvider";
 import { extractAgreementClauses } from "@/lib/agreementClauses";
 import {
   buildAgreementHtmlForPartner, printAgreementPdf,
@@ -70,7 +71,7 @@ function mapApiAgreement(a: ApiPartnerAgreement): Agreement {
 }
 
 export const Route = createFileRoute("/admin/agreements")({
-  head: () => ({ meta: [{ title: "اتفاقيات الشركاء | الإدارة" }] }),
+  head: () => ({ meta: [{ title: "Partner Agreements | Admin" }] }),
   component: AgreementsPage,
 });
 
@@ -111,8 +112,10 @@ async function ensureFixedTemplate(): Promise<Template | null> {
 // until the backend bug is fixed.
 
 function AgreementsPage() {
+  const { lang } = useLang();
+  const L = (ar: string, en: string) => (lang === "en" ? en : ar);
   return (
-    <AdminLayout title="اتفاقيات الشركاء">
+    <AdminLayout title={L("اتفاقيات الشركاء", "Partner Agreements")}>
       <RequestsTab />
     </AdminLayout>
   );
@@ -121,6 +124,15 @@ function AgreementsPage() {
 /* ============ Requests ============ */
 
 function RequestsTab() {
+  const { lang, dir } = useLang();
+  const L = (ar: string, en: string) => (lang === "en" ? en : ar);
+  const locale = lang === "en" ? "en-US" : "ar-SA";
+  const statusLabel = (s: string) =>
+    s === "active" ? L("مفعّل", "Active")
+    : s === "pending" ? L("قيد الانتظار", "Pending")
+    : s === "suspended" ? L("موقوف", "Suspended")
+    : s;
+
   const [partners, setPartners] = useState<Partner[]>([]);
   const [latestByPartner, setLatestByPartner] = useState<Record<string, ApiPartnerAgreement | null>>({});
   const [template, setTemplate] = useState<Template | null>(null);
@@ -167,10 +179,11 @@ function RequestsTab() {
       setTemplate(tpl);
     } catch (e: any) {
       console.error("Failed to load", e);
-      toast.error("تعذّر تحميل البيانات");
+      toast.error(L("تعذّر تحميل البيانات", "Failed to load data"));
     }
     setLoading(false);
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lang]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -178,17 +191,16 @@ function RequestsTab() {
     setResendingId(a.id);
     try {
       const r = await adminAgreementsApi.resendAgreementEmail(partnerId, a.id);
-      toast.success(r?.emailSent ? "تم إرسال الإيميل مجدداً" : "تم تجديد التوكن (لم يتم إرسال إيميل)");
+      toast.success(r?.emailSent
+        ? L("تم إرسال الإيميل مجدداً", "Email resent successfully")
+        : L("تم تجديد التوكن (لم يتم إرسال إيميل)", "Token renewed (no email sent)"));
       load();
     } catch (e: any) {
-      toast.error(e?.message || "فشل إعادة الإرسال");
+      toast.error(e?.message || L("فشل إعادة الإرسال", "Failed to resend"));
     } finally {
       setResendingId(null);
     }
   }
-
-
-
 
   const filteredPartners = partners.filter((p) => {
     if (statusFilter === "all") return true;
@@ -206,17 +218,17 @@ function RequestsTab() {
   return (
     <>
       <PanelCard
-        title="الشركاء واتفاقياتهم"
+        title={L("الشركاء واتفاقياتهم", "Partners & their agreements")}
         action={
           <div className="flex gap-1.5">
             {([
-              ["all", "الكل", counts.all],
-              ["pending", "قيد الانتظار", counts.pending],
-              ["active", "مفعّل", counts.active],
+              ["all", L("الكل", "All"), counts.all],
+              ["pending", L("قيد الانتظار", "Pending"), counts.pending],
+              ["active", L("مفعّل", "Active"), counts.active],
             ] as const).map(([key, label, n]) => (
               <button
                 key={key}
-                onClick={() => setStatusFilter(key)}
+                onClick={() => setStatusFilter(key as any)}
                 className={`rounded-full px-3 py-1 text-[11px] font-bold transition ${
                   statusFilter === key
                     ? "bg-primary text-primary-foreground"
@@ -232,18 +244,18 @@ function RequestsTab() {
         {loading ? (
           <div className="flex justify-center p-8"><Loader2 className="h-6 w-6 animate-spin" /></div>
         ) : filteredPartners.length === 0 ? (
-          <div className="p-6 text-center text-sm text-muted-foreground">لا يوجد شركاء بهذه الحالة.</div>
+          <div className="p-6 text-center text-sm text-muted-foreground">{L("لا يوجد شركاء بهذه الحالة.", "No partners with this status.")}</div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="text-xs text-muted-foreground">
                 <tr className="border-b">
-                  <th className="py-2 text-right">المركز</th>
-                  <th className="py-2 text-right">التواصل</th>
-                  <th className="py-2 text-right">حالة الشريك</th>
-                  <th className="py-2 text-right">الاتفاقية</th>
-                  <th className="py-2 text-right">النسبة الحالية</th>
-                  <th className="py-2 text-right">إجراء</th>
+                  <th className={dir === "rtl" ? "py-2 text-right" : "py-2 text-left"}>{L("المركز", "Merchant")}</th>
+                  <th className={dir === "rtl" ? "py-2 text-right" : "py-2 text-left"}>{L("التواصل", "Contact")}</th>
+                  <th className={dir === "rtl" ? "py-2 text-right" : "py-2 text-left"}>{L("حالة الشريك", "Partner status")}</th>
+                  <th className={dir === "rtl" ? "py-2 text-right" : "py-2 text-left"}>{L("الاتفاقية", "Agreement")}</th>
+                  <th className={dir === "rtl" ? "py-2 text-right" : "py-2 text-left"}>{L("النسبة الحالية", "Current rate")}</th>
+                  <th className={dir === "rtl" ? "py-2 text-right" : "py-2 text-left"}>{L("إجراء", "Action")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -257,25 +269,25 @@ function RequestsTab() {
                       <div className="flex items-center gap-1"><Phone className="h-3 w-3" />{p.phone}</div>
                       {p.email && <div className="flex items-center gap-1 text-muted-foreground mt-0.5"><Mail className="h-3 w-3" />{p.email}</div>}
                     </td>
-                    <td className="py-3"><Pill tone={p.status === "active" ? "emerald" : "amber"}>{p.status}</Pill></td>
+                    <td className="py-3"><Pill tone={p.status === "active" ? "emerald" : "amber"}>{statusLabel(p.status)}</Pill></td>
                     <td className="py-3 align-middle whitespace-nowrap">
                       {(() => {
                         const latest = latestByPartner[p.id];
-                        if (!latest) return <Pill tone="muted">لا توجد</Pill>;
+                        if (!latest) return <Pill tone="muted">{L("لا توجد", "None")}</Pill>;
                         if (latest.status === "signed") return (
                           <div className="inline-flex items-center gap-2">
-                            <Pill tone="emerald"><CheckCircle2 className="h-3 w-3 inline ml-0.5" /> موقّعة</Pill>
+                            <Pill tone="emerald"><CheckCircle2 className="h-3 w-3 inline ml-0.5" /> {L("موقّعة", "Signed")}</Pill>
                             {latest.signedAt && (
                               <span className="text-[10px] text-muted-foreground" dir="ltr">
-                                {new Date(latest.signedAt).toLocaleDateString("ar-SA")}
+                                {new Date(latest.signedAt).toLocaleDateString(locale)}
                               </span>
                             )}
                           </div>
                         );
                         if (latest.status === "cancelled" || latest.status === "rejected") return (
-                          <Pill tone="rose"><XCircle className="h-3 w-3 inline ml-0.5" /> ملغاة</Pill>
+                          <Pill tone="rose"><XCircle className="h-3 w-3 inline ml-0.5" /> {L("ملغاة", "Cancelled")}</Pill>
                         );
-                        return <Pill tone="amber">بانتظار التوقيع</Pill>;
+                        return <Pill tone="amber">{L("بانتظار التوقيع", "Awaiting signature")}</Pill>;
                       })()}
                     </td>
 
@@ -293,23 +305,23 @@ function RequestsTab() {
                               onClick={() => setFileFor(p)}
                               className="inline-flex items-center gap-1 rounded-full border border-border bg-background px-2.5 py-1 text-[11px] font-bold hover:bg-muted"
                             >
-                              <FolderOpen className="h-3 w-3" /> الملف
+                              <FolderOpen className="h-3 w-3" /> {L("الملف", "File")}
                             </button>
                             <button
                               onClick={() => setOpenFor(p)}
                               disabled={!template}
                               className="inline-flex items-center gap-1 rounded-full bg-primary px-2.5 py-1 text-[11px] font-bold text-primary-foreground disabled:opacity-50"
-                              title={!template ? "جارٍ تهيئة قالب الاتفاقية..." : ""}
+                              title={!template ? L("جارٍ تهيئة قالب الاتفاقية...", "Preparing agreement template...") : ""}
                             >
                               <Send className="h-3 w-3" />
-                              إصدار اتفاقية
+                              {L("إصدار اتفاقية", "Issue agreement")}
                             </button>
                             {latest && (
                               <button
                                 onClick={() => setViewAg({ partner: p, ag: mapApiAgreement(latest) })}
                                 className="inline-flex items-center gap-1 rounded-full bg-primary px-2.5 py-1 text-[11px] font-bold text-primary-foreground hover:opacity-90"
                               >
-                                <Eye className="h-3 w-3" /> عرض
+                                <Eye className="h-3 w-3" /> {L("عرض", "View")}
                               </button>
                             )}
                             {isPending && (
@@ -318,7 +330,7 @@ function RequestsTab() {
                                   onClick={() => setEditAg({ partnerId: p.id, ag: latest! })}
                                   className="inline-flex items-center gap-1 rounded-full border border-border bg-background px-2.5 py-1 text-[11px] font-bold hover:bg-muted"
                                 >
-                                  <Pencil className="h-3 w-3" /> تعديل
+                                  <Pencil className="h-3 w-3" /> {L("تعديل", "Edit")}
                                 </button>
                                 <button
                                   onClick={() => resendOuter(p.id, latest!)}
@@ -326,7 +338,7 @@ function RequestsTab() {
                                   className="inline-flex items-center gap-1 rounded-full border border-primary/40 bg-primary/5 px-2.5 py-1 text-[11px] font-bold text-primary hover:bg-primary/10 disabled:opacity-60"
                                 >
                                   {resendingId === latest!.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCw className="h-3 w-3" />}
-                                  إعادة إرسال الإيميل
+                                  {L("إعادة إرسال الإيميل", "Resend email")}
                                 </button>
                               </>
                             )}
@@ -362,21 +374,21 @@ function RequestsTab() {
 
       {viewAg && (
         <Dialog open onOpenChange={(o) => !o && setViewAg(null)}>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto" dir="rtl">
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto" dir={dir}>
             <DialogHeader>
-              <DialogTitle>عرض الاتفاقية — {viewAg.partner.vendor_name}</DialogTitle>
+              <DialogTitle>{L("عرض الاتفاقية", "View agreement")} — {viewAg.partner.vendor_name}</DialogTitle>
             </DialogHeader>
             <iframe
               srcDoc={buildAgreementHtmlForPartner(viewAg.partner, viewAg.ag, template)}
               className="w-full h-[70vh] rounded-lg border"
             />
             <DialogFooter>
-              <button onClick={() => setViewAg(null)} className="rounded-full px-4 py-2 text-sm">إغلاق</button>
+              <button onClick={() => setViewAg(null)} className="rounded-full px-4 py-2 text-sm">{L("إغلاق", "Close")}</button>
               <button
                 onClick={() => printAgreementPdf(buildAgreementHtmlForPartner(viewAg.partner, viewAg.ag, template))}
                 className="inline-flex items-center gap-1 rounded-full bg-primary px-4 py-2 text-sm font-bold text-primary-foreground"
               >
-                <FileText className="h-4 w-4" /> تحميل PDF
+                <FileText className="h-4 w-4" /> {L("تحميل PDF", "Download PDF")}
               </button>
             </DialogFooter>
           </DialogContent>
@@ -400,6 +412,15 @@ function RequestsTab() {
 function PartnerFileDialog({
   partner, template, onClose,
 }: { partner: Partner; template: Template | null; onClose: () => void }) {
+  const { lang, dir } = useLang();
+  const L = (ar: string, en: string) => (lang === "en" ? en : ar);
+  const locale = lang === "en" ? "en-US" : "ar-SA";
+  const statusLabel = (s: string) =>
+    s === "active" ? L("مفعّل", "Active")
+    : s === "pending" ? L("قيد الانتظار", "Pending")
+    : s === "suspended" ? L("موقوف", "Suspended")
+    : s;
+
   const [apiAgreements, setApiAgreements] = useState<ApiPartnerAgreement[]>([]);
   const [loading, setLoading] = useState(true);
   const [viewAg, setViewAg] = useState<Agreement | null>(null);
@@ -413,25 +434,28 @@ function PartnerFileDialog({
       setApiAgreements(items);
     } catch (e) {
       console.error(e);
-      toast.error("تعذّر تحميل الاتفاقيات");
+      toast.error(L("تعذّر تحميل الاتفاقيات", "Failed to load agreements"));
     }
     setLoading(false);
-  }, [partner.id]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [partner.id, lang]);
 
   useEffect(() => { load(); }, [load]);
 
   function tplTitle(_id: string | null, version: string | null) {
-    return template ? `${template.title} · ${template.version}` : (version ? `نسخة ${version}` : FIXED_TEMPLATE_TITLE);
+    return template ? `${template.title} · ${template.version}` : (version ? L(`نسخة ${version}`, `Version ${version}`) : FIXED_TEMPLATE_TITLE);
   }
 
   async function resend(a: ApiPartnerAgreement) {
     setResendingId(a.id);
     try {
       const r = await adminAgreementsApi.resendAgreementEmail(partner.id, a.id);
-      toast.success(r?.emailSent ? "تم إرسال الإيميل مجدداً" : "تم تجديد التوكن (لم يتم إرسال إيميل — البريد غير متوفر)");
+      toast.success(r?.emailSent
+        ? L("تم إرسال الإيميل مجدداً", "Email resent successfully")
+        : L("تم تجديد التوكن (لم يتم إرسال إيميل — البريد غير متوفر)", "Token renewed (no email sent — address unavailable)"));
       load();
     } catch (e: any) {
-      toast.error(e?.message || "فشل إعادة الإرسال");
+      toast.error(e?.message || L("فشل إعادة الإرسال", "Failed to resend"));
     } finally {
       setResendingId(null);
     }
@@ -440,51 +464,51 @@ function PartnerFileDialog({
   const viewHtml = viewAg ? buildAgreementHtmlForPartner(partner, viewAg, template) : "";
 
   function statusBadge(s: string) {
-    if (s === "signed") return <Pill tone="emerald"><CheckCircle2 className="h-3 w-3 inline ml-0.5" /> موقّعة</Pill>;
-    if (s === "cancelled" || s === "rejected") return <Pill tone="rose"><XCircle className="h-3 w-3 inline ml-0.5" /> ملغاة</Pill>;
-    return <Pill tone="amber">بانتظار التوقيع</Pill>;
+    if (s === "signed") return <Pill tone="emerald"><CheckCircle2 className="h-3 w-3 inline ml-0.5" /> {L("موقّعة", "Signed")}</Pill>;
+    if (s === "cancelled" || s === "rejected") return <Pill tone="rose"><XCircle className="h-3 w-3 inline ml-0.5" /> {L("ملغاة", "Cancelled")}</Pill>;
+    return <Pill tone="amber">{L("بانتظار التوقيع", "Awaiting signature")}</Pill>;
   }
 
   function emailStatusBadge(s?: string | null) {
-    if (!s) return <span className="text-[10px] text-muted-foreground">لم يُرسل</span>;
-    if (s === "sent") return <Pill tone="emerald"><Mail className="h-3 w-3 inline ml-0.5" /> أُرسل</Pill>;
-    if (s === "queued") return <Pill tone="amber"><Mail className="h-3 w-3 inline ml-0.5" /> في الطابور</Pill>;
-    if (s === "failed") return <Pill tone="rose"><XCircle className="h-3 w-3 inline ml-0.5" /> فشل</Pill>;
+    if (!s) return <span className="text-[10px] text-muted-foreground">{L("لم يُرسل", "Not sent")}</span>;
+    if (s === "sent") return <Pill tone="emerald"><Mail className="h-3 w-3 inline ml-0.5" /> {L("أُرسل", "Sent")}</Pill>;
+    if (s === "queued") return <Pill tone="amber"><Mail className="h-3 w-3 inline ml-0.5" /> {L("في الطابور", "Queued")}</Pill>;
+    if (s === "failed") return <Pill tone="rose"><XCircle className="h-3 w-3 inline ml-0.5" /> {L("فشل", "Failed")}</Pill>;
     return <Pill tone="muted">{s}</Pill>;
   }
 
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto" dir="rtl">
+      <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto" dir={dir}>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <FolderOpen className="h-5 w-5 text-primary" />
-            ملف الشريك: {partner.vendor_name}
+            {L("ملف الشريك:", "Partner file:")} {partner.vendor_name}
           </DialogTitle>
         </DialogHeader>
 
         <div className="rounded-2xl border bg-muted/30 p-4 text-sm space-y-2">
-          <div className="font-bold text-base mb-2">البيانات الأساسية</div>
+          <div className="font-bold text-base mb-2">{L("البيانات الأساسية", "Basic information")}</div>
           <div className="grid grid-cols-2 gap-x-4 gap-y-1.5">
-            <div><span className="text-muted-foreground">المسؤول:</span> <b>{partner.owner_name}</b></div>
-            <div><span className="text-muted-foreground">المدينة:</span> <b>{partner.city}</b></div>
+            <div><span className="text-muted-foreground">{L("المسؤول:", "Owner:")}</span> <b>{partner.owner_name}</b></div>
+            <div><span className="text-muted-foreground">{L("المدينة:", "City:")}</span> <b>{partner.city}</b></div>
             <div className="flex items-center gap-1"><Phone className="h-3.5 w-3.5 text-primary" /><b>{partner.phone}</b></div>
             {partner.email && <div className="flex items-center gap-1"><Mail className="h-3.5 w-3.5 text-primary" /><b>{partner.email}</b></div>}
-            {partner.commercial_number && <div><span className="text-muted-foreground">السجل التجاري:</span> <b>{partner.commercial_number}</b></div>}
-            <div><span className="text-muted-foreground">الحالة:</span> <Pill tone={partner.status === "active" ? "emerald" : "amber"}>{partner.status}</Pill></div>
+            {partner.commercial_number && <div><span className="text-muted-foreground">{L("السجل التجاري:", "Commercial reg.:")}</span> <b>{partner.commercial_number}</b></div>}
+            <div><span className="text-muted-foreground">{L("الحالة:", "Status:")}</span> <Pill tone={partner.status === "active" ? "emerald" : "amber"}>{statusLabel(partner.status)}</Pill></div>
           </div>
         </div>
 
         <div className="mt-4">
           <div className="font-bold text-base mb-2 flex items-center gap-2">
             <FileText className="h-4 w-4 text-primary" />
-            سجل الاتفاقيات ({apiAgreements.length})
+            {L("سجل الاتفاقيات", "Agreements history")} ({apiAgreements.length})
           </div>
           {loading ? (
             <div className="flex justify-center p-6"><Loader2 className="h-5 w-5 animate-spin" /></div>
           ) : apiAgreements.length === 0 ? (
             <div className="rounded-xl border border-dashed p-6 text-center text-sm text-muted-foreground">
-              لا توجد اتفاقيات بعد
+              {L("لا توجد اتفاقيات بعد", "No agreements yet")}
             </div>
           ) : (
             <div className="space-y-2">
@@ -499,24 +523,24 @@ function PartnerFileDialog({
                           {statusBadge(a.status)}
                           {isPending && emailStatusBadge(a.emailLastStatus)}
                           {typeof a.emailResentCount === "number" && a.emailResentCount > 0 && (
-                            <span className="text-[10px] text-muted-foreground">إعادة إرسال: {a.emailResentCount}×</span>
+                            <span className="text-[10px] text-muted-foreground">{L("إعادة إرسال:", "Resends:")} {a.emailResentCount}×</span>
                           )}
                         </div>
                         <div className="mt-1 text-xs text-muted-foreground">
-                          النسبة: <b className="text-foreground">{a.commissionPct}%</b> · أُرسلت {new Date(a.createdAt).toLocaleString("ar-SA")}
+                          {L("النسبة:", "Rate:")} <b className="text-foreground">{a.commissionPct}%</b> · {L("أُرسلت", "Sent")} {new Date(a.createdAt).toLocaleString(locale)}
                         </div>
                         {a.emailSentAt && (
                           <div className="mt-0.5 text-[11px] text-muted-foreground">
-                            آخر إرسال إيميل: {new Date(a.emailSentAt).toLocaleString("ar-SA")}
+                            {L("آخر إرسال إيميل:", "Last email sent:")} {new Date(a.emailSentAt).toLocaleString(locale)}
                           </div>
                         )}
                         {a.signedAt && (
                           <div className="mt-1 text-xs text-emerald-700">
-                            باسم <b>{a.signedName}</b> · {new Date(a.signedAt).toLocaleString("ar-SA")}
+                            {L("باسم", "By")} <b>{a.signedName}</b> · {new Date(a.signedAt).toLocaleString(locale)}
                           </div>
                         )}
                         {a.adminNotes && (
-                          <div className="mt-1 text-[11px] text-muted-foreground">ملاحظات: {a.adminNotes}</div>
+                          <div className="mt-1 text-[11px] text-muted-foreground">{L("ملاحظات:", "Notes:")} {a.adminNotes}</div>
                         )}
                       </div>
                       <div className="flex flex-col items-end gap-1.5">
@@ -524,7 +548,7 @@ function PartnerFileDialog({
                           onClick={() => setViewAg(mapApiAgreement(a))}
                           className="inline-flex items-center gap-1 rounded-full bg-primary px-3 py-1.5 text-[11px] font-bold text-primary-foreground hover:opacity-90"
                         >
-                          <Eye className="h-3 w-3" /> عرض
+                          <Eye className="h-3 w-3" /> {L("عرض", "View")}
                         </button>
                         {isPending && (
                           <>
@@ -532,7 +556,7 @@ function PartnerFileDialog({
                               onClick={() => setEditAg(a)}
                               className="inline-flex items-center gap-1 rounded-full border border-border bg-background px-3 py-1.5 text-[11px] font-bold hover:bg-muted"
                             >
-                              <Pencil className="h-3 w-3" /> تعديل
+                              <Pencil className="h-3 w-3" /> {L("تعديل", "Edit")}
                             </button>
                             <button
                               onClick={() => resend(a)}
@@ -540,7 +564,7 @@ function PartnerFileDialog({
                               className="inline-flex items-center gap-1 rounded-full border border-primary/40 bg-primary/5 px-3 py-1.5 text-[11px] font-bold text-primary hover:bg-primary/10 disabled:opacity-60"
                             >
                               {resendingId === a.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCw className="h-3 w-3" />}
-                              إعادة إرسال الإيميل
+                              {L("إعادة إرسال الإيميل", "Resend email")}
                             </button>
                           </>
                         )}
@@ -554,23 +578,23 @@ function PartnerFileDialog({
         </div>
 
         <DialogFooter>
-          <button onClick={onClose} className="rounded-full px-4 py-2 text-sm">إغلاق</button>
+          <button onClick={onClose} className="rounded-full px-4 py-2 text-sm">{L("إغلاق", "Close")}</button>
         </DialogFooter>
 
         {viewAg && (
           <Dialog open onOpenChange={(o) => !o && setViewAg(null)}>
-            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto" dir="rtl">
+            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto" dir={dir}>
               <DialogHeader>
-                <DialogTitle>عرض الاتفاقية</DialogTitle>
+                <DialogTitle>{L("عرض الاتفاقية", "View agreement")}</DialogTitle>
               </DialogHeader>
               <iframe srcDoc={viewHtml} className="w-full h-[70vh] rounded-lg border" />
               <DialogFooter>
-                <button onClick={() => setViewAg(null)} className="rounded-full px-4 py-2 text-sm">إغلاق</button>
+                <button onClick={() => setViewAg(null)} className="rounded-full px-4 py-2 text-sm">{L("إغلاق", "Close")}</button>
                 <button
                   onClick={() => printAgreementPdf(viewHtml)}
                   className="inline-flex items-center gap-1 rounded-full bg-primary px-4 py-2 text-sm font-bold text-primary-foreground"
                 >
-                  <FileText className="h-4 w-4" /> تحميل PDF
+                  <FileText className="h-4 w-4" /> {L("تحميل PDF", "Download PDF")}
                 </button>
               </DialogFooter>
             </DialogContent>
@@ -593,6 +617,9 @@ function PartnerFileDialog({
 function EditPendingAgreementDialog({
   partnerId, agreement, onClose, onSaved,
 }: { partnerId: string; agreement: ApiPartnerAgreement; onClose: () => void; onSaved: () => void }) {
+  const { lang, dir } = useLang();
+  const L = (ar: string, en: string) => (lang === "en" ? en : ar);
+
   const [rate, setRate] = useState<number>(agreement.commissionPct ?? agreement.depositPct ?? 10);
 
   const [title, setTitle] = useState<string>(agreement.customTitle || agreement.title || "");
@@ -601,7 +628,7 @@ function EditPendingAgreementDialog({
   const [saving, setSaving] = useState(false);
 
   async function save() {
-    if (!body.trim()) { toast.error("نص الاتفاقية مطلوب"); return; }
+    if (!body.trim()) { toast.error(L("نص الاتفاقية مطلوب", "Agreement body is required")); return; }
     setSaving(true);
     try {
       await adminAgreementsApi.updatePartnerAgreement(partnerId, agreement.id, {
@@ -612,10 +639,10 @@ function EditPendingAgreementDialog({
         customBody: body,
         adminNotes: notes || null,
       });
-      toast.success("تم تحديث الاتفاقية وإعادة الإرسال للشريك");
+      toast.success(L("تم تحديث الاتفاقية وإعادة الإرسال للشريك", "Agreement updated and resent to partner"));
       onSaved();
     } catch (e: any) {
-      toast.error(e?.message || "تعذّر التحديث أو حفظ النسبة على المركز");
+      toast.error(e?.message || L("تعذّر التحديث أو حفظ النسبة على المركز", "Failed to update or save rate on merchant"));
     } finally {
       setSaving(false);
     }
@@ -623,45 +650,45 @@ function EditPendingAgreementDialog({
 
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" dir="rtl">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" dir={dir}>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Pencil className="h-4 w-4 text-primary" /> تعديل اتفاقية بانتظار التوقيع
+            <Pencil className="h-4 w-4 text-primary" /> {L("تعديل اتفاقية بانتظار التوقيع", "Edit pending agreement")}
           </DialogTitle>
         </DialogHeader>
         <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">
           <Link2 className="inline h-3.5 w-3.5 ml-1" />
-          بعد الحفظ سيتم إنشاء توكن جديد وإعادة إرسال الإيميل تلقائياً للشريك.
+          {L("بعد الحفظ سيتم إنشاء توكن جديد وإعادة إرسال الإيميل تلقائياً للشريك.", "On save, a new token is generated and the email is automatically resent to the partner.")}
         </div>
         <div className="space-y-3 mt-3">
           <div>
-            <Label>نسبة العمولة / العربون %</Label>
+            <Label>{L("نسبة العمولة / العربون %", "Commission / deposit rate %")}</Label>
             <Input type="number" min={0} max={100} value={rate} onChange={(e) => setRate(Number(e.target.value))} />
-            <p className="mt-1 text-[11px] text-muted-foreground">العميل يدفع نفس النسبة كعربون وهي عمولة المنصة على الحجز.</p>
+            <p className="mt-1 text-[11px] text-muted-foreground">{L("العميل يدفع نفس النسبة كعربون وهي عمولة المنصة على الحجز.", "The customer pays the same rate as a deposit, which is the platform commission on the booking.")}</p>
           </div>
 
           <div>
-            <Label>عنوان الاتفاقية</Label>
+            <Label>{L("عنوان الاتفاقية", "Agreement title")}</Label>
             <Input value={title} onChange={(e) => setTitle(e.target.value)} />
           </div>
           <div>
-            <Label>نص الاتفاقية</Label>
+            <Label>{L("نص الاتفاقية", "Agreement body")}</Label>
             <Textarea value={body} onChange={(e) => setBody(e.target.value)} rows={10} className="font-mono text-xs leading-relaxed" />
           </div>
           <div>
-            <Label>ملاحظات الإدارة</Label>
+            <Label>{L("ملاحظات الإدارة", "Admin notes")}</Label>
             <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} />
           </div>
         </div>
         <DialogFooter>
-          <button onClick={onClose} className="rounded-full px-4 py-2 text-sm">إلغاء</button>
+          <button onClick={onClose} className="rounded-full px-4 py-2 text-sm">{L("إلغاء", "Cancel")}</button>
           <button
             onClick={save}
             disabled={saving}
             className="inline-flex items-center gap-1.5 rounded-full bg-primary px-4 py-2 text-sm font-bold text-primary-foreground disabled:opacity-60"
           >
             {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-            حفظ وإعادة إرسال
+            {L("حفظ وإعادة إرسال", "Save & resend")}
           </button>
         </DialogFooter>
       </DialogContent>
@@ -673,6 +700,9 @@ function EditPendingAgreementDialog({
 function IssueAgreementDialog({
   partner, template, onClose, onSaved,
 }: { partner: Partner; template: Template; onClose: () => void; onSaved: () => void }) {
+  const { lang, dir } = useLang();
+  const L = (ar: string, en: string) => (lang === "en" ? en : ar);
+
   const defaultClauses = extractAgreementClauses(template.body);
 
   const [rate, setRate] = useState<number>(partner.commission_pct ?? partner.deposit_pct ?? 10);
@@ -682,8 +712,6 @@ function IssueAgreementDialog({
   const [saving, setSaving] = useState(false);
   const [previewing, setPreviewing] = useState(false);
 
-  const fillRate = (txt: string) =>
-    txt.replace(/\{commission_pct\}/g, String(rate)).replace(/\{deposit_pct\}/g, String(rate));
   const bodyText = clauses.map((c) => c.trim()).filter(Boolean).join("\n\n");
 
   function updateClause(i: number, v: string) {
@@ -733,11 +761,11 @@ function IssueAgreementDialog({
 
   async function send() {
     if (!title.trim()) {
-      toast.error("العنوان مطلوب");
+      toast.error(L("العنوان مطلوب", "Title is required"));
       return;
     }
     if (!bodyText.trim()) {
-      toast.error("أضف بندًا واحدًا على الأقل");
+      toast.error(L("أضف بندًا واحدًا على الأقل", "Add at least one clause"));
       return;
     }
     setSaving(true);
@@ -750,11 +778,11 @@ function IssueAgreementDialog({
         customBody: bodyText,
         adminNotes: notes || null,
       });
-      toast.success("تم إصدار الاتفاقية وحفظها في قاعدة البيانات");
+      toast.success(L("تم إصدار الاتفاقية وحفظها في قاعدة البيانات", "Agreement issued and saved to the database"));
       onSaved();
     } catch (e: any) {
       console.error(e);
-      toast.error(e?.message || "تعذّر إصدار الاتفاقية أو حفظ النسبة على المركز");
+      toast.error(e?.message || L("تعذّر إصدار الاتفاقية أو حفظ النسبة على المركز", "Failed to issue agreement or save rate on merchant"));
     } finally {
       setSaving(false);
     }
@@ -762,38 +790,38 @@ function IssueAgreementDialog({
 
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" dir="rtl">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" dir={dir}>
         <DialogHeader>
-          <DialogTitle>إصدار اتفاقية لـ {partner.vendor_name}</DialogTitle>
+          <DialogTitle>{L("إصدار اتفاقية لـ", "Issue agreement for")} {partner.vendor_name}</DialogTitle>
         </DialogHeader>
         <div className="space-y-3">
           <div className="rounded-xl border border-dashed bg-muted/40 p-3 text-xs text-muted-foreground">
-            القالب الأساسي: <b className="text-foreground">{template.title}</b> ({template.version}).
-            يمكنك تعديل العنوان والنص أدناه قبل الإرسال — التعديلات تُحفظ مع هذه الاتفاقية فقط ولا تغيّر القالب.
+            {L("القالب الأساسي:", "Base template:")} <b className="text-foreground">{template.title}</b> ({template.version}).
+            {" "}{L("يمكنك تعديل العنوان والنص أدناه قبل الإرسال — التعديلات تُحفظ مع هذه الاتفاقية فقط ولا تغيّر القالب.", "You can edit the title and body below before sending — changes are saved with this agreement only and do not modify the template.")}
           </div>
 
           <div>
-            <Label>نسبة العمولة / العربون (%)</Label>
+            <Label>{L("نسبة العمولة / العربون (%)", "Commission / deposit rate (%)")}</Label>
             <Input type="number" min={0} max={100} value={rate} onChange={(e) => setRate(Number(e.target.value))} />
             <p className="mt-1 text-[11px] text-muted-foreground">
-              يتم استبدال <code>{"{commission_pct}"}</code> داخل النص بهذه النسبة تلقائياً.
+              {L("يتم استبدال", "Replaces")} <code>{"{commission_pct}"}</code> {L("داخل النص بهذه النسبة تلقائياً.", "inside the body with this rate automatically.")}
             </p>
           </div>
 
           <div>
-            <Label>عنوان الاتفاقية</Label>
+            <Label>{L("عنوان الاتفاقية", "Agreement title")}</Label>
             <Input value={title} onChange={(e) => setTitle(e.target.value)} />
           </div>
 
           <div>
             <div className="flex items-center justify-between mb-2">
-              <Label>بنود الاتفاقية</Label>
+              <Label>{L("بنود الاتفاقية", "Agreement clauses")}</Label>
               <button
                 type="button"
                 onClick={resetClauses}
                 className="text-[11px] text-primary hover:underline"
               >
-                إعادة تعيين من القالب
+                {L("إعادة تعيين من القالب", "Reset from template")}
               </button>
             </div>
             <div className="space-y-2">
@@ -806,7 +834,7 @@ function IssueAgreementDialog({
                     value={c}
                     onChange={(e) => updateClause(i, e.target.value)}
                     rows={2}
-                    placeholder={`البند رقم ${i + 1}...`}
+                    placeholder={L(`البند رقم ${i + 1}...`, `Clause #${i + 1}...`)}
                     className="flex-1 min-h-[44px] text-xs leading-relaxed"
                   />
                   <div className="flex flex-col gap-1">
@@ -815,7 +843,7 @@ function IssueAgreementDialog({
                       onClick={() => moveClause(i, -1)}
                       disabled={i === 0}
                       className="flex h-6 w-6 items-center justify-center rounded-md border bg-background hover:bg-muted disabled:opacity-40"
-                      title="تحريك لأعلى"
+                      title={L("تحريك لأعلى", "Move up")}
                     >
                       <ArrowUp className="h-3 w-3" />
                     </button>
@@ -824,7 +852,7 @@ function IssueAgreementDialog({
                       onClick={() => moveClause(i, 1)}
                       disabled={i === clauses.length - 1}
                       className="flex h-6 w-6 items-center justify-center rounded-md border bg-background hover:bg-muted disabled:opacity-40"
-                      title="تحريك لأسفل"
+                      title={L("تحريك لأسفل", "Move down")}
                     >
                       <ArrowDown className="h-3 w-3" />
                     </button>
@@ -832,7 +860,7 @@ function IssueAgreementDialog({
                       type="button"
                       onClick={() => removeClause(i)}
                       className="flex h-6 w-6 items-center justify-center rounded-md border border-rose-200 bg-background text-rose-600 hover:bg-rose-50"
-                      title="حذف البند"
+                      title={L("حذف البند", "Remove clause")}
                     >
                       <Trash2 className="h-3 w-3" />
                     </button>
@@ -845,31 +873,31 @@ function IssueAgreementDialog({
               onClick={addClause}
               className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-dashed border-primary/40 bg-primary/5 px-3 py-1.5 text-xs font-bold text-primary hover:bg-primary/10"
             >
-              <Plus className="h-3.5 w-3.5" /> إضافة بند جديد
+              <Plus className="h-3.5 w-3.5" /> {L("إضافة بند جديد", "Add new clause")}
             </button>
             <p className="mt-2 text-[11px] text-muted-foreground">
-              يمكنك استخدام <code>{"{commission_pct}"}</code> و <code>{"{deposit_pct}"}</code> داخل البنود لاستبدالهما بالنسبة تلقائيًا.
+              {L("يمكنك استخدام", "You can use")} <code>{"{commission_pct}"}</code> {L("و", "and")} <code>{"{deposit_pct}"}</code> {L("داخل البنود لاستبدالهما بالنسبة تلقائيًا.", "inside clauses to substitute the rate automatically.")}
             </p>
           </div>
 
           <div>
-            <Label>ملاحظات للشريك (اختياري)</Label>
+            <Label>{L("ملاحظات للشريك (اختياري)", "Notes for partner (optional)")}</Label>
             <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} />
           </div>
         </div>
         <DialogFooter>
-          <button onClick={onClose} className="rounded-full px-4 py-2 text-sm">إلغاء</button>
+          <button onClick={onClose} className="rounded-full px-4 py-2 text-sm">{L("إلغاء", "Cancel")}</button>
           <button
             onClick={() => {
               if (!title.trim() || !bodyText.trim()) {
-                toast.error("العنوان وبند واحد على الأقل مطلوبان");
+                toast.error(L("العنوان وبند واحد على الأقل مطلوبان", "Title and at least one clause are required"));
                 return;
               }
               setPreviewing(true);
             }}
             className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-4 py-2 text-sm font-bold hover:bg-muted"
           >
-            <Eye className="h-4 w-4" /> مراجعة قبل الإرسال
+            <Eye className="h-4 w-4" /> {L("مراجعة قبل الإرسال", "Review before sending")}
           </button>
           <button
             onClick={send}
@@ -877,20 +905,20 @@ function IssueAgreementDialog({
             className="inline-flex items-center gap-1.5 rounded-full bg-primary px-4 py-2 text-sm font-bold text-primary-foreground disabled:opacity-60"
           >
             {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-            إرسال الاتفاقية للشريك
+            {L("إرسال الاتفاقية للشريك", "Send agreement to partner")}
           </button>
         </DialogFooter>
 
         {previewing && (
           <Dialog open onOpenChange={(o) => !o && setPreviewing(false)}>
-            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto" dir="rtl">
+            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto" dir={dir}>
               <DialogHeader>
-                <DialogTitle>معاينة الاتفاقية قبل الإرسال</DialogTitle>
+                <DialogTitle>{L("معاينة الاتفاقية قبل الإرسال", "Preview agreement before sending")}</DialogTitle>
               </DialogHeader>
               <iframe srcDoc={previewHtml} className="w-full h-[65vh] rounded-lg border" />
               <DialogFooter>
                 <button onClick={() => setPreviewing(false)} className="rounded-full px-4 py-2 text-sm">
-                  رجوع للتعديل
+                  {L("رجوع للتعديل", "Back to edit")}
                 </button>
                 <button
                   onClick={async () => { await send(); setPreviewing(false); }}
@@ -898,7 +926,7 @@ function IssueAgreementDialog({
                   className="inline-flex items-center gap-1.5 rounded-full bg-primary px-4 py-2 text-sm font-bold text-primary-foreground disabled:opacity-60"
                 >
                   {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-                  تأكيد الإرسال
+                  {L("تأكيد الإرسال", "Confirm send")}
                 </button>
               </DialogFooter>
             </DialogContent>
@@ -908,4 +936,3 @@ function IssueAgreementDialog({
     </Dialog>
   );
 }
-

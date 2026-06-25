@@ -466,10 +466,10 @@ function SlideVisual({ slide, slideIndex }: { slide: Slide; slideIndex: number }
       : 0;
 
   const badgeValue = discountPct > 0 ? `${discountPct}%` : slide.badge.value;
-  const badgeLabel = discountPct > 0 ? "خصم العرض" : slide.badge.label;
+  const badgeLabel = discountPct > 0 ? L("خصم العرض", "Offer discount") : slide.badge.label;
 
   const offerTitle =
-    offer?.title || offer?.titleAr || offer?.titleEn || ad?.title || "";
+    (lang === "en" ? (offer?.titleEn || offer?.title || offer?.titleAr) : (offer?.title || offer?.titleAr || offer?.titleEn)) || ad?.title || "";
   const centerName =
     offer?.vendor?.name ||
     offer?.vendorName ||

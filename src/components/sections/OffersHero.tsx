@@ -619,7 +619,7 @@ function SlideVisual({ slide, slideIndex }: { slide: Slide; slideIndex: number }
             const inner = (
               <div className="min-w-0 flex-1">
                 <div className="mb-0.5 inline-flex items-center gap-1 rounded-full bg-primary/10 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-primary">
-                  <Megaphone className="h-2.5 w-2.5" /> إعلان ممول
+                  <Megaphone className="h-2.5 w-2.5" /> {L("إعلان ممول", "Sponsored")}
                 </div>
                 <div className="truncate text-xs font-extrabold text-foreground sm:text-sm">
                   {ad.title}

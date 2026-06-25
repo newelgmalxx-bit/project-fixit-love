@@ -952,9 +952,6 @@ function AddCenterDialog({
           <div className="sm:col-span-2">
             <label className="text-xs font-bold flex items-center gap-2">
               <KeyRound className="h-3.5 w-3.5" />
-          <div className="sm:col-span-2">
-            <label className="text-xs font-bold flex items-center gap-2">
-              <KeyRound className="h-3.5 w-3.5" />
               {initial ? L("تغيير كلمة مرور المركز (اختياري)", "Change partner password (optional)") : L("كلمة مرور المركز (اختياري)", "Partner password (optional)")}
             </label>
             <div className="mt-1 flex gap-2">

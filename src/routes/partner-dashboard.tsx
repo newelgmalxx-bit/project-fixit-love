@@ -22,9 +22,10 @@ import {
 
 
 import { PartnerGuard } from "@/components/auth/PartnerGuard";
+import { useLang } from "@/i18n/LanguageProvider";
 
 export const Route = createFileRoute("/partner-dashboard")({
-  head: () => ({ meta: [{ title: "لوحة تحكم الشريك | خصومات" }] }),
+  head: () => ({ meta: [{ title: "Partner Dashboard | Koswmat" }] }),
   component: () => (
     <PartnerGuard>
       <PartnerDashboard />

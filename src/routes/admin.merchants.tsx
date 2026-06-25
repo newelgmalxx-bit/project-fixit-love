@@ -48,14 +48,14 @@ type Merchant = {
   packageId?: string;
 };
 
-const WEEK_DAYS: { key: string; ar: string }[] = [
-  { key: "saturday", ar: "السبت" },
-  { key: "sunday", ar: "الأحد" },
-  { key: "monday", ar: "الاثنين" },
-  { key: "tuesday", ar: "الثلاثاء" },
-  { key: "wednesday", ar: "الأربعاء" },
-  { key: "thursday", ar: "الخميس" },
-  { key: "friday", ar: "الجمعة" },
+const WEEK_DAYS: { key: string; ar: string; en: string }[] = [
+  { key: "saturday", ar: "السبت", en: "Saturday" },
+  { key: "sunday", ar: "الأحد", en: "Sunday" },
+  { key: "monday", ar: "الاثنين", en: "Monday" },
+  { key: "tuesday", ar: "الثلاثاء", en: "Tuesday" },
+  { key: "wednesday", ar: "الأربعاء", en: "Wednesday" },
+  { key: "thursday", ar: "الخميس", en: "Thursday" },
+  { key: "friday", ar: "الجمعة", en: "Friday" },
 ];
 
 function defaultWorkingHours(): WorkingHour[] {
@@ -86,11 +86,11 @@ function parseWorkingHours(raw: any): WorkingHour[] {
 }
 
 
-const STATUS_META: Record<Status, { label: string; tone: "emerald" | "amber" | "rose" | "muted"; icon: any }> = {
-  active: { label: "نشط", tone: "emerald", icon: CheckCircle2 },
-  pending: { label: "قيد المراجعة", tone: "amber", icon: Clock },
-  suspended: { label: "موقوف", tone: "muted", icon: Ban },
-  rejected: { label: "مرفوض", tone: "rose", icon: XCircle },
+const STATUS_META: Record<Status, { ar: string; en: string; tone: "emerald" | "amber" | "rose" | "muted"; icon: any }> = {
+  active: { ar: "نشط", en: "Active", tone: "emerald", icon: CheckCircle2 },
+  pending: { ar: "قيد المراجعة", en: "Pending review", tone: "amber", icon: Clock },
+  suspended: { ar: "موقوف", en: "Suspended", tone: "muted", icon: Ban },
+  rejected: { ar: "مرفوض", en: "Rejected", tone: "rose", icon: XCircle },
 };
 
 function normalizeStatus(s: any): Status {
@@ -180,6 +180,9 @@ function mapPartner(p: AdminPartner): Merchant {
 }
 
 function MerchantsPage() {
+  const { lang } = useLang();
+  const L = (a: string, e: string) => (lang === "en" ? e : a);
+  const sLabel = (s: Status) => L(STATUS_META[s].ar, STATUS_META[s].en);
 
   const [items, setItems] = useState<Merchant[]>([]);
   const [loading, setLoading] = useState(true);
@@ -232,7 +235,7 @@ function MerchantsPage() {
       );
       setItems(enriched);
     } catch (e: any) {
-      toast.error(e?.message || "تعذّر تحميل المراكز");
+      toast.error(e?.message || L("تعذّر تحميل المراكز", "Failed to load partners"));
       setItems([]);
     } finally {
       setLoading(false);
@@ -265,29 +268,35 @@ function MerchantsPage() {
       await adminPartnersApi.setStatus(id, status);
       setItems((arr) => arr.map((m) => (m.id === id ? { ...m, status } : m)));
       setViewing((v) => (v && v.id === id ? { ...v, status } : v));
-      toast.success("تم تحديث حالة المركز");
+      toast.success(L("تم تحديث حالة المركز", "Partner status updated"));
     } catch (e: any) {
-      toast.error(e?.message || "تعذّر تحديث الحالة");
+      toast.error(e?.message || L("تعذّر تحديث الحالة", "Failed to update status"));
     }
   }
 
   async function deleteCenter(m: Merchant, force = false) {
     const msg = force
-      ? `حذف نهائي للمركز "${m.name}" وكل البيانات المرتبطة به (العروض، الحجوزات، المدفوعات، التصنيفات، الاتفاقيات). لا يمكن التراجع. هل أنت متأكد؟`
-      : `تعليق المركز "${m.name}" (Suspend)؟ يمكنك إعادة تفعيله لاحقًا.`;
+      ? L(
+          `حذف نهائي للمركز "${m.name}" وكل البيانات المرتبطة به (العروض، الحجوزات، المدفوعات، التصنيفات، الاتفاقيات). لا يمكن التراجع. هل أنت متأكد؟`,
+          `Permanently delete partner "${m.name}" and all related data (offers, bookings, payments, categories, agreements). This cannot be undone. Are you sure?`,
+        )
+      : L(
+          `تعليق المركز "${m.name}" (Suspend)؟ يمكنك إعادة تفعيله لاحقًا.`,
+          `Suspend partner "${m.name}"? You can reactivate later.`,
+        );
     if (!confirm(msg)) return;
     try {
       await adminPartnersApi.remove(m.id, { force });
       if (force) {
         setItems((arr) => arr.filter((x) => x.id !== m.id));
         setViewing((v) => (v && v.id === m.id ? null : v));
-        toast.success("تم حذف المركز نهائيًا");
+        toast.success(L("تم حذف المركز نهائيًا", "Partner permanently deleted"));
       } else {
         setItems((arr) => arr.map((x) => (x.id === m.id ? { ...x, status: "suspended" } : x)));
-        toast.success("تم تعليق المركز");
+        toast.success(L("تم تعليق المركز", "Partner suspended"));
       }
     } catch (e: any) {
-      toast.error(e?.message || (force ? "تعذّر حذف المركز" : "تعذّر تعليق المركز"));
+      toast.error(e?.message || (force ? L("تعذّر حذف المركز", "Failed to delete partner") : L("تعذّر تعليق المركز", "Failed to suspend partner")));
     }
   }
 
@@ -325,17 +334,17 @@ function MerchantsPage() {
       });
       const tempPwd = res?.data?.partner?.tempPassword || res?.partner?.tempPassword;
       if (tempPwd) {
-        toast.success(`تمت إضافة المركز — كلمة المرور المؤقتة: ${tempPwd}`, {
+        toast.success(L(`تمت إضافة المركز — كلمة المرور المؤقتة: ${tempPwd}`, `Partner added — temporary password: ${tempPwd}`), {
           duration: 12000,
-          action: { label: "نسخ", onClick: () => navigator.clipboard.writeText(tempPwd) },
+          action: { label: L("نسخ", "Copy"), onClick: () => navigator.clipboard.writeText(tempPwd) },
         });
       } else {
-        toast.success("تمت إضافة المركز");
+        toast.success(L("تمت إضافة المركز", "Partner added"));
       }
       setAddOpen(false);
       load();
     } catch (e: any) {
-      toast.error(e?.message || "تعذّر إضافة المركز");
+      toast.error(e?.message || L("تعذّر إضافة المركز", "Failed to add partner"));
     }
   }
 
@@ -371,17 +380,17 @@ function MerchantsPage() {
         } as any),
       });
       if (data.password) {
-        toast.success(`تم تحديث المركز وكلمة المرور الجديدة: ${data.password}`, {
+        toast.success(L(`تم تحديث المركز وكلمة المرور الجديدة: ${data.password}`, `Partner updated, new password: ${data.password}`), {
           duration: 12000,
-          action: { label: "نسخ", onClick: () => navigator.clipboard.writeText(data.password!) },
+          action: { label: L("نسخ", "Copy"), onClick: () => navigator.clipboard.writeText(data.password!) },
         });
       } else {
-        toast.success("تم تحديث بيانات المركز");
+        toast.success(L("تم تحديث بيانات المركز", "Partner updated"));
       }
       setEditing(null);
       load();
     } catch (e: any) {
-      toast.error(e?.message || "تعذّر تحديث المركز");
+      toast.error(e?.message || L("تعذّر تحديث المركز", "Failed to update partner"));
     }
   }
 
@@ -393,25 +402,25 @@ function MerchantsPage() {
 
   return (
     <AdminLayout
-      title="إدارة المراكز"
-      subtitle="راجع وفعّل المراكز، تابع أداءها والتزامها بمعايير المنصة"
+      title={L("إدارة المراكز", "Partner management")}
+      subtitle={L("راجع وفعّل المراكز، تابع أداءها والتزامها بمعايير المنصة", "Review and activate partners, track performance and compliance")}
       action={
         <PrimaryButton onClick={() => setAddOpen(true)}>
-          <Store className="h-4 w-4" /> إضافة مركز يدوي
+          <Store className="h-4 w-4" /> {L("إضافة مركز يدوي", "Add partner manually")}
         </PrimaryButton>
       }
     >
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard label="إجمالي المراكز" value={counts.all} icon={Store} accent="primary" hint={`${counts.active} نشط`} />
-        <StatCard label="بانتظار المراجعة" value={counts.pending} icon={Clock} accent="amber" hint="يحتاج إجراء" />
-        <StatCard label="مراكز موقوفة" value={counts.suspended} icon={Ban} accent="rose" />
-        <StatCard label="إجمالي الإيرادات" value={`${revenueTotal.toLocaleString()} ر.س`} icon={BadgeCheck} accent="emerald" />
+        <StatCard label={L("إجمالي المراكز", "Total partners")} value={counts.all} icon={Store} accent="primary" hint={`${counts.active} ${L("نشط", "active")}`} />
+        <StatCard label={L("بانتظار المراجعة", "Pending review")} value={counts.pending} icon={Clock} accent="amber" hint={L("يحتاج إجراء", "Needs action")} />
+        <StatCard label={L("مراكز موقوفة", "Suspended")} value={counts.suspended} icon={Ban} accent="rose" />
+        <StatCard label={L("إجمالي الإيرادات", "Total revenue")} value={`${revenueTotal.toLocaleString()} ${L("ر.س", "SAR")}`} icon={BadgeCheck} accent="emerald" />
       </div>
 
       <PanelCard
         className="mt-6"
-        title={`قائمة المراكز (${filtered.length})`}
-        subtitle="اعتمد أو ارفض طلبات الانضمام، وعدّل حالة المراكز النشطة."
+        title={L(`قائمة المراكز (${filtered.length})`, `Partners list (${filtered.length})`)}
+        subtitle={L("اعتمد أو ارفض طلبات الانضمام، وعدّل حالة المراكز النشطة.", "Approve or reject join requests, and manage active partners.")}
         action={
           <div className="flex flex-wrap items-center gap-2">
             <div className="relative">
@@ -419,21 +428,21 @@ function MerchantsPage() {
               <input
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
-                placeholder="ابحث باسم المركز، المالك، السجل التجاري…"
+                placeholder={L("ابحث باسم المركز، المالك، السجل التجاري…", "Search by partner name, owner, CR…")}
                 className="h-10 w-64 rounded-xl border border-border bg-background pe-9 ps-3 text-sm outline-none focus:border-primary"
               />
             </div>
-            <button onClick={load} className="rounded-xl border border-border px-3 py-2 text-xs font-bold hover:bg-muted">تحديث</button>
+            <button onClick={load} className="rounded-xl border border-border px-3 py-2 text-xs font-bold hover:bg-muted">{L("تحديث", "Refresh")}</button>
           </div>
         }
       >
         <div className="mb-4 flex flex-wrap gap-2">
           {[
-            { v: "all", l: "الكل", c: counts.all },
-            { v: "pending", l: "قيد المراجعة", c: counts.pending },
-            { v: "active", l: "نشط", c: counts.active },
-            { v: "suspended", l: "موقوف", c: counts.suspended },
-            { v: "rejected", l: "مرفوض", c: counts.rejected },
+            { v: "all", l: L("الكل", "All"), c: counts.all },
+            { v: "pending", l: L("قيد المراجعة", "Pending"), c: counts.pending },
+            { v: "active", l: L("نشط", "Active"), c: counts.active },
+            { v: "suspended", l: L("موقوف", "Suspended"), c: counts.suspended },
+            { v: "rejected", l: L("مرفوض", "Rejected"), c: counts.rejected },
           ].map((o) => (
             <button
               key={o.v}
@@ -448,6 +457,7 @@ function MerchantsPage() {
           ))}
         </div>
 
+
         {loading ? (
           <div className="flex justify-center py-16"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
         ) : (
@@ -455,17 +465,17 @@ function MerchantsPage() {
           <table className="min-w-full text-sm">
             <thead className="bg-muted/40 text-xs font-bold text-muted-foreground">
               <tr>
-                <th className="p-3 text-start">المركز</th>
-                <th className="p-3 text-start">التواصل</th>
-                <th className="p-3 text-start">رقم التواصل</th>
-                <th className="p-3 text-start">التصنيف · المدينة</th>
-                <th className="p-3 text-start">الباقة</th>
-                <th className="p-3 text-start">العروض</th>
-                <th className="p-3 text-start">الحجوزات</th>
-                <th className="p-3 text-start">الإيراد</th>
-                <th className="p-3 text-start">التقييم</th>
-                <th className="p-3 text-start">الحالة</th>
-                <th className="p-3 text-end">إجراءات</th>
+                <th className="p-3 text-start">{L("المركز", "Partner")}</th>
+                <th className="p-3 text-start">{L("التواصل", "Email")}</th>
+                <th className="p-3 text-start">{L("رقم التواصل", "Phone")}</th>
+                <th className="p-3 text-start">{L("التصنيف · المدينة", "Category · City")}</th>
+                <th className="p-3 text-start">{L("الباقة", "Package")}</th>
+                <th className="p-3 text-start">{L("العروض", "Offers")}</th>
+                <th className="p-3 text-start">{L("الحجوزات", "Bookings")}</th>
+                <th className="p-3 text-start">{L("الإيراد", "Revenue")}</th>
+                <th className="p-3 text-start">{L("التقييم", "Rating")}</th>
+                <th className="p-3 text-start">{L("الحالة", "Status")}</th>
+                <th className="p-3 text-end">{L("إجراءات", "Actions")}</th>
               </tr>
             </thead>
             <tbody>
@@ -518,7 +528,7 @@ function MerchantsPage() {
                     </td>
                     <td className="p-3 font-bold">{m.offers}</td>
                     <td className="p-3 font-bold">{m.bookings}</td>
-                    <td className="p-3 font-bold" dir="ltr">{m.revenue.toLocaleString()} ر.س</td>
+                    <td className="p-3 font-bold" dir="ltr">{m.revenue.toLocaleString()} {L("ر.س", "SAR")}</td>
                     <td className="p-3">
                       {m.rating > 0 ? (
                         <span className="inline-flex items-center gap-1 text-sm font-bold">
@@ -530,7 +540,7 @@ function MerchantsPage() {
                     </td>
                     <td className="p-3">
                       <Pill tone={s.tone}>
-                        <s.icon className="h-3 w-3" /> {s.label}
+                        <s.icon className="h-3 w-3" /> {sLabel(m.status)}
                       </Pill>
                     </td>
                     <td className="p-3 text-end">
@@ -539,7 +549,7 @@ function MerchantsPage() {
                           onClick={() => setViewing(m)}
                           className="inline-flex items-center gap-1 rounded-lg border border-border bg-background px-2.5 py-1.5 text-xs font-bold hover:bg-muted"
                         >
-                          <Eye className="h-3.5 w-3.5" /> عرض
+                          <Eye className="h-3.5 w-3.5" /> {L("عرض", "View")}
                         </button>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
@@ -551,10 +561,10 @@ function MerchantsPage() {
                             {m.status === "pending" && (
                               <>
                                 <DropdownMenuItem onClick={() => setStatus(m.id, "active")}>
-                                  <CheckCircle2 className="me-2 h-4 w-4 text-emerald-600" /> اعتماد المركز
+                                  <CheckCircle2 className="me-2 h-4 w-4 text-emerald-600" /> {L("اعتماد المركز", "Approve partner")}
                                 </DropdownMenuItem>
                                 <DropdownMenuItem onClick={() => setStatus(m.id, "rejected")}>
-                                  <XCircle className="me-2 h-4 w-4 text-rose-600" /> رفض الطلب
+                                  <XCircle className="me-2 h-4 w-4 text-rose-600" /> {L("رفض الطلب", "Reject request")}
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator />
                               </>
@@ -589,21 +599,21 @@ function MerchantsPage() {
                                 setEditing(m);
                               }
                             }}>
-                              <Pencil className="me-2 h-4 w-4" /> تعديل البيانات
+                              <Pencil className="me-2 h-4 w-4" /> {L("تعديل البيانات", "Edit details")}
                             </DropdownMenuItem>
                             {m.status === "active" && (
                               <DropdownMenuItem onClick={() => setStatus(m.id, "suspended")}>
-                                <Ban className="me-2 h-4 w-4 text-amber-600" /> إيقاف مؤقت
+                                <Ban className="me-2 h-4 w-4 text-amber-600" /> {L("إيقاف مؤقت", "Suspend")}
                               </DropdownMenuItem>
                             )}
                             {(m.status === "suspended" || m.status === "rejected") && (
                               <DropdownMenuItem onClick={() => setStatus(m.id, "active")}>
-                                <CheckCircle2 className="me-2 h-4 w-4 text-emerald-600" /> إعادة تفعيل
+                                <CheckCircle2 className="me-2 h-4 w-4 text-emerald-600" /> {L("إعادة تفعيل", "Reactivate")}
                               </DropdownMenuItem>
                             )}
                             <DropdownMenuSeparator />
                             <DropdownMenuItem onClick={() => deleteCenter(m, true)} className="text-rose-600 focus:text-rose-600">
-                              <Trash2 className="me-2 h-4 w-4" /> حذف نهائي
+                              <Trash2 className="me-2 h-4 w-4" /> {L("حذف نهائي", "Delete permanently")}
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -614,7 +624,7 @@ function MerchantsPage() {
               })}
               {filtered.length === 0 && (
                 <tr>
-                  <td colSpan={11} className="p-10 text-center text-sm text-muted-foreground">لا توجد مراكز مطابقة</td>
+                  <td colSpan={11} className="p-10 text-center text-sm text-muted-foreground">{L("لا توجد مراكز مطابقة", "No matching partners")}</td>
                 </tr>
               )}
             </tbody>
@@ -636,7 +646,7 @@ function MerchantsPage() {
                     const s = STATUS_META[viewing.status];
                     return (
                       <Pill tone={s.tone}>
-                        <s.icon className="h-3 w-3" /> {s.label}
+                        <s.icon className="h-3 w-3" /> {sLabel(viewing.status)}
                       </Pill>
                     );
                   })()}
@@ -647,42 +657,42 @@ function MerchantsPage() {
                   <div className="flex items-center gap-2"><Store className="h-4 w-4 text-primary" /> {viewing.owner}</div>
                   <div className="flex items-center gap-2"><Phone className="h-4 w-4 text-primary" /> <span dir="ltr">{viewing.phone}</span></div>
                   <div className="flex items-center gap-2"><Mail className="h-4 w-4 text-primary" /> {viewing.email}</div>
-                  <div className="flex items-center gap-2"><FileText className="h-4 w-4 text-primary" /> س.ت: <span dir="ltr">{viewing.commercialNumber}</span></div>
-                  <div className="flex items-center gap-2"><Calendar className="h-4 w-4 text-primary" /> انضم: {viewing.joined || "—"}</div>
-                  <div className="flex items-center gap-2"><Star className="h-4 w-4 text-amber-500" /> {viewing.rating > 0 ? `${viewing.rating} / 5` : "بدون تقييم"}</div>
+                  <div className="flex items-center gap-2"><FileText className="h-4 w-4 text-primary" /> {L("س.ت:", "CR:")} <span dir="ltr">{viewing.commercialNumber}</span></div>
+                  <div className="flex items-center gap-2"><Calendar className="h-4 w-4 text-primary" /> {L("انضم:", "Joined:")} {viewing.joined || "—"}</div>
+                  <div className="flex items-center gap-2"><Star className="h-4 w-4 text-amber-500" /> {viewing.rating > 0 ? `${viewing.rating} / 5` : L("بدون تقييم", "No rating")}</div>
                   {viewing.mapsUrl && (
                     <a href={viewing.mapsUrl} target="_blank" rel="noopener noreferrer" className="sm:col-span-2 inline-flex items-center gap-2 rounded-lg border border-primary/40 bg-primary/5 px-3 py-2 font-bold text-primary hover:bg-primary/10">
-                      <MapPin className="h-4 w-4" /> فتح الموقع على خرائط جوجل
+                      <MapPin className="h-4 w-4" /> {L("فتح الموقع على خرائط جوجل", "Open on Google Maps")}
                     </a>
                   )}
                 </div>
                 <div className="grid grid-cols-3 gap-3 rounded-2xl border border-border bg-muted/30 p-4 text-center">
                   <div>
                     <div className="text-2xl font-black">{viewing.offers}</div>
-                    <div className="text-xs text-muted-foreground">عرض</div>
+                    <div className="text-xs text-muted-foreground">{L("عرض", "Offers")}</div>
                   </div>
                   <div>
                     <div className="text-2xl font-black">{viewing.bookings}</div>
-                    <div className="text-xs text-muted-foreground">حجز</div>
+                    <div className="text-xs text-muted-foreground">{L("حجز", "Bookings")}</div>
                   </div>
                   <div>
                     <div className="text-2xl font-black" dir="ltr">{viewing.revenue.toLocaleString()}</div>
-                    <div className="text-xs text-muted-foreground">إيراد (ر.س)</div>
+                    <div className="text-xs text-muted-foreground">{L("إيراد (ر.س)", "Revenue (SAR)")}</div>
                   </div>
                 </div>
               </div>
               <DialogFooter className="gap-2 sm:gap-2">
                 {viewing.status === "pending" && (
                   <>
-                    <GhostButton onClick={() => setStatus(viewing.id, "rejected")}>رفض</GhostButton>
-                    <PrimaryButton onClick={() => setStatus(viewing.id, "active")}>اعتماد المركز</PrimaryButton>
+                    <GhostButton onClick={() => setStatus(viewing.id, "rejected")}>{L("رفض", "Reject")}</GhostButton>
+                    <PrimaryButton onClick={() => setStatus(viewing.id, "active")}>{L("اعتماد المركز", "Approve partner")}</PrimaryButton>
                   </>
                 )}
                 {viewing.status === "active" && (
-                  <GhostButton onClick={() => setStatus(viewing.id, "suspended")}>إيقاف مؤقت</GhostButton>
+                  <GhostButton onClick={() => setStatus(viewing.id, "suspended")}>{L("إيقاف مؤقت", "Suspend")}</GhostButton>
                 )}
                 {(viewing.status === "suspended" || viewing.status === "rejected") && (
-                  <PrimaryButton onClick={() => setStatus(viewing.id, "active")}>إعادة تفعيل</PrimaryButton>
+                  <PrimaryButton onClick={() => setStatus(viewing.id, "active")}>{L("إعادة تفعيل", "Reactivate")}</PrimaryButton>
                 )}
               </DialogFooter>
             </>
@@ -713,6 +723,8 @@ function AddCenterDialog({
   categories?: AdminCategory[];
   packages?: PartnerPackage[];
 }) {
+  const { lang, dir } = useLang();
+  const L = (a: string, e: string) => (lang === "en" ? e : a);
   const empty = {
     name: "", nameEn: "", owner: "", city: "", phone: "", email: "",
     commercialNumber: "", mapsUrl: "", status: "pending" as Status,
@@ -754,62 +766,65 @@ function AddCenterDialog({
   }
   function submit(e: React.FormEvent) {
     e.preventDefault();
-    if (!f.name.trim()) { toast.error("اسم المركز مطلوب"); return; }
-    if (!f.owner.trim()) { toast.error("اسم المالك مطلوب"); return; }
-    if (!f.city.trim()) { toast.error("المدينة مطلوبة"); return; }
-    if (!f.phone.trim()) { toast.error("رقم الجوال مطلوب"); return; }
-    if (!initial && !f.email.trim()) { toast.error("البريد الإلكتروني مطلوب لإرسال بيانات الدخول"); return; }
+    if (!f.name.trim()) { toast.error(L("اسم المركز مطلوب", "Partner name is required")); return; }
+    if (!f.owner.trim()) { toast.error(L("اسم المالك مطلوب", "Owner name is required")); return; }
+    if (!f.city.trim()) { toast.error(L("المدينة مطلوبة", "City is required")); return; }
+    if (!f.phone.trim()) { toast.error(L("رقم الجوال مطلوب", "Phone is required")); return; }
+    if (!initial && !f.email.trim()) { toast.error(L("البريد الإلكتروني مطلوب لإرسال بيانات الدخول", "Email is required to send login credentials")); return; }
     onSave({ ...f });
     reset();
   }
   return (
     <Dialog open={open} onOpenChange={(o) => !o && (reset(), onClose())}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" dir="rtl">
-        <DialogHeader><DialogTitle className="text-end">{initial ? "تعديل بيانات المركز" : "إضافة مركز يدوي"}</DialogTitle></DialogHeader>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" dir={dir}>
+        <DialogHeader><DialogTitle className="text-end">{initial ? L("تعديل بيانات المركز", "Edit partner details") : L("إضافة مركز يدوي", "Add partner manually")}</DialogTitle></DialogHeader>
         <form onSubmit={submit} className="grid gap-3 sm:grid-cols-2">
           <div>
-            <label className="text-xs font-bold">اسم المركز (عربي) *</label>
+            <label className="text-xs font-bold">{L("اسم المركز (عربي) *", "Partner name (Arabic) *")}</label>
             <input value={f.name} onChange={(e) => up("name", e.target.value)} className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm" />
           </div>
           <div>
-            <label className="text-xs font-bold">اسم المركز (إنجليزي)</label>
+            <label className="text-xs font-bold">{L("اسم المركز (إنجليزي)", "Partner name (English)")}</label>
             <input dir="ltr" value={f.nameEn} onChange={(e) => up("nameEn", e.target.value)} placeholder="Center name" className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm" />
           </div>
 
           <div>
-            <label className="text-xs font-bold">اسم المالك *</label>
+            <label className="text-xs font-bold">{L("اسم المالك *", "Owner name *")}</label>
             <input value={f.owner} onChange={(e) => up("owner", e.target.value)} className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm" />
           </div>
           <div>
-            <label className="text-xs font-bold">المدينة *</label>
+            <label className="text-xs font-bold">{L("المدينة *", "City *")}</label>
             <input value={f.city} onChange={(e) => up("city", e.target.value)} className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm" />
           </div>
           <div>
-            <label className="text-xs font-bold">رقم الجوال *</label>
+            <label className="text-xs font-bold">{L("رقم الجوال *", "Phone *")}</label>
             <input value={f.phone} onChange={(e) => up("phone", e.target.value)} placeholder="+966…" className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm" />
           </div>
           <div>
-            <label className="text-xs font-bold">البريد الإلكتروني {initial ? "" : "*"}</label>
+            <label className="text-xs font-bold">{L("البريد الإلكتروني", "Email")} {initial ? "" : "*"}</label>
             <input value={f.email} onChange={(e) => up("email", e.target.value)} className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm" />
           </div>
           <div>
-            <label className="text-xs font-bold">السجل التجاري</label>
+            <label className="text-xs font-bold">{L("السجل التجاري", "Commercial registration")}</label>
             <input value={f.commercialNumber} onChange={(e) => up("commercialNumber", e.target.value)} className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm" />
           </div>
           <div className="sm:col-span-2">
-            <label className="text-xs font-bold">رابط الموقع على خرائط جوجل</label>
+            <label className="text-xs font-bold">{L("رابط الموقع على خرائط جوجل", "Google Maps URL")}</label>
             <input dir="ltr" value={f.mapsUrl} onChange={(e) => up("mapsUrl", e.target.value)} placeholder="https://maps.app.goo.gl/..." className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm" />
           </div>
 
           <div className="sm:col-span-2">
-            <label className="text-xs font-bold">تصنيفات المركز</label>
+            <label className="text-xs font-bold">{L("تصنيفات المركز", "Partner categories")}</label>
             <div className="mt-1 flex flex-wrap gap-2 rounded-xl border border-border bg-background p-2">
               {(categories || []).length === 0 && (
-                <span className="text-xs text-muted-foreground">لا توجد تصنيفات — أضفها من صفحة التصنيفات أولاً.</span>
+                <span className="text-xs text-muted-foreground">{L("لا توجد تصنيفات — أضفها من صفحة التصنيفات أولاً.", "No categories — add them from the Categories page first.")}</span>
               )}
               {(categories || []).map((c) => {
                 const idKey = categoryKey(c);
                 const selected = (f.categoryIds || []).some((id) => categoryKey(id) === idKey);
+                const catName = lang === "en"
+                  ? ((c as any).nameEn || (c as any).name_en || (c as any).nameAr || (c as any).name_ar || (c as any).name)
+                  : ((c as any).nameAr || (c as any).name_ar || (c as any).name || c.nameEn);
                 return (
                   <button
                     type="button"
@@ -827,7 +842,7 @@ function AddCenterDialog({
                       selected ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card text-foreground hover:bg-muted",
                     ].join(" ")}
                   >
-                    {(c as any).nameAr || (c as any).name_ar || (c as any).name || c.nameEn}
+                    {catName}
                   </button>
                 );
               })}
@@ -836,17 +851,17 @@ function AddCenterDialog({
 
           {/* Description AR/EN */}
           <div>
-            <label className="text-xs font-bold">وصف المركز (عربي)</label>
+            <label className="text-xs font-bold">{L("وصف المركز (عربي)", "Partner description (Arabic)")}</label>
             <textarea
               rows={3}
               value={f.description}
               onChange={(e) => up("description", e.target.value)}
-              placeholder="نبذة عن المركز وخدماته..."
+              placeholder={L("نبذة عن المركز وخدماته...", "Brief about the partner and its services...")}
               className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm"
             />
           </div>
           <div>
-            <label className="text-xs font-bold">وصف المركز (إنجليزي)</label>
+            <label className="text-xs font-bold">{L("وصف المركز (إنجليزي)", "Partner description (English)")}</label>
             <textarea
               rows={3}
               dir="ltr"
@@ -859,17 +874,17 @@ function AddCenterDialog({
 
           {/* Terms AR/EN */}
           <div>
-            <label className="text-xs font-bold">شروط المركز (عربي)</label>
+            <label className="text-xs font-bold">{L("شروط المركز (عربي)", "Partner terms (Arabic)")}</label>
             <textarea
               rows={3}
               value={f.terms}
               onChange={(e) => up("terms", e.target.value)}
-              placeholder="سياسة الإلغاء، التحضير قبل الموعد..."
+              placeholder={L("سياسة الإلغاء، التحضير قبل الموعد...", "Cancellation policy, prep before appointment...")}
               className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm"
             />
           </div>
           <div>
-            <label className="text-xs font-bold">شروط المركز (إنجليزي)</label>
+            <label className="text-xs font-bold">{L("شروط المركز (إنجليزي)", "Partner terms (English)")}</label>
             <textarea
               rows={3}
               dir="ltr"
@@ -883,13 +898,13 @@ function AddCenterDialog({
           {/* Working hours */}
           <div className="sm:col-span-2 rounded-2xl border border-border p-3">
             <div className="mb-2 flex items-center justify-between">
-              <label className="text-xs font-bold">ساعات العمل الأسبوعية</label>
+              <label className="text-xs font-bold">{L("ساعات العمل الأسبوعية", "Weekly working hours")}</label>
               <button
                 type="button"
                 onClick={() => up("workingHours", defaultWorkingHours())}
                 className="rounded-lg border border-border px-2 py-1 text-[11px] font-bold hover:bg-muted"
               >
-                استعادة الافتراضي
+                {L("استعادة الافتراضي", "Reset to default")}
               </button>
             </div>
             <div className="space-y-2">
@@ -902,7 +917,7 @@ function AddCenterDialog({
                 };
                 return (
                   <div key={d.key} className="grid grid-cols-[80px_1fr_1fr_auto] items-center gap-2">
-                    <div className="text-xs font-bold">{d.ar}</div>
+                    <div className="text-xs font-bold">{L(d.ar, d.en)}</div>
                     <input
                       type="time"
                       disabled={wh.closed}
@@ -923,7 +938,7 @@ function AddCenterDialog({
                         checked={!!wh.closed}
                         onChange={(e) => setWh({ closed: e.target.checked, open: e.target.checked ? "00:00" : "09:00", close: e.target.checked ? "00:00" : "22:00" })}
                       />
-                      مغلق
+                      {L("مغلق", "Closed")}
                     </label>
                   </div>
                 );
@@ -937,59 +952,59 @@ function AddCenterDialog({
           <div className="sm:col-span-2">
             <label className="text-xs font-bold flex items-center gap-2">
               <KeyRound className="h-3.5 w-3.5" />
-              {initial ? "تغيير كلمة مرور المركز (اختياري)" : "كلمة مرور المركز (اختياري)"}
+              {initial ? L("تغيير كلمة مرور المركز (اختياري)", "Change partner password (optional)") : L("كلمة مرور المركز (اختياري)", "Partner password (optional)")}
             </label>
             <div className="mt-1 flex gap-2">
               <input
                 dir="ltr"
                 value={f.password}
                 onChange={(e) => up("password", e.target.value)}
-                placeholder={initial ? "اتركها فارغة للإبقاء على كلمة المرور الحالية" : "اتركها فارغة لتوليد تلقائي وإرسالها بالإيميل"}
+                placeholder={initial ? L("اتركها فارغة للإبقاء على كلمة المرور الحالية", "Leave empty to keep the current password") : L("اتركها فارغة لتوليد تلقائي وإرسالها بالإيميل", "Leave empty to auto-generate and send via email")}
                 className="flex-1 rounded-xl border border-border bg-background px-3 py-2 text-sm font-mono"
               />
-              <button type="button" onClick={genPwd} className="rounded-xl border border-border bg-muted px-3 py-2 text-xs font-bold hover:bg-muted/70">توليد</button>
+              <button type="button" onClick={genPwd} className="rounded-xl border border-border bg-muted px-3 py-2 text-xs font-bold hover:bg-muted/70">{L("توليد", "Generate")}</button>
             </div>
             <p className="mt-1 text-[11px] text-muted-foreground">
               {initial
-                ? "أي قيمة هنا ستحل محل كلمة مرور المركز فوراً."
-                : "سيتم إرسال بيانات الدخول للمركز على بريده الإلكتروني تلقائياً."}
+                ? L("أي قيمة هنا ستحل محل كلمة مرور المركز فوراً.", "Any value here will immediately replace the partner password.")
+                : L("سيتم إرسال بيانات الدخول للمركز على بريده الإلكتروني تلقائياً.", "Login credentials will be sent to the partner's email automatically.")}
             </p>
           </div>
 
 
           <div className="sm:col-span-2">
-            <label className="text-xs font-bold">الحالة</label>
+            <label className="text-xs font-bold">{L("الحالة", "Status")}</label>
             <select value={f.status} onChange={(e) => up("status", e.target.value as Status)} className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm">
-              <option value="active">نشط</option>
-              <option value="pending">قيد المراجعة</option>
-              <option value="suspended">موقوف</option>
+              <option value="active">{L("نشط", "Active")}</option>
+              <option value="pending">{L("قيد المراجعة", "Pending review")}</option>
+              <option value="suspended">{L("موقوف", "Suspended")}</option>
             </select>
           </div>
 
           <div className="sm:col-span-2">
             <label className="text-xs font-bold flex items-center gap-2">
               <Tag className="h-3.5 w-3.5" />
-              اشتراك المركز (الباقة)
+              {L("اشتراك المركز (الباقة)", "Partner subscription (Package)")}
             </label>
             <select
               value={f.packageId || ""}
               onChange={(e) => up("packageId", e.target.value)}
               className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm"
             >
-              <option value="">— بدون اشتراك —</option>
+              <option value="">{L("— بدون اشتراك —", "— No subscription —")}</option>
               {(packages || []).map((p) => (
                 <option key={p.id} value={p.id}>
-                  {(p.nameAr || p.name || p.nameEn)} {p.price ? `· ${p.price.toLocaleString()} ر.س` : ""}
+                  {(lang === "en" ? (p.nameEn || p.name || p.nameAr) : (p.nameAr || p.name || p.nameEn))} {p.price ? `· ${p.price.toLocaleString()} ${L("ر.س", "SAR")}` : ""}
                 </option>
               ))}
             </select>
             {(packages || []).length === 0 && (
-              <p className="mt-1 text-[11px] text-muted-foreground">لا توجد باقات — أضفها من صفحة باقات الشركاء أولاً.</p>
+              <p className="mt-1 text-[11px] text-muted-foreground">{L("لا توجد باقات — أضفها من صفحة باقات الشركاء أولاً.", "No packages — add them from the Partner Packages page first.")}</p>
             )}
           </div>
           <DialogFooter className="sm:col-span-2">
-            <button type="button" onClick={() => { reset(); onClose(); }} className="rounded-xl border border-border px-4 py-2 text-sm font-bold">إلغاء</button>
-            <button type="submit" className="rounded-xl bg-primary px-5 py-2 text-sm font-bold text-primary-foreground">حفظ المركز</button>
+            <button type="button" onClick={() => { reset(); onClose(); }} className="rounded-xl border border-border px-4 py-2 text-sm font-bold">{L("إلغاء", "Cancel")}</button>
+            <button type="submit" className="rounded-xl bg-primary px-5 py-2 text-sm font-bold text-primary-foreground">{L("حفظ المركز", "Save partner")}</button>
           </DialogFooter>
         </form>
       </DialogContent>

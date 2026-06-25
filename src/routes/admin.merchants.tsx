@@ -814,14 +814,17 @@ function AddCenterDialog({
           </div>
 
           <div className="sm:col-span-2">
-            <label className="text-xs font-bold">تصنيفات المركز</label>
+            <label className="text-xs font-bold">{L("تصنيفات المركز", "Partner categories")}</label>
             <div className="mt-1 flex flex-wrap gap-2 rounded-xl border border-border bg-background p-2">
               {(categories || []).length === 0 && (
-                <span className="text-xs text-muted-foreground">لا توجد تصنيفات — أضفها من صفحة التصنيفات أولاً.</span>
+                <span className="text-xs text-muted-foreground">{L("لا توجد تصنيفات — أضفها من صفحة التصنيفات أولاً.", "No categories — add them from the Categories page first.")}</span>
               )}
               {(categories || []).map((c) => {
                 const idKey = categoryKey(c);
                 const selected = (f.categoryIds || []).some((id) => categoryKey(id) === idKey);
+                const catName = lang === "en"
+                  ? ((c as any).nameEn || (c as any).name_en || (c as any).nameAr || (c as any).name_ar || (c as any).name)
+                  : ((c as any).nameAr || (c as any).name_ar || (c as any).name || c.nameEn);
                 return (
                   <button
                     type="button"
@@ -839,7 +842,7 @@ function AddCenterDialog({
                       selected ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card text-foreground hover:bg-muted",
                     ].join(" ")}
                   >
-                    {(c as any).nameAr || (c as any).name_ar || (c as any).name || c.nameEn}
+                    {catName}
                   </button>
                 );
               })}

@@ -9,6 +9,7 @@ import { useOffers, useCategories } from "@/hooks/useCatalog";
 import { buildSeo } from "@/lib/seo";
 import { renderCategoryIcon } from "@/lib/categoryIcon";
 import offersHero from "@/assets/offers-hero.webp";
+import { useLang } from "@/i18n/LanguageProvider";
 
 
 export const Route = createFileRoute("/offers/")({
@@ -27,6 +28,8 @@ export const Route = createFileRoute("/offers/")({
 type Sort = "featured" | "discount" | "price-asc" | "price-desc" | "rating";
 
 function OffersIndex() {
+  const { lang, dir } = useLang();
+  const L = (a: string, e: string) => (lang === "en" ? e : a);
   const [q, setQ] = useState("");
   const [cat, setCat] = useState<CategorySlug | "all">("all");
   const [city, setCity] = useState<string>("all");
@@ -64,7 +67,7 @@ function OffersIndex() {
   }, [q, cat, city, sort, offers]);
 
   return (
-    <div dir="rtl" className="flex min-h-screen flex-col bg-background">
+    <div dir={dir} className="flex min-h-screen flex-col bg-background">
       <SiteHeader />
 
       <main className="flex-1">
@@ -80,13 +83,13 @@ function OffersIndex() {
 
           <div className="relative mx-auto max-w-7xl px-4 text-center sm:px-6 lg:px-8">
             <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 text-[11px] font-bold backdrop-blur">
-              <Sparkles className="h-3 w-3" /> كل العروض المتاحة
+              <Sparkles className="h-3 w-3" /> {L("كل العروض المتاحة", "All available offers")}
             </span>
             <h1 className="mt-3 text-3xl font-extrabold tracking-tight sm:text-5xl">
-              اكتشف {offers.length}+ عرض حصري
+              {L(`اكتشف ${offers.length}+ عرض حصري`, `Discover ${offers.length}+ exclusive offers`)}
             </h1>
             <p className="mx-auto mt-2 max-w-xl text-sm text-white/85 sm:text-base">
-              فلتر حسب التصنيف والسعر والتقييم — احجز اللي يناسبك بضغطة
+              {L("فلتر حسب التصنيف والسعر والتقييم — احجز اللي يناسبك بضغطة", "Filter by category, price and rating — book what suits you with one tap")}
             </p>
 
             {/* search */}
@@ -96,7 +99,7 @@ function OffersIndex() {
                 <input
                   value={q}
                   onChange={(e) => setQ(e.target.value)}
-                  placeholder="ابحث عن خدمة أو منشأة أو مدينة..."
+                  placeholder={L("ابحث عن خدمة أو منشأة أو مدينة...", "Search for a service, center or city...")}
                   className="h-11 flex-1 bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground"
                 />
                 {q && (
@@ -114,15 +117,16 @@ function OffersIndex() {
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div className="flex items-center gap-3 overflow-x-auto py-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               <Chip active={cat === "all"} onClick={() => setCat("all")}>
-                <span>كل التصنيفات</span>
+                <span>{L("كل التصنيفات", "All Categories")}</span>
                 <span className="rounded-full bg-black/10 px-1.5 text-[10px]">{offers.length}</span>
               </Chip>
               {categories.map((c) => {
                 const count = offers.filter((o) => o.category === c.slug).length;
+                const name = (lang === "en" && (c as any).nameEn) ? (c as any).nameEn : c.nameAr;
                 return (
                   <Chip key={c.slug} active={cat === c.slug} onClick={() => setCat(c.slug)}>
                     <span className="inline-flex h-4 w-4 items-center justify-center overflow-hidden text-sm leading-none">{renderCategoryIcon(c.icon)}</span>
-                    <span className="truncate">{c.nameAr}</span>
+                    <span className="truncate">{name}</span>
                     <span className="rounded-full bg-black/10 px-1.5 text-[10px]">{count}</span>
                   </Chip>
                 );
@@ -135,18 +139,18 @@ function OffersIndex() {
         <section className="mx-auto max-w-7xl px-4 pt-8 sm:px-6 lg:px-8">
           <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
             <div className="text-sm text-muted-foreground">
-              عرض <span className="font-extrabold text-foreground">{filtered.length}</span> عرض
+              {L("عرض", "Showing")} <span className="font-extrabold text-foreground">{filtered.length}</span> {L("عرض", "offers")}
             </div>
             <div className="flex flex-wrap items-center gap-2">
               <label className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-2 text-xs font-bold text-foreground">
                 <MapPin className="h-3.5 w-3.5 text-muted-foreground" />
-                المدينة:
+                {L("المدينة:", "City:")}
                 <select
                   value={city}
                   onChange={(e) => setCity(e.target.value)}
                   className="cursor-pointer bg-transparent text-xs font-extrabold text-foreground outline-none"
                 >
-                  <option value="all">كل المدن</option>
+                  <option value="all">{L("كل المدن", "All cities")}</option>
                   {cities.map((c) => (
                     <option key={c} value={c}>{c}</option>
                   ))}
@@ -154,17 +158,17 @@ function OffersIndex() {
               </label>
               <label className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-2 text-xs font-bold text-foreground">
                 <SlidersHorizontal className="h-3.5 w-3.5 text-muted-foreground" />
-                ترتيب:
+                {L("ترتيب:", "Sort:")}
                 <select
                   value={sort}
                   onChange={(e) => setSort(e.target.value as Sort)}
                   className="cursor-pointer bg-transparent text-xs font-extrabold text-foreground outline-none"
                 >
-                  <option value="featured">المميزة</option>
-                  <option value="discount">الأعلى خصماً</option>
-                  <option value="rating">الأعلى تقييماً</option>
-                  <option value="price-asc">السعر: الأقل</option>
-                  <option value="price-desc">السعر: الأعلى</option>
+                  <option value="featured">{L("المميزة", "Featured")}</option>
+                  <option value="discount">{L("الأعلى خصماً", "Biggest discount")}</option>
+                  <option value="rating">{L("الأعلى تقييماً", "Top rated")}</option>
+                  <option value="price-asc">{L("السعر: الأقل", "Price: low to high")}</option>
+                  <option value="price-desc">{L("السعر: الأعلى", "Price: high to low")}</option>
                 </select>
               </label>
             </div>
@@ -173,13 +177,13 @@ function OffersIndex() {
           {filtered.length === 0 ? (
             <div className="rounded-3xl border border-dashed border-border bg-card p-12 text-center">
               <div className="text-4xl">🔍</div>
-              <h3 className="mt-3 text-lg font-extrabold text-foreground">لا توجد نتائج</h3>
-              <p className="mt-1 text-sm text-muted-foreground">جرّب تغيير الفلتر أو كلمة البحث</p>
+              <h3 className="mt-3 text-lg font-extrabold text-foreground">{L("لا توجد نتائج", "No results")}</h3>
+              <p className="mt-1 text-sm text-muted-foreground">{L("جرّب تغيير الفلتر أو كلمة البحث", "Try changing the filter or search term")}</p>
               <button
                 onClick={() => { setQ(""); setCat("all"); setCity("all"); }}
                 className="mt-4 inline-flex items-center gap-2 rounded-full bg-foreground px-4 py-2 text-xs font-bold text-background"
               >
-                إعادة تعيين الفلاتر
+                {L("إعادة تعيين الفلاتر", "Reset filters")}
               </button>
             </div>
           ) : (

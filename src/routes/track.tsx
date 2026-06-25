@@ -18,10 +18,10 @@ export const Route = createFileRoute("/track")({
 
 type StatusKey = "unpaid" | "paid" | "confirmed_branch";
 
-const STAGE_LABELS_AR: Record<StatusKey, string> = {
-  unpaid: "لم يتم الدفع",
-  paid: "تم الدفع",
-  confirmed_branch: "تم التأكيد في الفرع",
+const STAGE_LABELS: Record<StatusKey, { ar: string; en: string }> = {
+  unpaid: { ar: "لم يتم الدفع", en: "Unpaid" },
+  paid: { ar: "تم الدفع", en: "Paid" },
+  confirmed_branch: { ar: "تم التأكيد في الفرع", en: "Confirmed at branch" },
 };
 
 type OrderItem = {
@@ -134,6 +134,7 @@ function mapBookingRowToResult(row: any, qr: string): Result {
 
 function TrackPage() {
   const { t, lang, dir } = useLang();
+  const L = (a: string, e: string) => (lang === "en" ? e : a);
   const navigate = useNavigate();
   const [qrCode, setQrCode] = useState("");
   const [verifyCode, setVerifyCode] = useState("");
@@ -143,23 +144,23 @@ function TrackPage() {
 
   const paymentStatusLabel = (s?: string) => {
     const v = (s || "").toLowerCase();
-    if (v === "paid") return "مدفوع بالكامل";
-    if (v === "deposit_paid") return "عربون مدفوع — الباقي في المركز";
-    if (v === "unpaid") return "غير مدفوع";
-    if (v === "refunded") return "مسترجع";
+    if (v === "paid") return L("مدفوع بالكامل", "Paid in full");
+    if (v === "deposit_paid") return L("عربون مدفوع — الباقي في المركز", "Deposit paid — remainder at center");
+    if (v === "unpaid") return L("غير مدفوع", "Unpaid");
+    if (v === "refunded") return L("مسترجع", "Refunded");
     return s || "—";
   };
   const paymentMethodLabel = (s?: string) => {
     const v = (s || "").toLowerCase();
-    if (v === "mada") return "مدى";
-    if (v === "visa") return "فيزا";
-    if (v === "mastercard") return "ماستر كارد";
+    if (v === "mada") return L("مدى", "Mada");
+    if (v === "visa") return L("فيزا", "Visa");
+    if (v === "mastercard") return L("ماستر كارد", "Mastercard");
     if (v === "applepay") return "Apple Pay";
     if (v === "stcpay") return "STC Pay";
-    if (v === "mayfatoorah") return "ماي فاتورة";
-    if (v === "cod") return "الدفع في المركز";
-    if (v === "card") return "بطاقة";
-    if (v === "bank") return "تحويل بنكي";
+    if (v === "mayfatoorah") return L("ماي فاتورة", "MyFatoorah");
+    if (v === "cod") return L("الدفع في المركز", "Pay at center");
+    if (v === "card") return L("بطاقة", "Card");
+    if (v === "bank") return L("تحويل بنكي", "Bank transfer");
     return s || "—";
   };
 
@@ -168,11 +169,11 @@ function TrackPage() {
     const qr = qrCode.trim().toUpperCase();
     const code = verifyCode.trim();
     if (!qr || !code) {
-      toast.error("ادخل رقم الحجز ورمز التأكيد");
+      toast.error(L("ادخل رقم الحجز ورمز التأكيد", "Enter booking number and verification code"));
       return;
     }
     if (!/^\d{4,8}$/.test(code)) {
-      toast.error("رمز التأكيد يجب أن يكون أرقاماً (4–8 خانات)");
+      toast.error(L("رمز التأكيد يجب أن يكون أرقاماً (4–8 خانات)", "Verification code must be 4–8 digits"));
       return;
     }
     setLoading(true);
@@ -347,7 +348,7 @@ function TrackPage() {
         <section className="relative z-10 mx-auto -mt-10 max-w-5xl px-4 sm:px-6 lg:px-8">
           <div className="rounded-3xl border border-border bg-white p-6 pt-8 shadow-xl sm:p-8 sm:pt-10">
             <p className="mx-auto mb-4 max-w-md text-center text-xs text-muted-foreground">
-              ادخل رقم الحجز (BK-XXXXXX) ورمز التأكيد المكوّن من 6 أرقام الموجود في تذكرتك.
+              {L("ادخل رقم الحجز (BK-XXXXXX) ورمز التأكيد المكوّن من 6 أرقام الموجود في تذكرتك.", "Enter the booking number (BK-XXXXXX) and the 6-digit verification code from your ticket.")}
             </p>
             {/* Form */}
             <form
@@ -362,7 +363,7 @@ function TrackPage() {
                   type="text"
                   value={qrCode}
                   onChange={(e) => setQrCode(e.target.value)}
-                  placeholder="رقم الحجز مثال BK-DXECMR"
+                  placeholder={L("رقم الحجز مثال BK-DXECMR", "Booking number e.g. BK-DXECMR")}
                   className={`h-12 w-full rounded-full border border-border bg-background ps-5 pe-11 text-sm text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20 ${textEnd}`}
                 />
               </div>
@@ -375,7 +376,7 @@ function TrackPage() {
                   inputMode="numeric"
                   value={verifyCode}
                   onChange={(e) => setVerifyCode(e.target.value.replace(/\D/g, ""))}
-                  placeholder="رمز التأكيد (6 أرقام)"
+                  placeholder={L("رمز التأكيد (6 أرقام)", "Verification code (6 digits)")}
                   className={`h-12 w-full rounded-full border border-border bg-background ps-5 pe-11 text-sm text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20 ${textEnd}`}
                 />
               </div>
@@ -410,7 +411,7 @@ function TrackPage() {
         <section className="mx-auto max-w-5xl px-4 py-10 sm:px-6 lg:px-8">
           {notFound && (
             <p className="mx-auto max-w-3xl rounded-2xl border border-border bg-muted/40 p-4 text-center text-sm text-muted-foreground">
-              لم نجد حجزاً مطابقاً. تحقق من رقم الحجز ورمز التأكيد ثم حاول مرة أخرى.
+              {L("لم نجد حجزاً مطابقاً. تحقق من رقم الحجز ورمز التأكيد ثم حاول مرة أخرى.", "We couldn't find a matching booking. Verify the booking number and code, then try again.")}
             </p>
           )}
 
@@ -435,7 +436,7 @@ function TrackPage() {
               {/* Timeline */}
               <div className="rounded-3xl border border-border bg-white p-6 sm:p-8">
                 <h2 className={`mb-8 ${textEnd} text-xl font-extrabold text-foreground`}>{t("track.statusTitle")}</h2>
-              <Timeline currentIndex={currentIndex} dir={dir} t={t} timeline={result.timeline} locale={locale} />
+              <Timeline currentIndex={currentIndex} dir={dir} t={t} timeline={result.timeline} locale={locale} lang={lang} />
               </div>
 
               {/* Info cards */}
@@ -449,17 +450,17 @@ function TrackPage() {
               {/* Deposit & QR — shown when deposit_paid */}
               {result.order.paymentStatus?.toLowerCase() === "deposit_paid" && (
                 <div className="rounded-3xl border border-border bg-white p-6 sm:p-8">
-                  <h2 className={`mb-6 ${textEnd} text-xl font-extrabold text-foreground`}>تفاصيل الدفع</h2>
+                  <h2 className={`mb-6 ${textEnd} text-xl font-extrabold text-foreground`}>{L("تفاصيل الدفع", "Payment details")}</h2>
                   <div className="grid gap-6 sm:grid-cols-2">
                     {/* QR + Verification */}
                     <div className="flex flex-col items-center gap-4 rounded-2xl border border-border bg-muted/30 p-5">
-                      <div className="text-sm font-bold text-foreground">امسح QR للتحقق</div>
+                      <div className="text-sm font-bold text-foreground">{L("امسح QR للتحقق", "Scan QR to verify")}</div>
                       <div className="rounded-xl bg-white p-2 shadow-sm">
                         <QRCodeSVG value={result.order.qrData || result.order.number} size={160} level="M" />
                       </div>
                       {result.order.verificationCode && (
                         <div className={`w-full rounded-xl bg-primary/10 p-3 text-center ${textEnd}`}>
-                          <div className="text-xs text-muted-foreground">كود التحقق</div>
+                          <div className="text-xs text-muted-foreground">{L("كود التحقق", "Verification code")}</div>
                           <div className="mt-1 text-2xl font-extrabold tracking-widest text-primary" dir="ltr">{result.order.verificationCode}</div>
                         </div>
                       )}
@@ -468,17 +469,17 @@ function TrackPage() {
                         onClick={openBookingDetails}
                         className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-primary/40 bg-primary/5 px-4 py-2.5 text-sm font-bold text-primary transition hover:bg-primary/10"
                       >
-                        <FileText className="h-4 w-4" /> عرض تفاصيل الحجز
+                        <FileText className="h-4 w-4" /> {L("عرض تفاصيل الحجز", "View booking details")}
                       </button>
                     </div>
                     {/* Amounts */}
                     <div className="flex flex-col justify-center gap-4">
                       <div className={`rounded-2xl border border-border bg-muted/30 p-5 ${textEnd}`}>
-                        <div className="text-xs text-muted-foreground">العربون المدفوع أونلاين</div>
+                        <div className="text-xs text-muted-foreground">{L("العربون المدفوع أونلاين", "Deposit paid online")}</div>
                         <div className="mt-1 text-2xl font-extrabold text-primary">{result.order.depositPaid ?? 0} {currency}</div>
                       </div>
                       <div className={`rounded-2xl border border-border bg-muted/30 p-5 ${textEnd}`}>
-                        <div className="text-xs text-muted-foreground">المتبقي (يُدفع في المركز)</div>
+                        <div className="text-xs text-muted-foreground">{L("المتبقي (يُدفع في المركز)", "Remaining (paid at center)")}</div>
                         <div className="mt-1 text-2xl font-extrabold text-foreground">{result.order.remaining ?? 0} {currency}</div>
                       </div>
                     </div>
@@ -516,7 +517,7 @@ function TrackPage() {
                     )}
                     <div className="my-2 h-px bg-border" />
                     <Row label={t("track.total")} value={`${result.order.total ?? 0} ${currency}`} bold />
-                    <p className="text-[11px] text-muted-foreground text-end">السعر شامل ضريبة القيمة المضافة</p>
+                    <p className="text-[11px] text-muted-foreground text-end">{L("السعر شامل ضريبة القيمة المضافة", "Price includes VAT")}</p>
                   </div>
                 </div>
               )}
@@ -524,7 +525,7 @@ function TrackPage() {
               {/* Partner / Center info */}
               {result.partner && (
                 <div className="rounded-3xl border border-border bg-white p-6 sm:p-8">
-                  <h2 className={`mb-6 ${textEnd} text-xl font-extrabold text-foreground`}>بيانات المركز</h2>
+                  <h2 className={`mb-6 ${textEnd} text-xl font-extrabold text-foreground`}>{L("بيانات المركز", "Center details")}</h2>
                   <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
                     <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
                       <Store className="h-6 w-6" />
@@ -547,7 +548,7 @@ function TrackPage() {
                           className="mt-2 inline-flex items-center gap-1 rounded-full bg-primary/10 px-3 py-1 text-xs font-bold text-primary transition hover:bg-primary/20"
                         >
                           <MapPin className="h-3 w-3" />
-                          فتح الموقع على الخريطة
+                          {L("فتح الموقع على الخريطة", "Open in maps")}
                         </a>
                       )}
                     </div>
@@ -596,7 +597,7 @@ function Row({ label, value, bold }: { label: string; value: string; bold?: bool
   );
 }
 
-function Timeline({ currentIndex, dir, t, timeline, locale }: { currentIndex: number; dir: "rtl" | "ltr"; t: (k: TKey) => string; timeline: TimelineEvent[]; locale: string }) {
+function Timeline({ currentIndex, dir, t, timeline, locale, lang }: { currentIndex: number; dir: "rtl" | "ltr"; t: (k: TKey) => string; timeline: TimelineEvent[]; locale: string; lang: "ar" | "en" }) {
   const ordered = dir === "rtl" ? [...STAGE_KEYS].reverse() : [...STAGE_KEYS];
 
   const stageToStatus: Record<StatusKey, string> = {
@@ -651,7 +652,7 @@ function Timeline({ currentIndex, dir, t, timeline, locale }: { currentIndex: nu
               )}
             </div>
             <div className={["mt-3 text-center text-xs font-semibold sm:text-sm", reached ? "text-foreground" : "text-muted-foreground"].join(" ")}>
-              {STAGE_LABELS_AR[stage]}
+              {STAGE_LABELS[stage][lang]}
             </div>
             {reached && eventDate && (
               <div className="mt-1 text-[10px] text-muted-foreground sm:text-xs">

@@ -837,7 +837,7 @@ function OfferDetailPage() {
                         <div className="mt-3 grid gap-3 sm:grid-cols-2 text-sm">
                           <div className="flex items-start gap-2">
                             <MapPin className="mt-0.5 h-4 w-4 text-primary" />
-                            <span>{offer.vendor.address}، {offer.vendor.city}</span>
+                            <span>{offer.vendor.address}{L("، ", ", ")}{offer.vendor.city}</span>
                           </div>
                           <a href={mapsUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 rounded-lg border border-primary/40 bg-primary/5 px-3 py-2 text-sm font-bold text-primary hover:bg-primary/10 transition">
                             <MapPin className="h-4 w-4" /> {L("فتح على خرائط Google", "Open in Google Maps")}
@@ -887,7 +887,7 @@ function OfferDetailPage() {
                               })}
                             </div>
                             <div className="mt-1 text-xs text-muted-foreground">
-                              {displayCount > 0 ? `${displayCount} تقييم` : "لا توجد تقييمات"}
+                              {displayCount > 0 ? L(`${displayCount} تقييم`, `${displayCount} reviews`) : L("لا توجد تقييمات", "No reviews")}
                             </div>
                           </div>
                           <div className="flex-1 space-y-1.5">
@@ -917,12 +917,12 @@ function OfferDetailPage() {
                       >
                         <div className="mb-3 flex items-center justify-between gap-3">
                           <div>
-                            <div className="text-sm font-extrabold text-foreground">شاركنا تجربتك</div>
-                            <div className="text-xs text-muted-foreground">تقييمك يساعد غيرك يأخذ القرار الصح</div>
+                            <div className="text-sm font-extrabold text-foreground">{L("شاركنا تجربتك", "Share your experience")}</div>
+                            <div className="text-xs text-muted-foreground">{L("تقييمك يساعد غيرك يأخذ القرار الصح", "Your review helps others make the right choice")}</div>
                           </div>
                           {reviewSubmitted && (
                             <span className="rounded-full bg-emerald-100 px-3 py-1 text-[11px] font-bold text-emerald-700">
-                              تم النشر ✓
+                              {L("تم النشر ✓", "Published ✓")}
                             </span>
                           )}
                         </div>
@@ -938,7 +938,7 @@ function OfferDetailPage() {
                                 onClick={() => setReviewRating(val)}
                                 onMouseEnter={() => setHoverRating(val)}
                                 onMouseLeave={() => setHoverRating(0)}
-                                aria-label={`${val} نجوم`}
+                                aria-label={L(`${val} نجوم`, `${val} stars`)}
                                 className="p-0.5 transition hover:scale-110"
                               >
                                 <Star
@@ -954,13 +954,13 @@ function OfferDetailPage() {
 
                         {!isAuthenticated && (
                           <div className="mb-2 rounded-lg bg-amber-50 px-3 py-2 text-xs font-bold text-amber-700">
-                            سجّل دخول أولاً عشان تقدر تضيف تقييم
+                            {L("سجّل دخول أولاً عشان تقدر تضيف تقييم", "Sign in first to add a review")}
                           </div>
                         )}
                         <textarea
                           value={reviewText}
                           onChange={(e) => setReviewText(e.target.value)}
-                          placeholder="اكتب تجربتك بالتفصيل…"
+                          placeholder={L("اكتب تجربتك بالتفصيل…", "Write your experience in detail…")}
                           required
                           rows={3}
                           className="mb-3 w-full resize-none rounded-xl border border-border bg-background px-3 py-2.5 text-sm outline-none focus:border-primary"
@@ -1011,7 +1011,7 @@ function OfferDetailPage() {
 
               {/* FAQ */}
               <div className="rounded-3xl border border-border bg-card p-6 shadow-sm">
-                <h3 className="mb-4 text-lg font-extrabold text-foreground">أسئلة شائعة</h3>
+                <h3 className="mb-4 text-lg font-extrabold text-foreground">{L("أسئلة شائعة", "FAQ")}</h3>
                 <div className="space-y-2">
                   {((Array.isArray((site as any)?.faqs) && (site as any).faqs.length) ? (site as any).faqs : FAQ).map((f: { q: string; a: string }, i: number) => (
                     <div key={i} className="rounded-2xl border border-border bg-muted/20">
@@ -1046,26 +1046,26 @@ function OfferDetailPage() {
                   <div className="relative flex items-start justify-between gap-3">
                     <div>
                       <div className="text-[11px] font-bold uppercase tracking-wider opacity-90">
-                        {step === "review" ? "مراجعة الحجز" : "السعر بعد الخصم"}
+                        {step === "review" ? L("مراجعة الحجز", "Review booking") : L("السعر بعد الخصم", "Price after discount")}
                       </div>
                       <div className="mt-2 flex items-baseline gap-2" dir="ltr">
                         <span className="text-5xl font-black leading-none tracking-tight">{offer.priceAfter}</span>
                         <div className="flex flex-col items-start leading-tight">
                           <SarIcon className="h-5 text-white" />
-                          <span className="mt-0.5 text-[10px] font-bold opacity-80">ر.س</span>
+                          <span className="mt-0.5 text-[10px] font-bold opacity-80">{L("ر.س", "SAR")}</span>
                         </div>
                       </div>
                       <div className="mt-2 flex items-center gap-2" dir="ltr">
-                        <span className="text-sm text-white/60 line-through">{offer.priceBefore} ر.س</span>
+                        <span className="text-sm text-white/60 line-through">{offer.priceBefore} {L("ر.س", "SAR")}</span>
                         <span className="inline-flex items-center gap-1 rounded-full bg-emerald-400/20 px-2.5 py-1 text-[11px] font-extrabold text-emerald-100 ring-1 ring-emerald-200/30">
-                          وفّر {savings} ر.س
+                          {L(`وفّر ${savings} ر.س`, `Save ${savings} SAR`)}
                         </span>
                       </div>
                     </div>
 
                     <div className="flex shrink-0 flex-col items-center justify-center rounded-2xl bg-white/15 px-3 py-2 backdrop-blur ring-1 ring-white/20">
                       <span className="text-2xl font-black leading-none">{offer.discountPercent}%</span>
-                      <span className="mt-1 text-[10px] font-bold opacity-90">خصم</span>
+                      <span className="mt-1 text-[10px] font-bold opacity-90">{L("خصم", "Off")}</span>
                     </div>
                   </div>
                 </div>
@@ -1079,7 +1079,7 @@ function OfferDetailPage() {
                           <div className={`flex h-8 w-8 items-center justify-center rounded-lg transition ${date ? "bg-primary text-primary-foreground" : "bg-primary/10 text-primary"}`}>
                             <Calendar className="h-4 w-4" />
                           </div>
-                          <span className="text-xs font-bold text-muted-foreground">التاريخ</span>
+                          <span className="text-xs font-bold text-muted-foreground">{L("التاريخ", "Date")}</span>
                         </div>
                         <input
                           type="date"
@@ -1095,7 +1095,7 @@ function OfferDetailPage() {
                           <div className={`flex h-8 w-8 items-center justify-center rounded-lg transition ${time ? "bg-primary text-primary-foreground" : "bg-primary/10 text-primary"}`}>
                             <Clock className="h-4 w-4" />
                           </div>
-                          <span className="text-xs font-bold text-muted-foreground">الوقت</span>
+                          <span className="text-xs font-bold text-muted-foreground">{L("الوقت", "Time")}</span>
                         </div>
                         <select
                           value={time}
@@ -1103,12 +1103,12 @@ function OfferDetailPage() {
                           required
                           className="mt-2 w-full bg-transparent text-sm font-extrabold text-foreground outline-none"
                         >
-                          <option value="">اختر الوقت</option>
+                          <option value="">{L("اختر الوقت", "Choose a time")}</option>
                           {TIME_SLOTS.map((s) => {
                             const blocked = dayOff || blockedSlots.includes(s);
                             return (
                               <option key={s} value={s} disabled={blocked}>
-                                {s}{blocked ? " — غير متاح" : ""}
+                                {s}{blocked ? L(" — غير متاح", " — unavailable") : ""}
                               </option>
                             );
                           })}
@@ -1118,14 +1118,14 @@ function OfferDetailPage() {
 
                     {dayOff && (
                       <div className="rounded-xl border border-dashed border-rose-300 bg-rose-50 p-3 text-xs font-bold text-rose-700">
-                        المركز غير متاح في هذا اليوم — يرجى اختيار تاريخ آخر.
+                        {L("المركز غير متاح في هذا اليوم — يرجى اختيار تاريخ آخر.", "The center is closed on this day — please pick another date.")}
                       </div>
                     )}
 
                     {/* Upcoming days strip — blocked days are struck through */}
                     <div>
                       <div className="mb-2 text-sm font-bold text-foreground">
-                        أيام قريبة
+                        {L("أيام قريبة", "Upcoming days")}
                       </div>
                       <div className="flex gap-2 overflow-x-auto pb-1">
                         {upcomingDays.map((d) => {
@@ -1136,7 +1136,7 @@ function OfferDetailPage() {
                               type="button"
                               onClick={() => !d.blocked && setDate(d.iso)}
                               disabled={d.blocked}
-                              title={d.blocked ? "المركز غير متاح في هذا اليوم" : undefined}
+                              title={d.blocked ? L("المركز غير متاح في هذا اليوم", "Center closed on this day") : undefined}
                               className={`flex min-w-[64px] shrink-0 flex-col items-center rounded-xl border px-3 py-2 text-xs font-bold transition ${
                                 d.blocked
                                   ? "cursor-not-allowed border-dashed border-rose-300 bg-rose-50/60 text-rose-400 line-through opacity-70"
@@ -1157,13 +1157,13 @@ function OfferDetailPage() {
                     {/* Quick time slots */}
                     <div>
                       <div className="mb-2 flex items-center justify-between text-sm font-bold text-foreground">
-                        <span>مواعيد متاحة قريبة</span>
+                        <span>{L("مواعيد متاحة قريبة", "Nearest available times")}</span>
                         <span className="text-[11px] font-normal text-muted-foreground">
-                          مدة الجلسة: {offer.durationMinutes} د
+                          {L(`مدة الجلسة: ${offer.durationMinutes} د`, `Session: ${offer.durationMinutes} min`)}
                         </span>
                       </div>
                       {!date && (
-                        <p className="mb-2 text-xs text-muted-foreground">اختر التاريخ أولاً لمعرفة المواعيد المتاحة</p>
+                        <p className="mb-2 text-xs text-muted-foreground">{L("اختر التاريخ أولاً لمعرفة المواعيد المتاحة", "Pick a date first to see available times")}</p>
                       )}
                       <div className="flex flex-wrap gap-2">
                         {TIME_SLOTS.map((s) => {
@@ -1174,7 +1174,7 @@ function OfferDetailPage() {
                               type="button"
                               onClick={() => !blocked && setTime(s)}
                               disabled={blocked}
-                              title={blocked ? (dayOff ? "اليوم غير متاح بالكامل" : "هذا الموعد غير متاح") : undefined}
+                              title={blocked ? (dayOff ? L("اليوم غير متاح بالكامل", "The whole day is unavailable") : L("هذا الموعد غير متاح", "This time is unavailable")) : undefined}
                               className={`rounded-lg border px-3 py-2 text-sm font-bold transition ${
                                 blocked
                                   ? "cursor-not-allowed border-dashed border-rose-300 bg-rose-50 text-rose-500 line-through opacity-80"
@@ -1193,7 +1193,7 @@ function OfferDetailPage() {
 
                     {/* Quantity */}
                     <div className="flex items-center justify-between rounded-xl border border-border bg-muted/20 p-3">
-                      <span className="text-base font-bold text-foreground">عدد الجلسات</span>
+                      <span className="text-base font-bold text-foreground">{L("عدد الجلسات", "Number of sessions")}</span>
                       <div className="flex items-center gap-2">
                         <button
                           type="button"
@@ -1217,8 +1217,8 @@ function OfferDetailPage() {
                     {isAuthenticated ? (
                       <div className="rounded-xl border border-border bg-muted/30 p-3 text-sm">
                         <div className="mb-1 flex items-center justify-between">
-                          <span className="text-xs font-bold text-muted-foreground">بيانات التواصل</span>
-                          <Link to="/account/profile" className="text-[11px] font-bold text-primary hover:underline">تعديل</Link>
+                          <span className="text-xs font-bold text-muted-foreground">{L("بيانات التواصل", "Contact details")}</span>
+                          <Link to="/account/profile" className="text-[11px] font-bold text-primary hover:underline">{L("تعديل", "Edit")}</Link>
                         </div>
                         <div className="font-bold text-foreground">{customerName || user?.name}</div>
                         {customerPhone && <div className="text-xs text-muted-foreground" dir="ltr">{customerPhone}</div>}
@@ -1227,7 +1227,7 @@ function OfferDetailPage() {
                     ) : (
                       <div className="space-y-3">
                         <div>
-                          <label className="mb-2 block text-sm font-bold text-foreground">الاسم الكامل</label>
+                          <label className="mb-2 block text-sm font-bold text-foreground">{L("الاسم الكامل", "Full name")}</label>
                           <input
                             type="text"
                             value={customerName}
@@ -1237,7 +1237,7 @@ function OfferDetailPage() {
                           />
                         </div>
                         <div>
-                          <label className="mb-2 block text-sm font-bold text-foreground">البريد الإلكتروني</label>
+                          <label className="mb-2 block text-sm font-bold text-foreground">{L("البريد الإلكتروني", "Email")}</label>
                           <input
                             type="email"
                             value={customerEmail}
@@ -1247,10 +1247,10 @@ function OfferDetailPage() {
                             className="w-full rounded-xl border border-border bg-background px-3 py-3 text-base outline-none focus:border-primary"
                             dir="ltr"
                           />
-                          <p className="mt-1 text-xs text-muted-foreground">هنرسل تأكيد الحجز والباركود على إيميلك</p>
+                          <p className="mt-1 text-xs text-muted-foreground">{L("هنرسل تأكيد الحجز والباركود على إيميلك", "We will send the booking confirmation and barcode to your email")}</p>
                         </div>
                         <div>
-                          <label className="mb-2 block text-sm font-bold text-foreground">رقم الجوال</label>
+                          <label className="mb-2 block text-sm font-bold text-foreground">{L("رقم الجوال", "Phone number")}</label>
                           <input
                             type="tel"
                             value={customerPhone}
@@ -1267,16 +1267,16 @@ function OfferDetailPage() {
                     {/* Deposit summary */}
                     <div className="rounded-xl border border-primary/30 bg-primary/5 p-4 text-sm">
                       <div className="flex items-center justify-between text-muted-foreground">
-                        <span>الإجمالي شامل الضريبة</span>
-                        <span className="font-bold text-foreground" dir="ltr">{formatMoney(total)} ر.س</span>
+                        <span>{L("الإجمالي شامل الضريبة", "Total incl. VAT")}</span>
+                        <span className="font-bold text-foreground" dir="ltr">{formatMoney(total)} {L("ر.س", "SAR")}</span>
                       </div>
                       <div className="mt-1.5 flex items-center justify-between">
-                        <span className="font-bold text-foreground">عربون الحجز ({depositPctLabel})</span>
-                        <span className="font-extrabold text-primary" dir="ltr">{formatMoney(depositAmount)} ر.س</span>
+                        <span className="font-bold text-foreground">{L(`عربون الحجز (${depositPctLabel})`, `Deposit (${depositPctLabel})`)}</span>
+                        <span className="font-extrabold text-primary" dir="ltr">{formatMoney(depositAmount)} {L("ر.س", "SAR")}</span>
                       </div>
                       <div className="mt-1 flex items-center justify-between text-xs text-muted-foreground">
-                        <span>المتبقي عند الخدمة</span>
-                        <span dir="ltr">{formatMoney(remainingAmount)} ر.س</span>
+                        <span>{L("المتبقي عند الخدمة", "Remaining at service")}</span>
+                        <span dir="ltr">{formatMoney(remainingAmount)} {L("ر.س", "SAR")}</span>
                       </div>
                     </div>
 
@@ -1286,7 +1286,7 @@ function OfferDetailPage() {
                         type="submit"
                         className="w-full rounded-xl bg-gradient-to-r from-[#3F2A6B] to-[#E0254D] py-4 text-base font-extrabold text-white shadow-lg shadow-primary/30 transition hover:scale-[1.01]"
                       >
-                        احجز الآن — دفع العربون ←
+                        {L("احجز الآن — دفع العربون ←", "Book now — pay deposit →")}
                       </button>
                       <button
                         type="button"
@@ -1294,10 +1294,10 @@ function OfferDetailPage() {
                         className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-primary bg-primary/5 py-3 text-sm font-extrabold text-primary transition hover:bg-primary/10"
                       >
                         <ShoppingCart className="h-4 w-4" />
-                        أضف للسلة (طلب جماعي)
+                        {L("أضف للسلة (طلب جماعي)", "Add to cart (group order)")}
                       </button>
                       <p className="text-center text-[11px] text-muted-foreground">
-                        أضف عدة عروض من مراكز مختلفة وادفع عربون موحّد مرة واحدة.
+                        {L("أضف عدة عروض من مراكز مختلفة وادفع عربون موحّد مرة واحدة.", "Add multiple offers from different centers and pay a single deposit once.")}
                       </p>
                     </div>
                   </form>
@@ -1307,18 +1307,18 @@ function OfferDetailPage() {
                   <div className="space-y-4 p-5 sm:p-6">
                     {/* Service & schedule */}
                     <section className="rounded-2xl border border-border bg-muted/20 p-4">
-                      <div className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">الخدمة والموعد</div>
+                      <div className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">{L("الخدمة والموعد", "Service & schedule")}</div>
                       <div className="text-base font-extrabold text-foreground leading-snug">{offer.title}</div>
                       <div className="mt-3 grid grid-cols-2 gap-3 text-sm">
                         <div className="flex items-center gap-2"><Calendar className="h-4 w-4 text-primary" /><span className="font-bold">{date}</span></div>
                         <div className="flex items-center gap-2"><Clock className="h-4 w-4 text-primary" /><span className="font-bold">{time}</span></div>
-                        <div className="col-span-2 flex items-center gap-2 text-muted-foreground"><span className="text-xs">عدد الجلسات:</span><span className="font-bold text-foreground">{qty}</span></div>
+                        <div className="col-span-2 flex items-center gap-2 text-muted-foreground"><span className="text-xs">{L("عدد الجلسات:", "Sessions:")}</span><span className="font-bold text-foreground">{qty}</span></div>
                       </div>
                     </section>
 
                     {/* Vendor */}
                     <section className="rounded-2xl border border-border bg-muted/20 p-4">
-                      <div className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">بيانات التاجر</div>
+                      <div className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">{L("بيانات التاجر", "Merchant details")}</div>
                       <div className="text-base font-extrabold text-foreground">{offer.vendor.name}</div>
                       <div className="mt-1 flex items-start gap-1 text-sm text-muted-foreground">
                         <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
@@ -1332,7 +1332,7 @@ function OfferDetailPage() {
 
                     {/* Customer */}
                     <section className="rounded-2xl border border-border bg-muted/20 p-4">
-                      <div className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">بيانات العميل</div>
+                      <div className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">{L("بيانات العميل", "Customer details")}</div>
                       <div className="space-y-1 text-sm">
                         <div className="font-bold text-foreground">{customerName}</div>
                         <div className="text-muted-foreground" dir="ltr">{customerPhone}</div>
@@ -1342,26 +1342,26 @@ function OfferDetailPage() {
 
                     {/* Payment breakdown */}
                     <section className="rounded-2xl border border-primary/30 bg-primary/5 p-4">
-                      <div className="text-xs font-bold uppercase tracking-wider text-primary mb-3">تفاصيل الدفع</div>
+                      <div className="text-xs font-bold uppercase tracking-wider text-primary mb-3">{L("تفاصيل الدفع", "Payment details")}</div>
                       <div className="space-y-2 text-sm">
                         <div className="flex items-center justify-between text-muted-foreground">
-                          <span>سعر الجلسة × {qty}</span>
-                          <span dir="ltr">{formatMoney(total)} ر.س</span>
+                          <span>{L(`سعر الجلسة × ${qty}`, `Session price × ${qty}`)}</span>
+                          <span dir="ltr">{formatMoney(total)} {L("ر.س", "SAR")}</span>
                         </div>
                         <div className="flex items-center justify-between text-emerald-600">
-                          <span>وفّرت</span>
-                          <span dir="ltr">{formatMoney(savings * qty)} ر.س</span>
+                          <span>{L("وفّرت", "You saved")}</span>
+                          <span dir="ltr">{formatMoney(savings * qty)} {L("ر.س", "SAR")}</span>
                         </div>
                         <div className="flex items-center justify-between border-t border-border pt-2 text-base font-bold text-foreground">
                           <span>الإجمالي شامل الضريبة</span>
                           <span dir="ltr">{formatMoney(total)} ر.س</span>
                         </div>
                         <div className="flex items-center justify-between rounded-lg bg-primary/10 px-3 py-2 text-base font-extrabold text-primary">
-                          <span>عربون الآن ({depositPctLabel})</span>
-                          <span dir="ltr">{formatMoney(depositAmount)} ر.س</span>
+                          <span>{L(`عربون الآن (${depositPctLabel})`, `Deposit now (${depositPctLabel})`)}</span>
+                          <span dir="ltr">{formatMoney(depositAmount)} {L("ر.س", "SAR")}</span>
                         </div>
                         <div className="flex items-center justify-between text-xs text-muted-foreground">
-                          <span>المتبقي يُدفع عند الخدمة</span>
+                          <span>{L("المتبقي يُدفع عند الخدمة", "Remaining paid at service")}</span>
                           <span dir="ltr">{formatMoney(remainingAmount)} ر.س</span>
                         </div>
                       </div>
@@ -1369,7 +1369,7 @@ function OfferDetailPage() {
 
                     {/* Cancellation policy */}
                     <section className="rounded-2xl border border-border bg-muted/20 p-4">
-                      <div className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">شروط الإلغاء</div>
+                      <div className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">{L("شروط الإلغاء", "Cancellation policy")}</div>
                       <ul className="space-y-1.5 text-xs text-muted-foreground leading-6">
                         {(lang === "en" ? cancellationTermsEn : cancellationTermsAr).map((t: string, i: number) => (
                           <li key={i}>• {t}</li>
@@ -1385,7 +1385,7 @@ function OfferDetailPage() {
                         onChange={(e) => setAgreed(e.target.checked)}
                         className="mt-1 h-4 w-4 accent-primary"
                       />
-                      <span className="text-muted-foreground">أوافق على شروط وأحكام الحجز وسياسة الإلغاء.</span>
+                      <span className="text-muted-foreground">{L("أوافق على شروط وأحكام الحجز وسياسة الإلغاء.", "I agree to the booking terms and cancellation policy.")}</span>
                     </label>
 
                     <div className="flex flex-col gap-2 sm:flex-row">
@@ -1394,7 +1394,7 @@ function OfferDetailPage() {
                         onClick={() => setStep("form")}
                         className="flex-1 rounded-xl border border-border bg-background py-3.5 text-base font-bold text-foreground transition hover:bg-muted"
                       >
-                        تعديل
+                        {L("تعديل", "Edit")}
                       </button>
                       <button
                         type="button"
@@ -1402,7 +1402,7 @@ function OfferDetailPage() {
                         disabled={loading || !agreed}
                         className="flex-[2] rounded-xl bg-gradient-to-r from-[#3F2A6B] to-[#E0254D] py-3.5 text-base font-extrabold text-white shadow-lg shadow-primary/30 transition hover:scale-[1.01] disabled:opacity-60 disabled:hover:scale-100"
                       >
-                        {loading ? "جاري تأكيد الحجز…" : depositPct == null ? "نسبة العربون غير محددة" : `تأكيد ودفع العربون — ${formatMoney(depositAmount)} ر.س`}
+                        {loading ? L("جاري تأكيد الحجز…", "Confirming…") : depositPct == null ? L("نسبة العربون غير محددة", "Deposit percentage not set") : L(`تأكيد ودفع العربون — ${formatMoney(depositAmount)} ر.س`, `Confirm & pay deposit — ${formatMoney(depositAmount)} SAR`)}
                       </button>
                     </div>
                   </div>
@@ -1412,15 +1412,15 @@ function OfferDetailPage() {
                 <div className="grid grid-cols-3 gap-2 border-t border-border bg-muted/20 p-4 text-center text-[11px] text-muted-foreground">
                   <div className="flex flex-col items-center gap-1">
                     <ShieldCheck className="h-4 w-4 text-emerald-600" />
-                    <span>دفع آمن</span>
+                    <span>{L("دفع آمن", "Secure payment")}</span>
                   </div>
                   <div className="flex flex-col items-center gap-1">
                     <QrCode className="h-4 w-4 text-primary" />
-                    <span>باركود فوري</span>
+                    <span>{L("باركود فوري", "Instant barcode")}</span>
                   </div>
                   <div className="flex flex-col items-center gap-1">
                     <RotateCcw className="h-4 w-4 text-rose-500" />
-                    <span>إلغاء مرن</span>
+                    <span>{L("إلغاء مرن", "Flexible cancellation")}</span>
                   </div>
                 </div>
               </div>
@@ -1431,7 +1431,7 @@ function OfferDetailPage() {
                   <CalendarCheck className="h-5 w-5" />
                 </div>
                 <div className="text-xs text-muted-foreground">
-                  <span className="font-bold text-foreground">{Math.max(12, offer.vendor.reviewsCount % 80)}+</span> شخص حجز هذا العرض هذا الأسبوع
+                  <span className="font-bold text-foreground">{Math.max(12, offer.vendor.reviewsCount % 80)}+</span> {L("شخص حجز هذا العرض هذا الأسبوع", "people booked this offer this week")}
                 </div>
               </div>
             </aside>
@@ -1442,9 +1442,9 @@ function OfferDetailPage() {
             <section className="mt-16">
               <div className="mb-5 flex items-end justify-between">
                 <div>
-                  <h2 className="text-2xl font-extrabold text-foreground">عروض مشابهة</h2>
+                  <h2 className="text-2xl font-extrabold text-foreground">{L("عروض مشابهة", "Similar offers")}</h2>
                   <p className="mt-1 text-sm text-muted-foreground">
-                    اكتشف عروضاً أخرى في {category?.nameAr || "نفس الفئة"}
+                    {L("اكتشف عروضاً أخرى في", "Discover more offers in")} {(lang === "en" ? ((category as any)?.nameEn || category?.nameAr) : category?.nameAr) || L("نفس الفئة", "this category")}
                   </p>
                 </div>
                 {category && (
@@ -1453,7 +1453,7 @@ function OfferDetailPage() {
                     params={{ slug: category.slug }}
                     className="hidden text-sm font-bold text-primary hover:underline sm:block"
                   >
-                    عرض الكل ←
+                    {L("عرض الكل ←", "View all →")}
                   </Link>
                 )}
               </div>

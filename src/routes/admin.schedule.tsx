@@ -6,11 +6,13 @@ import { admin } from "@/lib/api/admin";
 import { adminPartnersApi, partnerLabel, type AdminPartner } from "@/lib/api/adminPartners";
 import { Calendar, Store, AlertCircle, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { useLang } from "@/i18n/LanguageProvider";
 
 // Weekly schedule order used across partner dashboard: Sat→Fri
 // JS Date.getDay(): Sun=0, Mon=1, ... Sat=6 → map to this order
 const DAY_INDEX_FROM_JS = [1, 2, 3, 4, 5, 6, 0]; // [Sun..Sat] → [Sat-first index]
 type DayHours = { day: string; open: string; close: string; closed: boolean };
+const DAY_KEYS = ["sat", "sun", "mon", "tue", "wed", "thu", "fri"] as const;
 const DEFAULT_HOURS: DayHours[] = [
   { day: "السبت", open: "09:00", close: "22:00", closed: false },
   { day: "الأحد", open: "09:00", close: "22:00", closed: false },
@@ -21,13 +23,19 @@ const DEFAULT_HOURS: DayHours[] = [
   { day: "الجمعة", open: "09:00", close: "22:00", closed: true },
 ];
 
+const DAY_LABEL_EN: Record<string, string> = {
+  "السبت": "Saturday", "الأحد": "Sunday", "الإثنين": "Monday",
+  "الثلاثاء": "Tuesday", "الأربعاء": "Wednesday", "الخميس": "Thursday", "الجمعة": "Friday",
+};
 
 export const Route = createFileRoute("/admin/schedule")({
-  head: () => ({ meta: [{ title: "إدارة المواعيد | Admin" }] }),
+  head: () => ({ meta: [{ title: "Schedule | Admin" }] }),
   component: SchedulePage,
 });
 
 function SchedulePage() {
+  const { lang } = useLang();
+  const L = (a: string, e: string) => (lang === "en" ? e : a);
   const [vendors, setVendors] = useState<AdminPartner[]>([]);
   const [vendorsLoading, setVendorsLoading] = useState(false);
 
@@ -43,7 +51,7 @@ function SchedulePage() {
       .catch((e: any) => {
         if (!alive) return;
         setVendors([]);
-        toast.error(e?.message || "تعذّر تحميل المراكز");
+        toast.error(e?.message || L("تعذّر تحميل المراكز", "Failed to load merchants"));
       })
       .finally(() => {
         if (alive) setVendorsLoading(false);
@@ -87,6 +95,8 @@ function SchedulePage() {
     return weekly[idx] ?? DEFAULT_HOURS[idx];
   }, [date, weekly]);
 
+  const todayDayLabel = lang === "en" ? (DAY_LABEL_EN[today.day] || today.day) : today.day;
+
   const slots = useMemo(
     () => (today.closed ? [] : generateTimeSlotsBetween(today.open, today.close, 30)),
     [today],
@@ -107,7 +117,7 @@ function SchedulePage() {
       setBlocked(Array.isArray(data?.slots) ? data.slots : []);
       setDayOff(!!data?.dayOff);
     } catch (e: any) {
-      toast.error(e?.message || "تعذّر تحميل المواعيد المعطّلة");
+      toast.error(e?.message || L("تعذّر تحميل المواعيد المعطّلة", "Failed to load blocked slots"));
       setBlocked([]);
       setDayOff(false);
     } finally {
@@ -126,7 +136,7 @@ function SchedulePage() {
       setBlocked(Array.isArray(data?.slots) ? data.slots : []);
       setDayOff(!!data?.dayOff);
     } catch (e: any) {
-      toast.error(e?.message || "تعذّر التحديث");
+      toast.error(e?.message || L("تعذّر التحديث", "Update failed"));
     } finally {
       setSaving(null);
     }
@@ -140,9 +150,9 @@ function SchedulePage() {
       const data = res?.data ?? res;
       setDayOff(!!data?.dayOff);
       setBlocked(Array.isArray(data?.slots) ? data.slots : []);
-      toast.success(data?.dayOff ? "تم تعطيل اليوم" : "تم تفعيل اليوم");
+      toast.success(data?.dayOff ? L("تم تعطيل اليوم", "Day disabled") : L("تم تفعيل اليوم", "Day enabled"));
     } catch (e: any) {
-      toast.error(e?.message || "تعذّر التحديث");
+      toast.error(e?.message || L("تعذّر التحديث", "Update failed"));
     } finally {
       setSaving(null);
     }
@@ -150,15 +160,15 @@ function SchedulePage() {
 
   return (
     <AdminLayout
-      title="إدارة المواعيد والتعطيل"
-      subtitle="عطّل أوقات معينة لأي مركز في يوم معين عند الزحمة أو عدم التوفر"
+      title={L("إدارة المواعيد والتعطيل", "Schedule & Blackouts")}
+      subtitle={L("عطّل أوقات معينة لأي مركز في يوم معين عند الزحمة أو عدم التوفر", "Disable specific time slots for any merchant on a given day")}
     >
       <div className="space-y-4">
-        <PanelCard title="اختيار المركز والتاريخ">
+        <PanelCard title={L("اختيار المركز والتاريخ", "Select merchant and date")}>
           <div className="grid gap-3 md:grid-cols-2">
             <label className="flex flex-col gap-1.5">
               <span className="flex items-center gap-1.5 text-xs font-bold text-muted-foreground">
-                <Store className="h-3.5 w-3.5" /> المركز
+                <Store className="h-3.5 w-3.5" /> {L("المركز", "Merchant")}
               </span>
               <select
                 value={vendorId}
@@ -166,7 +176,7 @@ function SchedulePage() {
                 disabled={vendorsLoading}
                 className="rounded-xl border border-border bg-background px-3 py-2.5 text-sm font-bold outline-none focus:border-primary"
               >
-                {vendors.length === 0 && <option value="">— لا توجد مراكز —</option>}
+                {vendors.length === 0 && <option value="">{L("— لا توجد مراكز —", "— No merchants —")}</option>}
                 {vendors.map((v) => (
                   <option key={v.id} value={v.id}>{partnerLabel(v)}{v.city ? ` — ${v.city}` : ""}</option>
                 ))}
@@ -175,7 +185,7 @@ function SchedulePage() {
 
             <label className="flex flex-col gap-1.5">
               <span className="flex items-center gap-1.5 text-xs font-bold text-muted-foreground">
-                <Calendar className="h-3.5 w-3.5" /> التاريخ
+                <Calendar className="h-3.5 w-3.5" /> {L("التاريخ", "Date")}
               </span>
               <input
                 type="date"
@@ -188,11 +198,11 @@ function SchedulePage() {
           </div>
         </PanelCard>
 
-        <PanelCard title="المواعيد - اضغط على الوقت لتعطيله/تفعيله">
+        <PanelCard title={L("المواعيد - اضغط على الوقت لتعطيله/تفعيله", "Time slots — click a slot to disable/enable")}>
           <div className="mb-3 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-muted/40 p-3">
             <div className="text-sm font-bold">
-              تعطيل اليوم بالكامل ({date})
-              {dayOff && <span className="ms-2 rounded-full bg-rose-100 px-2 py-0.5 text-[11px] font-extrabold text-rose-700">معطّل بالكامل</span>}
+              {L(`تعطيل اليوم بالكامل (${date})`, `Disable entire day (${date})`)}
+              {dayOff && <span className="ms-2 rounded-full bg-rose-100 px-2 py-0.5 text-[11px] font-extrabold text-rose-700">{L("معطّل بالكامل", "Fully disabled")}</span>}
             </div>
             <button
               type="button"
@@ -204,15 +214,17 @@ function SchedulePage() {
                   : "bg-rose-600 text-white hover:bg-rose-700"
               }`}
             >
-              {saving === "__day__" ? "..." : dayOff ? "تفعيل اليوم" : "تعطيل اليوم كامل"}
+              {saving === "__day__" ? "..." : dayOff ? L("تفعيل اليوم", "Enable day") : L("تعطيل اليوم كامل", "Disable whole day")}
             </button>
           </div>
 
           <div className="mb-3 flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900">
             <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
             <p>
-              المواعيد المشطوبة باللون الأحمر تعتبر <strong>غير متاحة</strong> للحجز،
-              والعميل لن يقدر يحجزها. التعطيل هنا بيتم على مستوى المركز بالكامل.
+              {L(
+                "المواعيد المشطوبة باللون الأحمر تعتبر غير متاحة للحجز، والعميل لن يقدر يحجزها. التعطيل هنا بيتم على مستوى المركز بالكامل.",
+                "Slots struck through in red are unavailable for booking — customers cannot book them. Blackouts here apply to the entire merchant.",
+              )}
             </p>
           </div>
 
@@ -221,8 +233,8 @@ function SchedulePage() {
           ) : slots.length === 0 ? (
             <p className="py-6 text-center text-sm text-muted-foreground">
               {today.closed
-                ? `المركز مغلق يوم ${today.day} حسب مواعيد العمل.`
-                : "لا توجد مواعيد متاحة في هذا اليوم."}
+                ? L(`المركز مغلق يوم ${todayDayLabel} حسب مواعيد العمل.`, `Closed on ${todayDayLabel} per working hours.`)
+                : L("لا توجد مواعيد متاحة في هذا اليوم.", "No available slots on this day.")}
             </p>
 
           ) : (
@@ -241,7 +253,7 @@ function SchedulePage() {
                         ? "border-dashed border-rose-300 bg-rose-50 text-rose-600 line-through"
                         : "border-emerald-200 bg-emerald-50 text-emerald-700 hover:border-emerald-400"
                     } ${dayOff ? "opacity-60 cursor-not-allowed" : ""} ${isSaving ? "opacity-50" : ""}`}
-                    title={dayOff ? "اليوم معطّل بالكامل" : isBlocked ? "اضغط للتفعيل" : "اضغط للتعطيل"}
+                    title={dayOff ? L("اليوم معطّل بالكامل", "Day fully disabled") : isBlocked ? L("اضغط للتفعيل", "Click to enable") : L("اضغط للتعطيل", "Click to disable")}
                   >
                     {isSaving ? "..." : s}
                   </button>
@@ -253,11 +265,11 @@ function SchedulePage() {
           <div className="mt-4 flex items-center gap-4 text-xs text-muted-foreground">
             <span className="flex items-center gap-1.5">
               <span className="inline-block h-3 w-3 rounded border-2 border-emerald-200 bg-emerald-50" />
-              متاح
+              {L("متاح", "Available")}
             </span>
             <span className="flex items-center gap-1.5">
               <span className="inline-block h-3 w-3 rounded border-2 border-dashed border-rose-300 bg-rose-50" />
-              معطّل
+              {L("معطّل", "Disabled")}
             </span>
           </div>
         </PanelCard>
@@ -265,3 +277,5 @@ function SchedulePage() {
     </AdminLayout>
   );
 }
+// silence unused DAY_KEYS in linter
+void DAY_KEYS;

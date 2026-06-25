@@ -142,9 +142,18 @@ type Booking = {
   confirmed_at?: string | null;
 };
 
-const PAY_METHOD_LABEL: Record<string, string> = { mada: "مدى", visa: "فيزا", mastercard: "ماستر كارد", applepay: "Apple Pay", stcpay: "STC Pay", mayfatoorah: "ماي فاتورة", cod: "الدفع في المركز" };
-const PAY_STATUS_LABEL: Record<string, string> = { paid: "مدفوع بالكامل", deposit_paid: "عربون مدفوع", unpaid: "غير مدفوع", refunded: "مسترجع" };
-const SOURCE_LABEL: Record<string, string> = { app: "التطبيق", web: "الويب", partner: "من المركز" };
+const PAY_METHOD_LABEL_AR: Record<string, string> = { mada: "مدى", visa: "فيزا", mastercard: "ماستر كارد", applepay: "Apple Pay", stcpay: "STC Pay", mayfatoorah: "ماي فاتورة", cod: "الدفع في المركز" };
+const PAY_METHOD_LABEL_EN: Record<string, string> = { mada: "Mada", visa: "Visa", mastercard: "Mastercard", applepay: "Apple Pay", stcpay: "STC Pay", mayfatoorah: "MyFatoorah", cod: "Pay at center" };
+const PAY_STATUS_LABEL_AR: Record<string, string> = { paid: "مدفوع بالكامل", deposit_paid: "عربون مدفوع", unpaid: "غير مدفوع", refunded: "مسترجع" };
+const PAY_STATUS_LABEL_EN: Record<string, string> = { paid: "Fully paid", deposit_paid: "Deposit paid", unpaid: "Unpaid", refunded: "Refunded" };
+const SOURCE_LABEL_AR: Record<string, string> = { app: "التطبيق", web: "الويب", partner: "من المركز" };
+const SOURCE_LABEL_EN: Record<string, string> = { app: "App", web: "Web", partner: "From center" };
+const PAY_METHOD_LABEL = PAY_METHOD_LABEL_AR;
+const PAY_STATUS_LABEL = PAY_STATUS_LABEL_AR;
+const SOURCE_LABEL = SOURCE_LABEL_AR;
+function payMethodLabel(k: string, lang: string) { return (lang === "en" ? PAY_METHOD_LABEL_EN : PAY_METHOD_LABEL_AR)[k] || k; }
+function payStatusLabel(k: string, lang: string) { return (lang === "en" ? PAY_STATUS_LABEL_EN : PAY_STATUS_LABEL_AR)[k] || k; }
+function sourceLabel(k: string, lang: string) { return (lang === "en" ? SOURCE_LABEL_EN : SOURCE_LABEL_AR)[k] || k; }
 
 function safeAmount(v: any): number {
   const n = Number(v ?? 0);

@@ -736,7 +736,7 @@ function SponsoredAdOverlay({ slideIndex }: { slideIndex: number }) {
       )}
       <div className="min-w-0 flex-1">
         <div className="mb-0.5 inline-flex items-center gap-1 rounded-full bg-primary/10 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-primary">
-          <Megaphone className="h-2.5 w-2.5" /> إعلان ممول
+          <Megaphone className="h-2.5 w-2.5" /> {L("إعلان ممول", "Sponsored")}
         </div>
         <div className="truncate text-xs font-extrabold text-foreground sm:text-sm">{title}</div>
         {subtitle && (
@@ -745,7 +745,7 @@ function SponsoredAdOverlay({ slideIndex }: { slideIndex: number }) {
       </div>
       {showBookBtn && (
         <div className="shrink-0 rounded-full bg-primary px-3 py-1.5 text-[11px] font-bold text-primary-foreground sm:px-4 sm:py-2 sm:text-xs">
-          احجز الآن
+          {L("احجز الآن", "Book now")}
         </div>
       )}
     </>

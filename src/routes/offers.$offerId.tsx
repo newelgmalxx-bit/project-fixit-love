@@ -116,7 +116,20 @@ function OfferDetailPage() {
         "50% deduction from the deposit when cancelling less than 6 hours before.",
         "Deposit is non-refundable in case of no-show without notice.",
       ];
-  const mapsUrl = (offer.vendor as any).mapsUrl || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${offer.vendor.name} ${offer.vendor.address} ${offer.vendor.city}`)}`;
+  // Bilingual computed fields — fall back to whichever language is available.
+  const pickLang = (ar: any, en: any) => (lang === "en" ? (en || ar) : (ar || en)) || "";
+  const offerTitle = pickLang(offer.title, (offer as any).titleEn);
+  const offerDescription = pickLang(offer.description, (offer as any).descriptionEn);
+  const overviewListAr: string[] = Array.isArray((offer as any).overview) ? (offer as any).overview : [];
+  const overviewListEn: string[] = Array.isArray((offer as any).overviewEn) ? (offer as any).overviewEn : [];
+  const overviewList: string[] = lang === "en" ? (overviewListEn.length ? overviewListEn : overviewListAr) : (overviewListAr.length ? overviewListAr : overviewListEn);
+  const termsListAr: string[] = Array.isArray((offer as any).terms) ? (offer as any).terms : [];
+  const termsListEn: string[] = Array.isArray((offer as any).termsEn) ? (offer as any).termsEn : [];
+  const termsList: string[] = lang === "en" ? (termsListEn.length ? termsListEn : termsListAr) : (termsListAr.length ? termsListAr : termsListEn);
+  const vendorName = pickLang(offer.vendor.name, (offer.vendor as any).nameEn);
+  const vendorAddress = pickLang(offer.vendor.address, (offer.vendor as any).addressEn);
+  const vendorCity = pickLang(offer.vendor.city, (offer.vendor as any).cityEn);
+  const mapsUrl = (offer.vendor as any).mapsUrl || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${vendorName} ${vendorAddress} ${vendorCity}`)}`;
 
 
   const [date, setDate] = useState("");

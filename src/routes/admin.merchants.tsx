@@ -624,7 +624,7 @@ function MerchantsPage() {
               })}
               {filtered.length === 0 && (
                 <tr>
-                  <td colSpan={11} className="p-10 text-center text-sm text-muted-foreground">لا توجد مراكز مطابقة</td>
+                  <td colSpan={11} className="p-10 text-center text-sm text-muted-foreground">{L("لا توجد مراكز مطابقة", "No matching partners")}</td>
                 </tr>
               )}
             </tbody>

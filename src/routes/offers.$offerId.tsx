@@ -116,7 +116,20 @@ function OfferDetailPage() {
         "50% deduction from the deposit when cancelling less than 6 hours before.",
         "Deposit is non-refundable in case of no-show without notice.",
       ];
-  const mapsUrl = (offer.vendor as any).mapsUrl || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${offer.vendor.name} ${offer.vendor.address} ${offer.vendor.city}`)}`;
+  // Bilingual computed fields — fall back to whichever language is available.
+  const pickLang = (ar: any, en: any) => (lang === "en" ? (en || ar) : (ar || en)) || "";
+  const offerTitle = pickLang(offer.title, (offer as any).titleEn);
+  const offerDescription = pickLang(offer.description, (offer as any).descriptionEn);
+  const overviewListAr: string[] = Array.isArray((offer as any).overview) ? (offer as any).overview : [];
+  const overviewListEn: string[] = Array.isArray((offer as any).overviewEn) ? (offer as any).overviewEn : [];
+  const overviewList: string[] = lang === "en" ? (overviewListEn.length ? overviewListEn : overviewListAr) : (overviewListAr.length ? overviewListAr : overviewListEn);
+  const termsListAr: string[] = Array.isArray((offer as any).terms) ? (offer as any).terms : [];
+  const termsListEn: string[] = Array.isArray((offer as any).termsEn) ? (offer as any).termsEn : [];
+  const termsList: string[] = lang === "en" ? (termsListEn.length ? termsListEn : termsListAr) : (termsListAr.length ? termsListAr : termsListEn);
+  const vendorName = pickLang(offer.vendor.name, (offer.vendor as any).nameEn);
+  const vendorAddress = pickLang(offer.vendor.address, (offer.vendor as any).addressEn);
+  const vendorCity = pickLang(offer.vendor.city, (offer.vendor as any).cityEn);
+  const mapsUrl = (offer.vendor as any).mapsUrl || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${vendorName} ${vendorAddress} ${vendorCity}`)}`;
 
 
   const [date, setDate] = useState("");
@@ -501,7 +514,7 @@ function OfferDetailPage() {
       commissionPct: depositPct ?? undefined,
     });
     toast.success(L("تمت إضافة الحجز للسلة", "Booking added to cart"), {
-      description: `${offer.title} — ${date} ${time}`,
+      description: `${offerTitle} — ${date} ${time}`,
       action: { label: L("الذهاب للسلة", "Go to cart"), onClick: () => navigate({ to: "/cart" as any }) },
     });
     // ملاحظة: لا نمسح سجل السلة المتروكة هنا. الإضافة للسلة لا تعني إتمام
@@ -609,7 +622,7 @@ function OfferDetailPage() {
     const url = typeof window !== "undefined" ? window.location.href : "";
     try {
       if (navigator.share) {
-        await navigator.share({ title: offer.title, text: offer.description, url });
+        await navigator.share({ title: offerTitle, text: offerDescription, url });
       } else {
         await navigator.clipboard.writeText(url);
       }
@@ -669,7 +682,7 @@ function OfferDetailPage() {
                 <ChevronLeft className="h-3 w-3" />
               </>
             )}
-            <span className="truncate text-foreground">{offer.title}</span>
+            <span className="truncate text-foreground">{offerTitle}</span>
           </div>
 
           <div className="grid gap-5 sm:gap-8 lg:grid-cols-3">
@@ -680,7 +693,7 @@ function OfferDetailPage() {
                 <div className="relative overflow-hidden rounded-3xl border border-border bg-card shadow-lg">
                   <img
                     src={gallery[activeImg]}
-                    alt={offer.title}
+                    alt={offerTitle}
                     className="h-56 w-full object-cover sm:h-80 md:h-[28rem]"
                   />
                   {/* gradient overlay */}
@@ -747,12 +760,12 @@ function OfferDetailPage() {
               {/* Title + highlights */}
               <div className="rounded-3xl border border-border bg-card p-4 sm:p-6 shadow-sm">
                 <h1 className="text-2xl font-extrabold leading-tight text-foreground sm:text-3xl">
-                  {offer.title}
+                  {offerTitle}
                 </h1>
                 <div className="mt-3 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
                   <div className="flex items-center gap-1">
                     <MapPin className="h-4 w-4 text-primary" />
-                    <span>{offer.vendor.name} · {offer.vendor.city}</span>
+                    <span>{vendorName} · {vendorCity}</span>
                   </div>
                 </div>
 
@@ -799,11 +812,11 @@ function OfferDetailPage() {
                   {tab === "overview" && (
                     <div className="space-y-5">
                       {offer.description && (
-                        <p className="leading-7 text-muted-foreground whitespace-pre-line">{offer.description}</p>
+                        <p className="leading-7 text-muted-foreground whitespace-pre-line">{offerDescription}</p>
                       )}
-                      {Array.isArray((offer as any).overview) && (offer as any).overview.length > 0 && (
+                      {overviewList.length > 0 && (
                         <div className="grid gap-3 sm:grid-cols-2">
-                          {(offer as any).overview.map((b: string, i: number) => (
+                          {overviewList.map((b: string, i: number) => (
                             <div key={i} className="flex items-start gap-2 rounded-xl bg-muted/30 p-3 text-sm">
                               <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
                               <span className="text-foreground">{b}</span>
@@ -816,7 +829,7 @@ function OfferDetailPage() {
 
                   {tab === "terms" && (
                     <ul className="space-y-3">
-                      {(Array.isArray((offer as any).terms) ? (offer as any).terms : []).map((t: string, i: number) => (
+                      {termsList.map((t: string, i: number) => (
                         <li key={i} className="flex items-start gap-3 rounded-xl border border-border bg-muted/20 p-3 text-sm text-foreground">
                           <div className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
                             <Check className="h-3.5 w-3.5" />
@@ -824,7 +837,7 @@ function OfferDetailPage() {
                           <span>{t}</span>
                         </li>
                       ))}
-                      {(!Array.isArray((offer as any).terms) || (offer as any).terms.length === 0) && (
+                      {termsList.length === 0 && (
                         <li className="text-sm text-muted-foreground">{L("لا توجد شروط مضافة لهذا العرض.", "No terms added for this offer.")}</li>
                       )}
                     </ul>
@@ -833,11 +846,11 @@ function OfferDetailPage() {
                   {tab === "location" && (
                     <div className="space-y-4">
                       <div className="rounded-2xl border border-border bg-muted/30 p-5">
-                        <div className="text-lg font-extrabold text-foreground">{offer.vendor.name}</div>
+                        <div className="text-lg font-extrabold text-foreground">{vendorName}</div>
                         <div className="mt-3 grid gap-3 sm:grid-cols-2 text-sm">
                           <div className="flex items-start gap-2">
                             <MapPin className="mt-0.5 h-4 w-4 text-primary" />
-                            <span>{offer.vendor.address}{L("، ", ", ")}{offer.vendor.city}</span>
+                            <span>{vendorAddress}{L("، ", ", ")}{vendorCity}</span>
                           </div>
                           <a href={mapsUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 rounded-lg border border-primary/40 bg-primary/5 px-3 py-2 text-sm font-bold text-primary hover:bg-primary/10 transition">
                             <MapPin className="h-4 w-4" /> {L("فتح على خرائط Google", "Open in Google Maps")}
@@ -861,7 +874,7 @@ function OfferDetailPage() {
                             <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg">
                               <MapPin className="h-7 w-7" />
                             </div>
-                            <div className="text-sm font-bold text-foreground">{offer.vendor.city}</div>
+                            <div className="text-sm font-bold text-foreground">{vendorCity}</div>
                             <div className="text-xs text-muted-foreground">{L("سيظهر العنوان التفصيلي بعد تأكيد الحجز", "The detailed address will appear after confirming the booking")}</div>
                           </div>
                         </div>
@@ -1308,7 +1321,7 @@ function OfferDetailPage() {
                     {/* Service & schedule */}
                     <section className="rounded-2xl border border-border bg-muted/20 p-4">
                       <div className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">{L("الخدمة والموعد", "Service & schedule")}</div>
-                      <div className="text-base font-extrabold text-foreground leading-snug">{offer.title}</div>
+                      <div className="text-base font-extrabold text-foreground leading-snug">{offerTitle}</div>
                       <div className="mt-3 grid grid-cols-2 gap-3 text-sm">
                         <div className="flex items-center gap-2"><Calendar className="h-4 w-4 text-primary" /><span className="font-bold">{date}</span></div>
                         <div className="flex items-center gap-2"><Clock className="h-4 w-4 text-primary" /><span className="font-bold">{time}</span></div>
@@ -1319,10 +1332,10 @@ function OfferDetailPage() {
                     {/* Vendor */}
                     <section className="rounded-2xl border border-border bg-muted/20 p-4">
                       <div className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">{L("بيانات التاجر", "Merchant details")}</div>
-                      <div className="text-base font-extrabold text-foreground">{offer.vendor.name}</div>
+                      <div className="text-base font-extrabold text-foreground">{vendorName}</div>
                       <div className="mt-1 flex items-start gap-1 text-sm text-muted-foreground">
                         <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                        <span>{offer.vendor.address}{L("، ", ", ")}{offer.vendor.city}</span>
+                        <span>{vendorAddress}{L("، ", ", ")}{vendorCity}</span>
                       </div>
                       <a href={mapsUrl} target="_blank" rel="noopener noreferrer" className="mt-2 inline-flex items-center gap-1.5 rounded-md border border-primary/40 bg-primary/5 px-2.5 py-1 text-xs font-bold text-primary hover:bg-primary/10">
                         <MapPin className="h-3.5 w-3.5" /> {L("فتح على خرائط Google", "Open in Google Maps")}

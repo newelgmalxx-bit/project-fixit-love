@@ -462,6 +462,8 @@ function StatusBadge({ status }: { status: string }) {
 
 /* -------------------- Overview -------------------- */
 function OverviewTab({ partner, onNavigate }: { partner: Profile; onNavigate: (t: Tab) => void }) {
+  const { lang } = useLang();
+  const L = (a: string, e: string) => (lang === "en" ? e : a);
   const isDemo = partner.id === DEMO_PARTNER_ID;
   const [stats, setStats] = useState({ offers: 0, bookings: 0, revenue: 0, pendingBookings: 0 });
   const [recentBookings, setRecentBookings] = useState<Booking[]>([]);
@@ -501,26 +503,27 @@ function OverviewTab({ partner, onNavigate }: { partner: Profile; onNavigate: (t
         setRecentBookings(((brecent?.items || []) as Booking[]).slice(0, 4));
         setTopOffers(offersList.filter((o: any) => o.status === "active").slice(0, 3));
       } catch (e: any) {
-        toast.error(e?.message || "تعذّر تحميل الإحصائيات");
+        toast.error(e?.message || L("تعذّر تحميل الإحصائيات", "Failed to load statistics"));
       }
     })();
   }, [partner.id, isDemo]);
 
   const commissionPct = Number(partner.commission_pct ?? 10);
   const netProfit = Math.max(0, stats.revenue * (1 - commissionPct / 100));
+  const sar = L("ر.س", "SAR");
   const cards = [
-    { label: "إجمالي العروض", value: stats.offers, icon: Tag, color: "from-violet-500 to-purple-600" },
-    { label: "إجمالي الحجوزات", value: stats.bookings, icon: Calendar, color: "from-pink-500 to-rose-600" },
-    { label: "الإيرادات (ر.س)", value: stats.revenue.toFixed(2), icon: DollarSign, color: "from-emerald-500 to-teal-600" },
-    { label: "صافي الربح بعد خصم العربون", value: `ر.س ${netProfit.toLocaleString(undefined, { maximumFractionDigits: 0 })}`, icon: Percent, color: "from-emerald-500 to-teal-600", note: `تم تطبيق ${commissionPct}% عمولة` },
+    { label: L("إجمالي العروض", "Total offers"), value: stats.offers, icon: Tag, color: "from-violet-500 to-purple-600" },
+    { label: L("إجمالي الحجوزات", "Total bookings"), value: stats.bookings, icon: Calendar, color: "from-pink-500 to-rose-600" },
+    { label: L(`الإيرادات (${sar})`, `Revenue (${sar})`), value: stats.revenue.toFixed(2), icon: DollarSign, color: "from-emerald-500 to-teal-600" },
+    { label: L("صافي الربح بعد خصم العربون", "Net profit after deposit deduction"), value: `${sar} ${netProfit.toLocaleString(undefined, { maximumFractionDigits: 0 })}`, icon: Percent, color: "from-emerald-500 to-teal-600", note: L(`تم تطبيق ${commissionPct}% عمولة`, `${commissionPct}% commission applied`) },
   ] as { label: string; value: any; icon: any; color: string; note?: string }[];
 
 
   const statusMap: Record<string, { label: string; cls: string }> = {
-    pending: { label: "بانتظار", cls: "bg-amber-100 text-amber-800" },
-    confirmed: { label: "مؤكد", cls: "bg-sky-100 text-sky-800" },
-    completed: { label: "مكتمل", cls: "bg-emerald-100 text-emerald-800" },
-    cancelled: { label: "ملغي", cls: "bg-rose-100 text-rose-800" },
+    pending: { label: L("بانتظار", "Pending"), cls: "bg-amber-100 text-amber-800" },
+    confirmed: { label: L("مؤكد", "Confirmed"), cls: "bg-sky-100 text-sky-800" },
+    completed: { label: L("مكتمل", "Completed"), cls: "bg-emerald-100 text-emerald-800" },
+    cancelled: { label: L("ملغي", "Cancelled"), cls: "bg-rose-100 text-rose-800" },
   };
 
   return (
@@ -540,22 +543,22 @@ function OverviewTab({ partner, onNavigate }: { partner: Profile; onNavigate: (t
 
       <div className="rounded-3xl border border-border bg-gradient-to-br from-[#3F2A6B]/5 to-[#E0254D]/5 p-6">
         <div className="flex items-center gap-2 text-sm font-bold text-foreground">
-          <TrendingUp className="h-4 w-4 text-primary" /> نصيحة لزيادة الحجوزات
+          <TrendingUp className="h-4 w-4 text-primary" /> {L("نصيحة لزيادة الحجوزات", "Tip to grow your bookings")}
         </div>
         <p className="mt-2 text-sm text-muted-foreground">
-          أضف 3 عروض على الأقل بصور احترافية وأسعار جذابة، وفعّل ساعات العمل في ملف المركز لزيادة ظهورك في نتائج البحث.
+          {L("أضف 3 عروض على الأقل بصور احترافية وأسعار جذابة، وفعّل ساعات العمل في ملف المركز لزيادة ظهورك في نتائج البحث.", "Add at least 3 offers with professional images and attractive prices, and enable working hours in your center profile to boost your search visibility.")}
         </p>
       </div>
 
       {/* Quick actions */}
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {([
-          { label: "إضافة عرض جديد", icon: Plus, color: "from-violet-500 to-purple-600", target: "offers" as Tab },
-          { label: "مراجعة الحجوزات", icon: Calendar, color: "from-pink-500 to-rose-600", target: "bookings" as Tab },
-          { label: "نتائج المبيعات", icon: TrendingUp, color: "from-emerald-500 to-teal-600", target: "wallet" as Tab },
-          { label: "تعديل ملف المركز", icon: Store, color: "from-amber-500 to-orange-600", target: "profile" as Tab },
+          { label: L("إضافة عرض جديد", "Add new offer"), icon: Plus, color: "from-violet-500 to-purple-600", target: "offers" as Tab },
+          { label: L("مراجعة الحجوزات", "Review bookings"), icon: Calendar, color: "from-pink-500 to-rose-600", target: "bookings" as Tab },
+          { label: L("نتائج المبيعات", "Sales results"), icon: TrendingUp, color: "from-emerald-500 to-teal-600", target: "wallet" as Tab },
+          { label: L("تعديل ملف المركز", "Edit center profile"), icon: Store, color: "from-amber-500 to-orange-600", target: "profile" as Tab },
         ]).map((a) => (
-          <button key={a.label} onClick={() => onNavigate(a.target)} className="group flex items-center gap-3 rounded-2xl border border-border bg-card p-4 text-right hover:border-primary hover:shadow-sm transition">
+          <button key={a.label} onClick={() => onNavigate(a.target)} className="group flex items-center gap-3 rounded-2xl border border-border bg-card p-4 text-start hover:border-primary hover:shadow-sm transition">
             <div className={`flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br ${a.color} text-white`}>
               <a.icon className="h-4 w-4" />
             </div>
@@ -569,13 +572,13 @@ function OverviewTab({ partner, onNavigate }: { partner: Profile; onNavigate: (t
         <div className="rounded-3xl border border-border bg-card p-6 lg:col-span-2">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 text-sm font-extrabold">
-              <Calendar className="h-4 w-4 text-primary" /> آخر الحجوزات
+              <Calendar className="h-4 w-4 text-primary" /> {L("آخر الحجوزات", "Latest bookings")}
             </div>
-            <span className="text-[11px] text-muted-foreground">آخر {recentBookings.length} حجوزات</span>
+            <span className="text-[11px] text-muted-foreground">{L(`آخر ${recentBookings.length} حجوزات`, `Last ${recentBookings.length} bookings`)}</span>
           </div>
           <div className="mt-4 divide-y divide-border">
             {recentBookings.length === 0 ? (
-              <div className="py-6 text-center text-xs text-muted-foreground">لا توجد حجوزات بعد</div>
+              <div className="py-6 text-center text-xs text-muted-foreground">{L("لا توجد حجوزات بعد", "No bookings yet")}</div>
             ) : recentBookings.map((b) => {
               const s = statusMap[b.status] || statusMap.pending;
               return (
@@ -587,7 +590,7 @@ function OverviewTab({ partner, onNavigate }: { partner: Profile; onNavigate: (t
                     </div>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
-                    <span className="text-sm font-extrabold text-foreground">{Number(b.amount || 0).toFixed(0)} ر.س</span>
+                    <span className="text-sm font-extrabold text-foreground">{Number(b.amount || 0).toFixed(0)} {sar}</span>
                     <span className={`rounded-full px-2.5 py-1 text-[10px] font-bold ${s.cls}`}>{s.label}</span>
                   </div>
                 </div>
@@ -598,17 +601,17 @@ function OverviewTab({ partner, onNavigate }: { partner: Profile; onNavigate: (t
 
         <div className="rounded-3xl border border-border bg-card p-6">
           <div className="flex items-center gap-2 text-sm font-extrabold">
-            <Star className="h-4 w-4 text-amber-500" /> أبرز العروض
+            <Star className="h-4 w-4 text-amber-500" /> {L("أبرز العروض", "Top offers")}
           </div>
           <div className="mt-4 space-y-3">
             {topOffers.length === 0 ? (
-              <div className="py-6 text-center text-xs text-muted-foreground">لا توجد عروض نشطة بعد</div>
+              <div className="py-6 text-center text-xs text-muted-foreground">{L("لا توجد عروض نشطة بعد", "No active offers yet")}</div>
             ) : topOffers.map((o) => (
               <div key={o.id} className="flex items-center gap-3">
                 <img src={o.image_url || ""} alt="" className="h-12 w-12 rounded-xl object-cover" />
                 <div className="min-w-0 flex-1">
                   <div className="truncate text-xs font-bold text-foreground">{o.title}</div>
-                  <div className="text-[11px] font-bold text-primary">{o.price} ر.س</div>
+                  <div className="text-[11px] font-bold text-primary">{o.price} {sar}</div>
                 </div>
               </div>
             ))}

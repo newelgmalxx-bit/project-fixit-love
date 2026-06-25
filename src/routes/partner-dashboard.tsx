@@ -644,6 +644,8 @@ const DEMO_BOOKINGS: Booking[] = [
 
 /* -------------------- Offers -------------------- */
 function OffersTab({ partner }: { partner: Profile }) {
+  const { lang } = useLang();
+  const L = (a: string, e: string) => (lang === "en" ? e : a);
   const { apiCategories } = useCategories();
   const [items, setItems] = useState<Offer[]>([]);
   const [loading, setLoading] = useState(true);
@@ -665,7 +667,7 @@ function OffersTab({ partner }: { partner: Profile }) {
       const rows = (r?.items || r || []) as Offer[];
       setItems(rows);
     } catch (e: any) {
-      toast.error(e?.message || "تعذّر تحميل العروض");
+      toast.error(e?.message || L("تعذّر تحميل العروض", "Failed to load offers"));
       setItems([]);
     }
     setLoading(false);
@@ -674,14 +676,14 @@ function OffersTab({ partner }: { partner: Profile }) {
 
   async function save() {
     if (!editing?.title || editing.price == null) {
-      toast.error("ادخل العنوان بالعربي والسعر");
+      toast.error(L("ادخل العنوان بالعربي والسعر", "Enter the Arabic title and price"));
       return;
     }
     const matchedCategory = editing.category
       ? apiCategories.find((c: any) => c.id === editing.category || c.slug === editing.category)
       : null;
     if (apiCategories.length > 0 && editing.category && !matchedCategory) {
-      toast.error("اختر تصنيفًا صحيحًا من القائمة");
+      toast.error(L("اختر تصنيفًا صحيحًا من القائمة", "Choose a valid category from the list"));
       return;
     }
     const toArr = (v: any): string[] =>
@@ -714,22 +716,22 @@ function OffersTab({ partner }: { partner: Profile }) {
       } else {
         await partnerApi.createOffer(payload as any);
       }
-      toast.success("تم الحفظ");
+      toast.success(L("تم الحفظ", "Saved"));
       setEditing(null);
       load();
     } catch (e: any) {
-      toast.error(e?.message || "فشل الحفظ");
+      toast.error(e?.message || L("فشل الحفظ", "Save failed"));
     }
   }
 
   async function remove(id: string) {
-    if (!confirm("حذف هذا العرض؟")) return;
+    if (!confirm(L("حذف هذا العرض؟", "Delete this offer?"))) return;
     try {
       await partnerApi.deleteOffer(id);
-      toast.success("تم الحذف");
+      toast.success(L("تم الحذف", "Deleted"));
       load();
     } catch (e: any) {
-      toast.error(e?.message || "فشل الحذف");
+      toast.error(e?.message || L("فشل الحذف", "Delete failed"));
     }
   }
 
@@ -738,9 +740,9 @@ function OffersTab({ partner }: { partner: Profile }) {
     try {
       await partnerApi.updateOffer(o.id, { status: next } as any);
       setItems((prev) => prev.map((x) => x.id === o.id ? { ...x, status: next } : x));
-      toast.success(next === "active" ? "تم تفعيل العرض" : "تم إيقاف العرض");
+      toast.success(next === "active" ? L("تم تفعيل العرض", "Offer activated") : L("تم إيقاف العرض", "Offer paused"));
     } catch (e: any) {
-      toast.error(e?.message || "فشل تحديث الحالة");
+      toast.error(e?.message || L("فشل تحديث الحالة", "Failed to update status"));
     }
   }
 
@@ -758,12 +760,12 @@ function OffersTab({ partner }: { partner: Profile }) {
 
   async function bulkDelete() {
     if (selected.size === 0) return;
-    if (!confirm(`حذف ${selected.size} عرض نهائياً؟ لا يمكن التراجع.`)) return;
+    if (!confirm(L(`حذف ${selected.size} عرض نهائياً؟ لا يمكن التراجع.`, `Permanently delete ${selected.size} offers? This cannot be undone.`))) return;
     const ids = Array.from(selected);
     let failed = 0;
     await Promise.all(ids.map((id) => partnerApi.deleteOffer(id).catch(() => { failed++; })));
-    if (failed) toast.error(`فشل حذف ${failed} من ${ids.length}`);
-    else toast.success(`تم حذف ${ids.length} عرض`);
+    if (failed) toast.error(L(`فشل حذف ${failed} من ${ids.length}`, `Failed to delete ${failed} of ${ids.length}`));
+    else toast.success(L(`تم حذف ${ids.length} عرض`, `Deleted ${ids.length} offers`));
     setSelected(new Set());
     load();
   }
@@ -771,7 +773,7 @@ function OffersTab({ partner }: { partner: Profile }) {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-extrabold text-foreground">العروض ({items.length})</h2>
+        <h2 className="text-xl font-extrabold text-foreground">{L("العروض", "Offers")} ({items.length})</h2>
         <div className="flex items-center gap-2">
           {items.length > 0 && (
             <>
@@ -779,14 +781,14 @@ function OffersTab({ partner }: { partner: Profile }) {
                 onClick={toggleSelectAll}
                 className="inline-flex items-center gap-2 rounded-full border border-border px-4 py-2 text-xs font-bold hover:bg-muted"
               >
-                {selected.size === items.length && items.length > 0 ? "إلغاء التحديد" : "تحديد الكل"}
+                {selected.size === items.length && items.length > 0 ? L("إلغاء التحديد", "Clear selection") : L("تحديد الكل", "Select all")}
               </button>
               {selected.size > 0 && (
                 <button
                   onClick={bulkDelete}
                   className="inline-flex items-center gap-2 rounded-full border border-rose-200 bg-rose-50 px-4 py-2 text-xs font-bold text-rose-700 hover:bg-rose-100"
                 >
-                  <Trash2 className="h-3.5 w-3.5" /> حذف المحدد ({selected.size})
+                  <Trash2 className="h-3.5 w-3.5" /> {L("حذف المحدد", "Delete selected")} ({selected.size})
                 </button>
               )}
             </>
@@ -795,7 +797,7 @@ function OffersTab({ partner }: { partner: Profile }) {
             onClick={() => setEditing({ title: "", price: 0, status: "draft", category: "" })}
             className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#3F2A6B] to-[#E0254D] px-5 py-2.5 text-sm font-bold text-white shadow"
           >
-            <Plus className="h-4 w-4" /> أضف عرض
+            <Plus className="h-4 w-4" /> {L("أضف عرض", "Add offer")}
           </button>
         </div>
       </div>
@@ -804,13 +806,13 @@ function OffersTab({ partner }: { partner: Profile }) {
         <div className="flex justify-center py-10"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
       ) : items.length === 0 ? (
         <div className="rounded-3xl border border-dashed border-border bg-muted/30 p-10 text-center text-sm text-muted-foreground">
-          لا توجد عروض بعد — أضف أول عرض!
+          {L("لا توجد عروض بعد — أضف أول عرض!", "No offers yet — add your first offer!")}
         </div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {items.map((o) => (
             <div key={o.id} className={`relative overflow-hidden rounded-3xl border bg-card transition ${selected.has(o.id) ? "border-primary ring-2 ring-primary/30" : "border-border"}`}>
-              <label className="absolute top-3 right-3 z-10 flex h-6 w-6 cursor-pointer items-center justify-center rounded-md border border-border bg-white/90 shadow-sm">
+              <label className="absolute top-3 ltr:left-3 rtl:right-3 z-10 flex h-6 w-6 cursor-pointer items-center justify-center rounded-md border border-border bg-white/90 shadow-sm">
                 <input
                   type="checkbox"
                   checked={selected.has(o.id)}
@@ -823,27 +825,27 @@ function OffersTab({ partner }: { partner: Profile }) {
                 <div className="flex items-start justify-between gap-2">
                   <h3 className="text-base font-extrabold text-foreground">{o.title}</h3>
                   <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold ${o.status === "active" ? "bg-emerald-100 text-emerald-700" : "bg-gray-100 text-gray-600"}`}>
-                    {o.status === "active" ? "نشط" : o.status === "paused" ? "متوقف" : "مسودة"}
+                    {o.status === "active" ? L("نشط", "Active") : o.status === "paused" ? L("متوقف", "Paused") : L("مسودة", "Draft")}
                   </span>
                 </div>
                 {o.description && <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">{o.description}</p>}
                 <div className="mt-3 flex items-center gap-2">
-                  <span className="text-lg font-extrabold text-primary">{o.price} ر.س</span>
+                  <span className="text-lg font-extrabold text-primary">{o.price} {L("ر.س", "SAR")}</span>
                   {o.original_price && <span className="text-xs text-muted-foreground line-through">{o.original_price}</span>}
                 </div>
                 <div className="mt-4 flex gap-2">
-                  <Link to="/offers/$offerId" params={{ offerId: o.id }} target="_blank" className="inline-flex items-center justify-center rounded-xl border border-border px-3 py-2 text-xs font-bold hover:bg-muted" title="عرض">
+                  <Link to="/offers/$offerId" params={{ offerId: o.id }} target="_blank" className="inline-flex items-center justify-center rounded-xl border border-border px-3 py-2 text-xs font-bold hover:bg-muted" title={L("عرض", "View")}>
                     <Eye className="h-3.5 w-3.5" />
                   </Link>
                   <button
                     onClick={() => toggleStatus(o)}
-                    title={o.status === "active" ? "إيقاف" : "تفعيل"}
+                    title={o.status === "active" ? L("إيقاف", "Pause") : L("تفعيل", "Activate")}
                     className={`inline-flex items-center justify-center rounded-xl border px-3 py-2 text-xs font-bold ${o.status === "active" ? "border-amber-200 text-amber-700 hover:bg-amber-50" : "border-emerald-200 text-emerald-700 hover:bg-emerald-50"}`}
                   >
                     {o.status === "active" ? <PowerOff className="h-3.5 w-3.5" /> : <Power className="h-3.5 w-3.5" />}
                   </button>
                   <button onClick={() => setEditing({ ...o, terms_text: (o.terms || []).join("\n"), terms_text_en: (o.terms_en || []).join("\n"), bullets_text: (o.overview_bullets || []).join("\n"), bullets_text_en: (o.overview_bullets_en || []).join("\n") } as any)} className="inline-flex flex-1 items-center justify-center gap-1 rounded-xl border border-border px-3 py-2 text-xs font-bold hover:bg-muted">
-                    <Edit3 className="h-3.5 w-3.5" /> تعديل
+                    <Edit3 className="h-3.5 w-3.5" /> {L("تعديل", "Edit")}
                   </button>
                   <button onClick={() => remove(o.id)} className="inline-flex items-center justify-center rounded-xl border border-rose-200 px-3 py-2 text-rose-600 hover:bg-rose-50">
                     <Trash2 className="h-3.5 w-3.5" />
@@ -867,7 +869,7 @@ function OffersTab({ partner }: { partner: Profile }) {
           >
             {/* Sticky header */}
             <div className="sticky top-0 z-10 flex items-center justify-between rounded-t-3xl border-b border-border bg-white px-5 py-4 sm:px-6">
-              <h3 className="text-base font-extrabold sm:text-lg">{editing.id ? "تعديل عرض" : "عرض جديد"}</h3>
+              <h3 className="text-base font-extrabold sm:text-lg">{editing.id ? L("تعديل عرض", "Edit offer") : L("عرض جديد", "New offer")}</h3>
               <button onClick={() => setEditing(null)} className="rounded-full p-1 hover:bg-muted">
                 <X className="h-5 w-5" />
               </button>
@@ -876,21 +878,21 @@ function OffersTab({ partner }: { partner: Profile }) {
             {/* Scrollable body */}
             <div className="flex-1 overflow-y-auto px-5 py-4 sm:px-6">
               <div className="space-y-3">
-                <Input label="العنوان (عربي) *" value={editing.title || ""} onChange={(v) => setEditing({ ...editing, title: v })} />
-                <Input label="Title (English) — optional" value={(editing as any).title_en || ""} onChange={(v) => setEditing({ ...editing, title_en: v } as any)} />
+                <Input label={L("العنوان (عربي) *", "Title (Arabic) *")} value={editing.title || ""} onChange={(v) => setEditing({ ...editing, title: v })} />
+                <Input label={L("Title (English) — optional", "Title (English) — optional")} value={(editing as any).title_en || ""} onChange={(v) => setEditing({ ...editing, title_en: v } as any)} />
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                   <div>
-                    <label className="mb-1.5 block text-xs font-bold">الوصف (عربي)</label>
+                    <label className="mb-1.5 block text-xs font-bold">{L("الوصف (عربي)", "Description (Arabic)")}</label>
                     <textarea
                       rows={3}
                       value={editing.description || ""}
                       onChange={(e) => setEditing({ ...editing, description: e.target.value })}
-                      placeholder="نبذة مفصّلة عن العرض وما يشمله…"
+                      placeholder={L("نبذة مفصّلة عن العرض وما يشمله…", "Detailed summary of the offer and what it includes…")}
                       className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm"
                     />
                   </div>
                   <div>
-                    <label className="mb-1.5 block text-xs font-bold">Description (English) — optional</label>
+                    <label className="mb-1.5 block text-xs font-bold">{L("Description (English) — optional", "Description (English) — optional")}</label>
                     <textarea
                       rows={3}
                       dir="ltr"
@@ -902,11 +904,11 @@ function OffersTab({ partner }: { partner: Profile }) {
                   </div>
                 </div>
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                  <Input label="السعر (ر.س) *" type="number" value={String(editing.price ?? "")} onChange={(v) => setEditing({ ...editing, price: Number(v) })} />
-                  <Input label="السعر قبل الخصم" type="number" value={String(editing.original_price ?? "")} onChange={(v) => setEditing({ ...editing, original_price: v ? Number(v) : null as any })} />
+                  <Input label={L("السعر (ر.س) *", "Price (SAR) *")} type="number" value={String(editing.price ?? "")} onChange={(v) => setEditing({ ...editing, price: Number(v) })} />
+                  <Input label={L("السعر قبل الخصم", "Price before discount")} type="number" value={String(editing.original_price ?? "")} onChange={(v) => setEditing({ ...editing, original_price: v ? Number(v) : null as any })} />
                 </div>
                 <div>
-                  <label className="mb-1.5 block text-xs font-bold">صور العرض (يمكن إضافة أكثر من صورة)</label>
+                  <label className="mb-1.5 block text-xs font-bold">{L("صور العرض (يمكن إضافة أكثر من صورة)", "Offer images (multiple allowed)")}</label>
                   {(() => {
                     const imgs: string[] = Array.isArray(editing.image_urls) && editing.image_urls.length
                       ? (editing.image_urls as string[])
@@ -920,34 +922,34 @@ function OffersTab({ partner }: { partner: Profile }) {
                       />
                     );
                   })()}
-                  <p className="mt-2 text-[11px] text-muted-foreground">أول صورة هي الصورة الرئيسية للعرض.</p>
+                  <p className="mt-2 text-[11px] text-muted-foreground">{L("أول صورة هي الصورة الرئيسية للعرض.", "The first image is the offer's main image.")}</p>
                 </div>
 
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                   <div>
-                    <label className="mb-1.5 block text-xs font-bold">التصنيف</label>
+                    <label className="mb-1.5 block text-xs font-bold">{L("التصنيف", "Category")}</label>
                     <select value={selectedCategoryId} onChange={(e) => setEditing({ ...editing, category: e.target.value })} className="h-10 w-full rounded-xl border border-border bg-background px-3 text-sm">
-                      <option value="">— اختر التصنيف —</option>
-                      {apiCategories.map((c: any) => <option key={c.id} value={c.id}>{c.nameAr}</option>)}
+                      <option value="">{L("— اختر التصنيف —", "— Choose category —")}</option>
+                      {apiCategories.map((c: any) => <option key={c.id} value={c.id}>{lang === "en" ? (c.nameEn || c.nameAr) : c.nameAr}</option>)}
                     </select>
                   </div>
                   <div>
-                    <label className="mb-1.5 block text-xs font-bold">الحالة</label>
+                    <label className="mb-1.5 block text-xs font-bold">{L("الحالة", "Status")}</label>
                     <select value={editing.status || "draft"} onChange={(e) => setEditing({ ...editing, status: e.target.value })} className="h-10 w-full rounded-xl border border-border bg-background px-3 text-sm">
-                      <option value="draft">مسودة</option>
-                      <option value="active">نشط</option>
-                      <option value="paused">متوقف</option>
-                      <option value="archived">مؤرشف</option>
+                      <option value="draft">{L("مسودة", "Draft")}</option>
+                      <option value="active">{L("نشط", "Active")}</option>
+                      <option value="paused">{L("متوقف", "Paused")}</option>
+                      <option value="archived">{L("مؤرشف", "Archived")}</option>
                     </select>
                   </div>
                 </div>
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                  <Input label="مدة الجلسة (دقيقة)" type="number" value={String((editing.duration_minutes as any) ?? "")} onChange={(v) => setEditing({ ...editing, duration_minutes: v === "" ? null : Number(v) })} />
-                  <Input label="نسبة الخصم %" type="number" value={String((editing.discount_percent as any) ?? "")} onChange={(v) => setEditing({ ...editing, discount_percent: v === "" ? null : Number(v) })} />
+                  <Input label={L("مدة الجلسة (دقيقة)", "Session duration (minutes)")} type="number" value={String((editing.duration_minutes as any) ?? "")} onChange={(v) => setEditing({ ...editing, duration_minutes: v === "" ? null : Number(v) })} />
+                  <Input label={L("نسبة الخصم %", "Discount %")} type="number" value={String((editing.discount_percent as any) ?? "")} onChange={(v) => setEditing({ ...editing, discount_percent: v === "" ? null : Number(v) })} />
                 </div>
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                   <div>
-                    <label className="mb-1.5 block text-xs font-bold">تاريخ بداية العرض (اختياري)</label>
+                    <label className="mb-1.5 block text-xs font-bold">{L("تاريخ بداية العرض (اختياري)", "Offer start date (optional)")}</label>
                     <input
                       type="date"
                       dir="ltr"
@@ -957,7 +959,7 @@ function OffersTab({ partner }: { partner: Profile }) {
                     />
                   </div>
                   <div>
-                    <label className="mb-1.5 block text-xs font-bold">تاريخ نهاية العرض (اختياري)</label>
+                    <label className="mb-1.5 block text-xs font-bold">{L("تاريخ نهاية العرض (اختياري)", "Offer end date (optional)")}</label>
                     <input
                       type="date"
                       dir="ltr"
@@ -968,7 +970,7 @@ function OffersTab({ partner }: { partner: Profile }) {
                   </div>
                 </div>
                 <div>
-                  <label className="mb-1.5 block text-xs font-bold">نقاط نظرة عامة (عربي — كل نقطة في سطر)</label>
+                  <label className="mb-1.5 block text-xs font-bold">{L("نقاط نظرة عامة (عربي — كل نقطة في سطر)", "Overview bullets (Arabic — one per line)")}</label>
                   <textarea
                     rows={3}
                     value={(editing as any).bullets_text ?? ""}
@@ -978,7 +980,7 @@ function OffersTab({ partner }: { partner: Profile }) {
                   />
                 </div>
                 <div>
-                  <label className="mb-1.5 block text-xs font-bold">Overview bullets (English — one per line) — optional</label>
+                  <label className="mb-1.5 block text-xs font-bold">{L("Overview bullets (English — one per line) — optional", "Overview bullets (English — one per line) — optional")}</label>
                   <textarea
                     rows={3}
                     dir="ltr"
@@ -989,7 +991,7 @@ function OffersTab({ partner }: { partner: Profile }) {
                   />
                 </div>
                 <div>
-                  <label className="mb-1.5 block text-xs font-bold">شروط العرض (عربي — كل شرط في سطر)</label>
+                  <label className="mb-1.5 block text-xs font-bold">{L("شروط العرض (عربي — كل شرط في سطر)", "Offer terms (Arabic — one per line)")}</label>
                   <textarea
                     rows={3}
                     value={(editing as any).terms_text ?? ""}
@@ -999,7 +1001,7 @@ function OffersTab({ partner }: { partner: Profile }) {
                   />
                 </div>
                 <div>
-                  <label className="mb-1.5 block text-xs font-bold">Terms (English — one per line) — optional</label>
+                  <label className="mb-1.5 block text-xs font-bold">{L("Terms (English — one per line) — optional", "Terms (English — one per line) — optional")}</label>
                   <textarea
                     rows={3}
                     dir="ltr"
@@ -1015,10 +1017,10 @@ function OffersTab({ partner }: { partner: Profile }) {
             {/* Sticky footer */}
             <div className="sticky bottom-0 z-10 flex flex-col-reverse gap-2 border-t border-border bg-white px-5 py-3 sm:flex-row sm:justify-end sm:px-6">
               <button onClick={() => setEditing(null)} className="rounded-full border border-border bg-white px-5 py-2.5 text-sm font-bold hover:bg-muted">
-                إلغاء
+                {L("إلغاء", "Cancel")}
               </button>
               <button onClick={save} className="rounded-full bg-gradient-to-r from-[#3F2A6B] to-[#E0254D] px-6 py-2.5 text-sm font-extrabold text-white shadow">
-                حفظ
+                {L("حفظ", "Save")}
               </button>
             </div>
           </div>
@@ -1030,6 +1032,9 @@ function OffersTab({ partner }: { partner: Profile }) {
 
 /* -------------------- Bookings -------------------- */
 function BookingsTab({ partner }: { partner: Profile }) {
+  const { lang } = useLang();
+  const L = (a: string, e: string) => (lang === "en" ? e : a);
+  const sar = L("ر.س", "SAR");
   const { categories } = useCategories();
   const [items, setItems] = useState<Booking[]>([]);
   const [offers, setOffers] = useState<Offer[]>([]);
@@ -1046,11 +1051,11 @@ function BookingsTab({ partner }: { partner: Profile }) {
       unsub = subscribeVerifyFeed((ev) => {
         setLiveEvents((prev) => [ev, ...prev.filter((p) => p.id !== ev.id)]);
         playSuccessChime();
-        toast.success(`تم تأكيد حضور: ${ev.customerName}`, { description: `${ev.offerTitle || "خدمة"} · ${ev.bookingDate} ${ev.bookingTime}` });
+        toast.success(L(`تم تأكيد حضور: ${ev.customerName}`, `Attendance confirmed: ${ev.customerName}`), { description: `${ev.offerTitle || L("خدمة", "Service")} · ${ev.bookingDate} ${ev.bookingTime}` });
       });
     });
     return () => { try { unsub?.(); } catch {} };
-  }, []);
+  }, [lang]);
 
   const offerMap = useMemo(() => {
     const m = new Map<string, Offer>();
@@ -1076,7 +1081,7 @@ function BookingsTab({ partner }: { partner: Profile }) {
       const offerRows = ((o?.items || o || []) as Offer[]);
       setOffers(offerRows);
     } catch (e: any) {
-      toast.error(e?.message || "تعذّر تحميل الحجوزات");
+      toast.error(e?.message || L("تعذّر تحميل الحجوزات", "Failed to load bookings"));
       setItems([]); setOffers([]);
     }
     setLoading(false);
@@ -1093,12 +1098,12 @@ function BookingsTab({ partner }: { partner: Profile }) {
         ...(stampConfirm && !b.confirmed_at ? { confirmed_at: new Date().toISOString() } : {}),
         ...(extra || {}),
       } : b));
-      toast.success("تم التحديث (بيانات تجريبية)");
+      toast.success(L("تم التحديث (بيانات تجريبية)", "Updated (demo data)"));
       return;
     }
     try { await partnerApi.updateBooking(id, { status, ...(extra as any) }); }
-    catch (e: any) { toast.error(e?.message || "فشل التحديث"); return; }
-    toast.success("تم التحديث");
+    catch (e: any) { toast.error(e?.message || L("فشل التحديث", "Update failed")); return; }
+    toast.success(L("تم التحديث", "Updated"));
     load();
   }
 
@@ -1107,7 +1112,7 @@ function BookingsTab({ partner }: { partner: Profile }) {
     const rawIdQ = vId.trim();
     const codeQ = vCode.trim();
     const idQ = rawIdQ.replace(/\s+/g, "").replace(/^#/, "").replace(/^bk[-_ ]?/i, "").toUpperCase();
-    if (!idQ || !codeQ) { toast.error("أدخل رقم الحجز ورمز التحقق"); return; }
+    if (!idQ || !codeQ) { toast.error(L("أدخل رقم الحجز ورمز التحقق", "Enter booking number and verification code")); return; }
     const matchBooking = (x: any) => {
       const id = String(x.id || "").toUpperCase();
       const idShort = id.replace(/-/g, "").slice(-6);
@@ -1134,23 +1139,23 @@ function BookingsTab({ partner }: { partner: Profile }) {
         b = pool.find(matchBooking);
       } catch { /* ignore */ }
     }
-    if (!b) { toast.error("الحجز غير موجود"); return; }
-    if (b.redeemed_at || b.status === "completed") { toast.warning("هذا الحجز مستخدم من قبل"); return; }
-    if (b.status === "cancelled") { toast.error("هذا الحجز ملغي"); return; }
+    if (!b) { toast.error(L("الحجز غير موجود", "Booking not found")); return; }
+    if (b.redeemed_at || b.status === "completed") { toast.warning(L("هذا الحجز مستخدم من قبل", "This booking has already been redeemed")); return; }
+    if (b.status === "cancelled") { toast.error(L("هذا الحجز ملغي", "This booking is cancelled")); return; }
     if (b.id.startsWith("demo-")) {
-      if ((b.verify_code || "") !== codeQ) { toast.error("الكود غير صحيح"); return; }
+      if ((b.verify_code || "") !== codeQ) { toast.error(L("الكود غير صحيح", "Invalid code")); return; }
       updateStatus(b.id, "completed", { redeemed_at: new Date().toISOString() });
-      toast.success(`تم تأكيد حضور: ${b.customer_name}`);
+      toast.success(L(`تم تأكيد حضور: ${b.customer_name}`, `Attendance confirmed: ${b.customer_name}`));
       setVId(""); setVCode("");
       return;
     }
     try {
       await partnerApi.redeemBooking(b.id, codeQ);
-      toast.success(`تم تأكيد حضور: ${b.customer_name}`);
+      toast.success(L(`تم تأكيد حضور: ${b.customer_name}`, `Attendance confirmed: ${b.customer_name}`));
       setVId(""); setVCode("");
       load();
     } catch (err: any) {
-      toast.error(err?.message || "الكود غير صحيح");
+      toast.error(err?.message || L("الكود غير صحيح", "Invalid code"));
     }
   }
 
@@ -1165,15 +1170,15 @@ function BookingsTab({ partner }: { partner: Profile }) {
             <Shield className="h-4 w-4" />
           </div>
           <div>
-            <div className="text-sm font-extrabold">التحقق من حجز العميل</div>
-            <div className="text-[11px] text-muted-foreground">أدخل رقم الحجز (أو آخر أرقام الجوال) + رمز التحقق المكوّن من 6 أرقام</div>
+            <div className="text-sm font-extrabold">{L("التحقق من حجز العميل", "Verify customer booking")}</div>
+            <div className="text-[11px] text-muted-foreground">{L("أدخل رقم الحجز (أو آخر أرقام الجوال) + رمز التحقق المكوّن من 6 أرقام", "Enter the booking number (or last phone digits) + the 6-digit verification code")}</div>
           </div>
         </div>
         <div className="grid gap-2 sm:grid-cols-[1fr_1fr_auto]">
-          <input value={vId} onChange={(e) => setVId(e.target.value)} placeholder="رقم الحجز أو الجوال" className="h-11 rounded-xl border border-border bg-background px-3 text-sm" dir="ltr" />
-          <input value={vCode} onChange={(e) => setVCode(e.target.value.replace(/\D/g, "").slice(0, 6))} placeholder="رمز التحقق" maxLength={6} className="h-11 rounded-xl border border-border bg-background px-3 text-center text-base font-black tracking-[0.3em]" dir="ltr" />
+          <input value={vId} onChange={(e) => setVId(e.target.value)} placeholder={L("رقم الحجز أو الجوال", "Booking number or phone")} className="h-11 rounded-xl border border-border bg-background px-3 text-sm" dir="ltr" />
+          <input value={vCode} onChange={(e) => setVCode(e.target.value.replace(/\D/g, "").slice(0, 6))} placeholder={L("رمز التحقق", "Verification code")} maxLength={6} className="h-11 rounded-xl border border-border bg-background px-3 text-center text-base font-black tracking-[0.3em]" dir="ltr" />
           <button type="submit" className="h-11 rounded-xl bg-primary px-5 text-sm font-bold text-primary-foreground hover:bg-primary/90">
-            تأكيد الحضور
+            {L("تأكيد الحضور", "Confirm attendance")}
           </button>
         </div>
       </form>
@@ -1185,17 +1190,17 @@ function BookingsTab({ partner }: { partner: Profile }) {
               <Check className="h-4 w-4" />
             </div>
             <div>
-              <div className="text-sm font-extrabold text-emerald-800">تأكيدات الباركود اللحظية</div>
-              <div className="text-[11px] text-emerald-700/80">يتم تحديثها فور قراءة العميل للباركود</div>
+              <div className="text-sm font-extrabold text-emerald-800">{L("تأكيدات الباركود اللحظية", "Live barcode confirmations")}</div>
+              <div className="text-[11px] text-emerald-700/80">{L("يتم تحديثها فور قراءة العميل للباركود", "Updated as soon as the customer scans the barcode")}</div>
             </div>
           </div>
           <div className="grid gap-2 max-h-72 overflow-y-auto">
             {liveEvents.slice(0, 10).map((ev) => (
               <div key={ev.id} className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-emerald-200 bg-white px-3 py-2 text-xs">
                 <div className="font-extrabold text-foreground">{ev.customerName}</div>
-                <div className="text-muted-foreground">{ev.offerTitle || "خدمة"}</div>
-                <div className="text-muted-foreground" dir="ltr">حجز: {ev.bookingDate} · {ev.bookingTime}</div>
-                <div className="font-bold text-emerald-700" dir="ltr">تم: {new Date(ev.redeemedAt).toLocaleString("ar-SA")}</div>
+                <div className="text-muted-foreground">{ev.offerTitle || L("خدمة", "Service")}</div>
+                <div className="text-muted-foreground" dir="ltr">{L("حجز", "Booking")}: {ev.bookingDate} · {ev.bookingTime}</div>
+                <div className="font-bold text-emerald-700" dir="ltr">{L("تم", "At")}: {new Date(ev.redeemedAt).toLocaleString(lang === "en" ? "en-GB" : "ar-SA")}</div>
               </div>
             ))}
           </div>
@@ -1203,14 +1208,14 @@ function BookingsTab({ partner }: { partner: Profile }) {
       )}
 
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-xl font-extrabold text-foreground">الحجوزات ({items.length})</h2>
+        <h2 className="text-xl font-extrabold text-foreground">{L("الحجوزات", "Bookings")} ({items.length})</h2>
         <div className="flex gap-1 rounded-xl border border-border bg-card p-1">
           {[
-            { v: "all", l: "الكل" },
-            { v: "pending", l: "بانتظار" },
-            { v: "confirmed", l: "مؤكد" },
-            { v: "completed", l: "مكتمل" },
-            { v: "cancelled", l: "ملغي" },
+            { v: "all", l: L("الكل", "All") },
+            { v: "pending", l: L("بانتظار", "Pending") },
+            { v: "confirmed", l: L("مؤكد", "Confirmed") },
+            { v: "completed", l: L("مكتمل", "Completed") },
+            { v: "cancelled", l: L("ملغي", "Cancelled") },
           ].map((o) => (
             <button key={o.v} onClick={() => setFilter(o.v)} className={`rounded-lg px-3 py-1.5 text-xs font-bold transition ${filter === o.v ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}>
               {o.l}
@@ -1222,14 +1227,14 @@ function BookingsTab({ partner }: { partner: Profile }) {
       {loading ? (
         <div className="flex justify-center py-10"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
       ) : filtered.length === 0 ? (
-        <div className="rounded-3xl border border-dashed border-border bg-muted/30 p-10 text-center text-sm text-muted-foreground">لا توجد حجوزات</div>
+        <div className="rounded-3xl border border-dashed border-border bg-muted/30 p-10 text-center text-sm text-muted-foreground">{L("لا توجد حجوزات", "No bookings")}</div>
       ) : (
         <div className="overflow-hidden rounded-3xl border border-border bg-card">
           {filtered.map((b) => {
             const offer = b.offer_id ? offerMap.get(b.offer_id) : undefined;
             const uuidRe = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
             const rawTitle = (b as any).offer_title || offer?.title || (offer as any)?.titleAr || "";
-            const offerTitle = rawTitle && !uuidRe.test(String(rawTitle).trim()) ? String(rawTitle) : "خدمة";
+            const offerTitle = rawTitle && !uuidRe.test(String(rawTitle).trim()) ? String(rawTitle) : L("خدمة", "Service");
             const offerCategory = offer?.category
               ? (categories.find((c: any) => c.id === offer.category || c.slug === offer.category)?.nameAr || offer.category)
               : null;
@@ -1252,12 +1257,12 @@ function BookingsTab({ partner }: { partner: Profile }) {
                     <BookingStatusBadge status={b.status} redeemed={!!b.redeemed_at} />
                     {b.status === "pending" && (
                       <>
-                        <button onClick={() => updateStatus(b.id, "confirmed")} className="inline-flex items-center gap-1 rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-emerald-700"><Check className="h-3.5 w-3.5" /> تأكيد</button>
-                        <button onClick={() => updateStatus(b.id, "cancelled")} className="inline-flex items-center gap-1 rounded-lg border border-rose-300 px-3 py-1.5 text-xs font-bold text-rose-700 hover:bg-rose-50"><X className="h-3.5 w-3.5" /> إلغاء</button>
+                        <button onClick={() => updateStatus(b.id, "confirmed")} className="inline-flex items-center gap-1 rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-emerald-700"><Check className="h-3.5 w-3.5" /> {L("تأكيد", "Confirm")}</button>
+                        <button onClick={() => updateStatus(b.id, "cancelled")} className="inline-flex items-center gap-1 rounded-lg border border-rose-300 px-3 py-1.5 text-xs font-bold text-rose-700 hover:bg-rose-50"><X className="h-3.5 w-3.5" /> {L("إلغاء", "Cancel")}</button>
                       </>
                     )}
                     {b.status === "confirmed" && (
-                      <button onClick={() => updateStatus(b.id, "completed", { redeemed_at: new Date().toISOString() })} className="rounded-lg bg-violet-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-violet-700">إنهاء</button>
+                      <button onClick={() => updateStatus(b.id, "completed", { redeemed_at: new Date().toISOString() })} className="rounded-lg bg-violet-600 px-3 py-1.5 text-xs font-bold text-white hover:bg-violet-700">{L("إنهاء", "Complete")}</button>
                     )}
                   </div>
                 </div>
@@ -1275,18 +1280,18 @@ function BookingsTab({ partner }: { partner: Profile }) {
 
                 {/* Quick info row: booking #, verify code, schedule */}
                 <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-                  <InfoBox label="رقم الحجز">
+                  <InfoBox label={L("رقم الحجز", "Booking #")}>
                     <span dir="ltr" className="font-mono text-xs font-black tracking-wider text-primary">{bookingNumber}</span>
                   </InfoBox>
-                  <InfoBox label="رمز التحقق">
+                  <InfoBox label={L("رمز التحقق", "Verification code")}>
                     {b.verify_code ? (
                       <span dir="ltr" className="font-mono text-xs font-black tracking-[0.2em] text-amber-700">{b.verify_code}</span>
                     ) : <span className="text-xs text-muted-foreground">—</span>}
                   </InfoBox>
-                  <InfoBox label="موعد الحجز">
+                  <InfoBox label={L("موعد الحجز", "Booking date")}>
                     <span dir="ltr" className="text-xs font-bold">{b.booking_date || "—"} {b.booking_time || ""}</span>
                   </InfoBox>
-                  <InfoBox label="تاريخ الإنشاء">
+                  <InfoBox label={L("تاريخ الإنشاء", "Created at")}>
                     <span dir="ltr" className="text-xs font-semibold">{b.created_at ? new Date(b.created_at).toLocaleString("en-GB", { year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hour12: false }) : "—"}</span>
                   </InfoBox>
                 </div>
@@ -1300,18 +1305,18 @@ function BookingsTab({ partner }: { partner: Profile }) {
                   const remaining = totalWithVat != null ? Math.max(0, +(totalWithVat - paidOnline).toFixed(2)) : null;
                   return (
                     <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
-                      <InfoBox label="الإجمالي">
-                        <span dir="ltr" className="text-xs font-black text-primary">{totalWithVat != null ? `${totalWithVat} ر.س` : "—"}</span>
-                        <div className="mt-0.5 text-[10px] text-muted-foreground">شامل 15% ضريبة</div>
+                      <InfoBox label={L("الإجمالي", "Total")}>
+                        <span dir="ltr" className="text-xs font-black text-primary">{totalWithVat != null ? `${totalWithVat} ${sar}` : "—"}</span>
+                        <div className="mt-0.5 text-[10px] text-muted-foreground">{L("شامل 15% ضريبة", "VAT 15% included")}</div>
                       </InfoBox>
-                      <InfoBox label="العربون أونلاين">
-                        <span dir="ltr" className="text-xs font-black text-emerald-700">{paidOnline ? `${paidOnline} ر.س` : "—"}</span>
+                      <InfoBox label={L("العربون أونلاين", "Online deposit")}>
+                        <span dir="ltr" className="text-xs font-black text-emerald-700">{paidOnline ? `${paidOnline} ${sar}` : "—"}</span>
                       </InfoBox>
-                      <InfoBox label="المتبقي في المركز">
-                        <span dir="ltr" className="text-xs font-black text-amber-700">{remaining != null ? `${remaining} ر.س` : "—"}</span>
+                      <InfoBox label={L("المتبقي في المركز", "Remaining at center")}>
+                        <span dir="ltr" className="text-xs font-black text-amber-700">{remaining != null ? `${remaining} ${sar}` : "—"}</span>
                       </InfoBox>
-                      <InfoBox label="طريقة الدفع">
-                        <span className="text-xs font-bold text-foreground">{b.payment_method ? (PAY_METHOD_LABEL[b.payment_method] || b.payment_method) : "—"}</span>
+                      <InfoBox label={L("طريقة الدفع", "Payment method")}>
+                        <span className="text-xs font-bold text-foreground">{b.payment_method ? payMethodLabel(b.payment_method, lang) : "—"}</span>
                       </InfoBox>
                     </div>
                   );
@@ -1319,13 +1324,13 @@ function BookingsTab({ partner }: { partner: Profile }) {
 
                 {b.confirmed_at && (
                   <div className="mt-2 text-[11px] text-emerald-700" dir="ltr">
-                    ✓ تم التأكيد: {new Date(b.confirmed_at).toLocaleString("en-GB", { year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hour12: false })}
+                    ✓ {L("تم التأكيد", "Confirmed")}: {new Date(b.confirmed_at).toLocaleString("en-GB", { year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hour12: false })}
                   </div>
                 )}
 
                 {b.redeemed_at && (
                   <div className="mt-3 flex items-center justify-between gap-2 rounded-xl border border-emerald-200/70 bg-emerald-50/70 px-3 py-2">
-                    <span className="text-[11px] font-bold text-emerald-700">وقت تأكيد الاستخدام</span>
+                    <span className="text-[11px] font-bold text-emerald-700">{L("وقت تأكيد الاستخدام", "Redeemed at")}</span>
                     <span dir="ltr" className="text-xs font-extrabold text-emerald-800">
                       {new Date(b.redeemed_at).toLocaleString("en-GB", { year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hour12: false })}
                     </span>
@@ -1351,14 +1356,16 @@ function InfoBox({ label, children }: { label: string; children: React.ReactNode
 }
 
 function BookingStatusBadge({ status, redeemed }: { status: string; redeemed?: boolean }) {
+  const { lang } = useLang();
+  const L = (a: string, e: string) => (lang === "en" ? e : a);
   if (redeemed && status === "completed") {
-    return <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-[11px] font-bold text-emerald-700">تم الاستخدام</span>;
+    return <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-[11px] font-bold text-emerald-700">{L("تم الاستخدام", "Redeemed")}</span>;
   }
   const map: Record<string, { l: string; c: string }> = {
-    pending: { l: "بانتظار", c: "bg-amber-100 text-amber-700" },
-    confirmed: { l: "مؤكد", c: "bg-emerald-100 text-emerald-700" },
-    completed: { l: "مكتمل", c: "bg-violet-100 text-violet-700" },
-    cancelled: { l: "ملغي", c: "bg-rose-100 text-rose-700" },
+    pending: { l: L("بانتظار", "Pending"), c: "bg-amber-100 text-amber-700" },
+    confirmed: { l: L("مؤكد", "Confirmed"), c: "bg-emerald-100 text-emerald-700" },
+    completed: { l: L("مكتمل", "Completed"), c: "bg-violet-100 text-violet-700" },
+    cancelled: { l: L("ملغي", "Cancelled"), c: "bg-rose-100 text-rose-700" },
   };
   const c = map[status] || map.pending;
   return <span className={`rounded-full px-2.5 py-1 text-[11px] font-bold ${c.c}`}>{c.l}</span>;
@@ -1366,6 +1373,8 @@ function BookingStatusBadge({ status, redeemed }: { status: string; redeemed?: b
 
 /* -------------------- Profile -------------------- */
 function ProfileTab({ partner, onUpdate }: { partner: Profile; onUpdate: (p: Profile) => void }) {
+  const { lang } = useLang();
+  const L = (a: string, e: string) => (lang === "en" ? e : a);
   const { categories } = useCategories();
   const [f, setF] = useState<Profile>({
     ...partner,
@@ -1401,17 +1410,16 @@ function ProfileTab({ partner, onUpdate }: { partner: Profile; onUpdate: (p: Pro
         aboutEn: f.about_en || "",
         categoryIds: f.category_ids || [],
       } as any);
-      // The API returns the raw partner shape (camelCase). Normalize before storing.
       const raw = (r?.partner || r) as any;
       const mapped = mapApiPartner(raw) || f;
       if (raw?.id) setStoredPartner(raw);
       setF(mapped);
       onUpdate(mapped);
       setSaving(false);
-      toast.success("تم حفظ الملف");
+      toast.success(L("تم حفظ الملف", "Profile saved"));
     } catch (e: any) {
       setSaving(false);
-      toast.error(e?.message || "فشل الحفظ");
+      toast.error(e?.message || L("فشل الحفظ", "Save failed"));
     }
   }
 
@@ -1444,11 +1452,11 @@ function ProfileTab({ partner, onUpdate }: { partner: Profile; onUpdate: (p: Pro
     <div className="space-y-5">
       {/* Basic info */}
       <div className="rounded-3xl border border-border bg-card p-6">
-        <h3 className="mb-4 text-sm font-extrabold">البيانات الأساسية</h3>
+        <h3 className="mb-4 text-sm font-extrabold">{L("البيانات الأساسية", "Basic information")}</h3>
         <div className="grid gap-4 sm:grid-cols-2">
-          <Input label="اسم المركز (عربي)" value={f.vendor_name} onChange={(v) => upd("vendor_name", v)} />
+          <Input label={L("اسم المركز (عربي)", "Center name (Arabic)")} value={f.vendor_name} onChange={(v) => upd("vendor_name", v)} />
           <div>
-            <label className="mb-1.5 block text-xs font-bold">اسم المركز (إنجليزي)</label>
+            <label className="mb-1.5 block text-xs font-bold">{L("اسم المركز (إنجليزي)", "Center name (English)")}</label>
             <input
               dir="ltr"
               value={f.vendor_name_en || ""}
@@ -1457,15 +1465,15 @@ function ProfileTab({ partner, onUpdate }: { partner: Profile; onUpdate: (p: Pro
               className="h-10 w-full rounded-xl border border-border bg-background px-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
             />
           </div>
-      <Input label="اسم المسؤول" value={f.owner_name} onChange={(v) => upd("owner_name", v)} />
-      <Input label="المدينة" value={f.city || f.address || ""} onChange={(v) => { upd("city", v); upd("address", v); }} />
-      <Input label="رقم الجوال" value={f.phone} onChange={(v) => upd("phone", v)} />
-      <Input label="البريد الإلكتروني" value={f.email || ""} onChange={(v) => upd("email", v)} />
-      <Input label="السجل التجاري" value={f.commercial_number || ""} onChange={(v) => upd("commercial_number", v)} />
-      <Input label="رابط الموقع على خرائط جوجل" value={f.maps_url || ""} onChange={(v) => upd("maps_url", v)} placeholder="https://maps.app.goo.gl/..." className="sm:col-span-2" />
+      <Input label={L("اسم المسؤول", "Manager name")} value={f.owner_name} onChange={(v) => upd("owner_name", v)} />
+      <Input label={L("المدينة", "City")} value={f.city || f.address || ""} onChange={(v) => { upd("city", v); upd("address", v); }} />
+      <Input label={L("رقم الجوال", "Phone")} value={f.phone} onChange={(v) => upd("phone", v)} />
+      <Input label={L("البريد الإلكتروني", "Email")} value={f.email || ""} onChange={(v) => upd("email", v)} />
+      <Input label={L("السجل التجاري", "Commercial register")} value={f.commercial_number || ""} onChange={(v) => upd("commercial_number", v)} />
+      <Input label={L("رابط الموقع على خرائط جوجل", "Google Maps location URL")} value={f.maps_url || ""} onChange={(v) => upd("maps_url", v)} placeholder="https://maps.app.goo.gl/..." className="sm:col-span-2" />
           <div className="sm:col-span-2">
             <ImageUpload
-              label="شعار المركز"
+              label={L("شعار المركز", "Center logo")}
               value={f.logo_url}
               onChange={(url) => upd("logo_url", url || "")}
               folder={`partners/${f.id || "new"}/logo`}
@@ -1478,10 +1486,10 @@ function ProfileTab({ partner, onUpdate }: { partner: Profile; onUpdate: (p: Pro
 
       {/* Categories */}
       <div className="rounded-3xl border border-border bg-card p-6">
-        <h3 className="mb-3 text-sm font-extrabold">تصنيفات المركز</h3>
+        <h3 className="mb-3 text-sm font-extrabold">{L("تصنيفات المركز", "Center categories")}</h3>
         <div className="flex flex-wrap gap-2 rounded-xl border border-border bg-background p-2">
           {(categories || []).length === 0 && (
-            <span className="text-xs text-muted-foreground">لا توجد تصنيفات متاحة حالياً.</span>
+            <span className="text-xs text-muted-foreground">{L("لا توجد تصنيفات متاحة حالياً.", "No categories available right now.")}</span>
           )}
           {(categories || []).map((c: any) => {
             const k = catKey(c);
@@ -1498,7 +1506,7 @@ function ProfileTab({ partner, onUpdate }: { partner: Profile; onUpdate: (p: Pro
                     : "border-border bg-card text-foreground hover:bg-muted",
                 ].join(" ")}
               >
-                {c.nameAr || c.name_ar || c.name || c.nameEn}
+                {lang === "en" ? (c.nameEn || c.nameAr || c.name) : (c.nameAr || c.name_ar || c.name || c.nameEn)}
               </button>
             );
           })}
@@ -1507,10 +1515,10 @@ function ProfileTab({ partner, onUpdate }: { partner: Profile; onUpdate: (p: Pro
 
       {/* Description & Terms */}
       <div className="rounded-3xl border border-border bg-card p-6">
-        <h3 className="mb-4 text-sm font-extrabold">الوصف والشروط</h3>
+        <h3 className="mb-4 text-sm font-extrabold">{L("الوصف والشروط", "Description & terms")}</h3>
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
-            <label className="mb-1.5 block text-xs font-bold">نبذة قصيرة (عربي)</label>
+            <label className="mb-1.5 block text-xs font-bold">{L("نبذة قصيرة (عربي)", "Short about (Arabic)")}</label>
             <textarea value={f.about || ""} onChange={(e) => upd("about", e.target.value)} rows={3} className="w-full rounded-xl border border-border bg-background p-3 text-sm" />
           </div>
           <div>
@@ -1518,16 +1526,16 @@ function ProfileTab({ partner, onUpdate }: { partner: Profile; onUpdate: (p: Pro
             <textarea dir="ltr" value={f.about_en || ""} onChange={(e) => upd("about_en", e.target.value)} rows={3} className="w-full rounded-xl border border-border bg-background p-3 text-sm" />
           </div>
           <div>
-            <label className="mb-1.5 block text-xs font-bold">وصف المركز (عربي)</label>
-            <textarea value={f.description || ""} onChange={(e) => upd("description", e.target.value)} rows={4} placeholder="نبذة عن المركز وخدماته..." className="w-full rounded-xl border border-border bg-background p-3 text-sm" />
+            <label className="mb-1.5 block text-xs font-bold">{L("وصف المركز (عربي)", "Center description (Arabic)")}</label>
+            <textarea value={f.description || ""} onChange={(e) => upd("description", e.target.value)} rows={4} placeholder={L("نبذة عن المركز وخدماته...", "Brief about the center and its services...")} className="w-full rounded-xl border border-border bg-background p-3 text-sm" />
           </div>
           <div>
             <label className="mb-1.5 block text-xs font-bold">Description (English)</label>
             <textarea dir="ltr" value={f.description_en || ""} onChange={(e) => upd("description_en", e.target.value)} rows={4} placeholder="Brief about the center..." className="w-full rounded-xl border border-border bg-background p-3 text-sm" />
           </div>
           <div>
-            <label className="mb-1.5 block text-xs font-bold">شروط المركز (عربي)</label>
-            <textarea value={f.terms || ""} onChange={(e) => upd("terms", e.target.value)} rows={4} placeholder="سياسة الإلغاء، التحضير قبل الموعد..." className="w-full rounded-xl border border-border bg-background p-3 text-sm" />
+            <label className="mb-1.5 block text-xs font-bold">{L("شروط المركز (عربي)", "Center terms (Arabic)")}</label>
+            <textarea value={f.terms || ""} onChange={(e) => upd("terms", e.target.value)} rows={4} placeholder={L("سياسة الإلغاء، التحضير قبل الموعد...", "Cancellation policy, prep before appointment...")} className="w-full rounded-xl border border-border bg-background p-3 text-sm" />
           </div>
           <div>
             <label className="mb-1.5 block text-xs font-bold">Terms (English)</label>
@@ -1539,13 +1547,13 @@ function ProfileTab({ partner, onUpdate }: { partner: Profile; onUpdate: (p: Pro
       {/* Working hours */}
       <div className="rounded-3xl border border-border bg-card p-6">
         <div className="mb-3 flex items-center justify-between">
-          <h3 className="text-sm font-extrabold">ساعات العمل الأسبوعية</h3>
+          <h3 className="text-sm font-extrabold">{L("ساعات العمل الأسبوعية", "Weekly working hours")}</h3>
           <button
             type="button"
             onClick={() => upd("working_hours_struct", defaultWorkingHours())}
             className="rounded-lg border border-border px-2 py-1 text-[11px] font-bold hover:bg-muted"
           >
-            استعادة الافتراضي
+            {L("استعادة الافتراضي", "Restore default")}
           </button>
         </div>
         <div className="space-y-2">
@@ -1558,7 +1566,7 @@ function ProfileTab({ partner, onUpdate }: { partner: Profile; onUpdate: (p: Pro
             };
             return (
               <div key={d.key} className="grid grid-cols-[80px_1fr_1fr_auto] items-center gap-2">
-                <div className="text-xs font-bold">{d.ar}</div>
+                <div className="text-xs font-bold">{lang === "en" ? d.en : d.ar}</div>
                 <input type="time" disabled={cur.closed} value={cur.open} onChange={(e) => setWh({ open: e.target.value })} className="rounded-lg border border-border bg-background px-2 py-1.5 text-xs disabled:opacity-50" />
                 <input type="time" disabled={cur.closed} value={cur.close} onChange={(e) => setWh({ close: e.target.value })} className="rounded-lg border border-border bg-background px-2 py-1.5 text-xs disabled:opacity-50" />
                 <label className="inline-flex items-center gap-1 text-[11px] font-bold">
@@ -1567,7 +1575,7 @@ function ProfileTab({ partner, onUpdate }: { partner: Profile; onUpdate: (p: Pro
                     checked={!!cur.closed}
                     onChange={(e) => setWh({ closed: e.target.checked, open: e.target.checked ? "00:00" : "09:00", close: e.target.checked ? "00:00" : "22:00" })}
                   />
-                  مغلق
+                  {L("مغلق", "Closed")}
                 </label>
               </div>
             );
@@ -1577,7 +1585,7 @@ function ProfileTab({ partner, onUpdate }: { partner: Profile; onUpdate: (p: Pro
 
       <div>
         <button onClick={save} disabled={saving} className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#3F2A6B] to-[#E0254D] px-6 py-2.5 text-sm font-extrabold text-white shadow disabled:opacity-60">
-          {saving && <Loader2 className="h-4 w-4 animate-spin" />} حفظ التغييرات
+          {saving && <Loader2 className="h-4 w-4 animate-spin" />} {L("حفظ التغييرات", "Save changes")}
         </button>
       </div>
 
@@ -1588,6 +1596,8 @@ function ProfileTab({ partner, onUpdate }: { partner: Profile; onUpdate: (p: Pro
 }
 
 function ChangePasswordSection() {
+  const { lang } = useLang();
+  const L = (a: string, e: string) => (lang === "en" ? e : a);
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -1596,21 +1606,21 @@ function ChangePasswordSection() {
 
   async function submit() {
     if (!currentPassword) {
-      toast.error("أدخل كلمة المرور الحالية");
+      toast.error(L("أدخل كلمة المرور الحالية", "Enter your current password"));
       return;
     }
     if (newPassword.length < 6) {
-      toast.error("كلمة المرور الجديدة يجب ألا تقل عن 6 أحرف");
+      toast.error(L("كلمة المرور الجديدة يجب ألا تقل عن 6 أحرف", "New password must be at least 6 characters"));
       return;
     }
     if (newPassword !== confirmPassword) {
-      toast.error("كلمة المرور وتأكيدها غير متطابقين");
+      toast.error(L("كلمة المرور وتأكيدها غير متطابقين", "Password and confirmation do not match"));
       return;
     }
     setSaving(true);
     try {
       await partnerApi.changePassword({ currentPassword, newPassword });
-      toast.success("تم تغيير كلمة المرور بنجاح");
+      toast.success(L("تم تغيير كلمة المرور بنجاح", "Password changed successfully"));
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
@@ -1618,7 +1628,7 @@ function ChangePasswordSection() {
       const errs = e?.errors as Record<string, any> | undefined;
       const firstField =
         errs?.currentPassword ?? errs?.current_password ?? errs?.newPassword ?? errs?.new_password ?? errs?.password;
-      const msg = Array.isArray(firstField) ? firstField[0] : (firstField || e?.message || "فشل تغيير كلمة المرور");
+      const msg = Array.isArray(firstField) ? firstField[0] : (firstField || e?.message || L("فشل تغيير كلمة المرور", "Failed to change password"));
       toast.error(String(msg));
     } finally {
       setSaving(false);
@@ -1631,18 +1641,18 @@ function ChangePasswordSection() {
   return (
     <div className="rounded-3xl border border-border bg-card p-6">
       <div className="mb-4 flex items-center justify-between">
-        <h3 className="text-sm font-extrabold">تغيير كلمة المرور</h3>
+        <h3 className="text-sm font-extrabold">{L("تغيير كلمة المرور", "Change password")}</h3>
         <button
           type="button"
           onClick={() => setShow((s) => !s)}
           className="rounded-lg border border-border px-2 py-1 text-[11px] font-bold hover:bg-muted"
         >
-          {show ? "إخفاء" : "إظهار"}
+          {show ? L("إخفاء", "Hide") : L("إظهار", "Show")}
         </button>
       </div>
       <div className="grid gap-4 sm:grid-cols-3">
         <div>
-          <label className="mb-1.5 block text-xs font-bold">كلمة المرور الحالية</label>
+          <label className="mb-1.5 block text-xs font-bold">{L("كلمة المرور الحالية", "Current password")}</label>
           <input
             type={show ? "text" : "password"}
             value={currentPassword}
@@ -1652,7 +1662,7 @@ function ChangePasswordSection() {
           />
         </div>
         <div>
-          <label className="mb-1.5 block text-xs font-bold">كلمة المرور الجديدة</label>
+          <label className="mb-1.5 block text-xs font-bold">{L("كلمة المرور الجديدة", "New password")}</label>
           <input
             type={show ? "text" : "password"}
             value={newPassword}
@@ -1662,7 +1672,7 @@ function ChangePasswordSection() {
           />
         </div>
         <div>
-          <label className="mb-1.5 block text-xs font-bold">تأكيد كلمة المرور</label>
+          <label className="mb-1.5 block text-xs font-bold">{L("تأكيد كلمة المرور", "Confirm password")}</label>
           <input
             type={show ? "text" : "password"}
             value={confirmPassword}
@@ -1673,7 +1683,7 @@ function ChangePasswordSection() {
         </div>
       </div>
       <p className="mt-2 text-[11px] text-muted-foreground">
-        يجب أن تكون كلمة المرور 6 أحرف على الأقل. بعد التغيير قد يُطلب منك تسجيل الدخول مجدداً.
+        {L("يجب أن تكون كلمة المرور 6 أحرف على الأقل. بعد التغيير قد يُطلب منك تسجيل الدخول مجدداً.", "Password must be at least 6 characters. After change you may need to sign in again.")}
       </p>
       <div className="mt-4">
         <button
@@ -1681,7 +1691,7 @@ function ChangePasswordSection() {
           disabled={saving || !newPassword || !confirmPassword}
           className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#3F2A6B] to-[#E0254D] px-6 py-2.5 text-sm font-extrabold text-white shadow disabled:opacity-60"
         >
-          {saving && <Loader2 className="h-4 w-4 animate-spin" />} تحديث كلمة المرور
+          {saving && <Loader2 className="h-4 w-4 animate-spin" />} {L("تحديث كلمة المرور", "Update password")}
         </button>
       </div>
     </div>
@@ -1708,6 +1718,9 @@ function Input({ label, value, onChange, type = "text", placeholder, className =
 
 /* -------------------- Verify Booking -------------------- */
 function VerifyTab({ partner }: { partner: Profile }) {
+  const { lang } = useLang();
+  const L = (a: string, e: string) => (lang === "en" ? e : a);
+  const sar = L("ر.س", "SAR");
   const [bookingId, setBookingId] = useState("");
   const [code, setCode] = useState("");
   const [items, setItems] = useState<Booking[]>([]);
@@ -1758,7 +1771,7 @@ function VerifyTab({ partner }: { partner: Profile }) {
     const rawIdQ = bookingId.trim();
     const codeQ = code.trim();
     const idQ = rawIdQ.replace(/\s+/g, "").replace(/^#/, "").replace(/^bk[-_ ]?/i, "").toUpperCase();
-    if (!idQ || codeQ.length < 4) { toast.error("أدخل رقم الحجز ورمز التحقق"); return; }
+    if (!idQ || codeQ.length < 4) { toast.error(L("أدخل رقم الحجز ورمز التحقق", "Enter the booking number and verification code")); return; }
     setSubmitting(true);
     let b = items.find((x) => matchBooking(x, rawIdQ, idQ));
     if (!b && !(items[0]?.id?.startsWith?.("demo-"))) {
@@ -1782,7 +1795,7 @@ function VerifyTab({ partner }: { partner: Profile }) {
   async function confirmRedeem() {
     if (result.status !== "ok") return;
     const b = result.booking;
-    if (b.status === "cancelled") { toast.error("هذا الحجز ملغي"); return; }
+    if (b.status === "cancelled") { toast.error(L("هذا الحجز ملغي", "This booking is cancelled")); return; }
     setRedeeming(true);
     try {
       if (b.id.startsWith("demo-")) {
@@ -1795,9 +1808,9 @@ function VerifyTab({ partner }: { partner: Profile }) {
         setItems((prev) => prev.map((x) => x.id === b.id ? stamped : x));
         setResult({ status: "ok", booking: stamped, alreadyRedeemed: true });
       }
-      toast.success(`تم تأكيد حضور: ${b.customer_name}`);
+      toast.success(L(`تم تأكيد حضور: ${b.customer_name}`, `Attendance confirmed: ${b.customer_name}`));
     } catch (e: any) {
-      toast.error(e?.message || "تعذّر تأكيد الحجز");
+      toast.error(e?.message || L("تعذّر تأكيد الحجز", "Could not confirm booking"));
     } finally {
       setRedeeming(false);
     }
@@ -1821,8 +1834,8 @@ function VerifyTab({ partner }: { partner: Profile }) {
         <div className="bg-gradient-to-r from-[#3F2A6B] to-[#5a3d8f] p-6 text-white">
           <div className="flex items-center justify-between gap-3">
             <div>
-              <h2 className="text-xl font-extrabold">التحقق من حجز العميل</h2>
-              <p className="text-xs text-white/85">للمراكز فقط — أدخل رقم الحجز ورمز التأكيد</p>
+              <h2 className="text-xl font-extrabold">{L("التحقق من حجز العميل", "Verify customer booking")}</h2>
+              <p className="text-xs text-white/85">{L("للمراكز فقط — أدخل رقم الحجز ورمز التأكيد", "Centers only — enter the booking number and confirmation code")}</p>
             </div>
             <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/15">
               <ShieldCheck className="h-6 w-6" />
@@ -1833,7 +1846,7 @@ function VerifyTab({ partner }: { partner: Profile }) {
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-4 p-6">
           <div>
-            <label className="mb-1.5 block text-xs font-bold text-muted-foreground text-right">رقم الحجز</label>
+            <label className="mb-1.5 block text-xs font-bold text-muted-foreground text-start">{L("رقم الحجز", "Booking number")}</label>
             <input
               value={bookingId}
               onChange={(e) => setBookingId(e.target.value)}
@@ -1843,7 +1856,7 @@ function VerifyTab({ partner }: { partner: Profile }) {
             />
           </div>
           <div>
-            <label className="mb-1.5 block text-xs font-bold text-muted-foreground text-right">رمز التأكيد (6 أرقام)</label>
+            <label className="mb-1.5 block text-xs font-bold text-muted-foreground text-start">{L("رمز التأكيد (6 أرقام)", "Confirmation code (6 digits)")}</label>
             <input
               value={code}
               onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
@@ -1858,20 +1871,20 @@ function VerifyTab({ partner }: { partner: Profile }) {
             disabled={submitting || loading}
             className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#3F2A6B] py-3 text-sm font-bold text-white hover:bg-[#3F2A6B]/90 disabled:opacity-60"
           >
-            {submitting || loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />} تحقّق
+            {submitting || loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />} {L("تحقّق", "Verify")}
           </button>
         </form>
 
         {result.status === "notfound" && (
           <div className="mx-6 mb-6 flex items-start gap-3 rounded-2xl border border-rose-200 bg-rose-50 p-4 text-rose-700">
             <XCircle className="h-5 w-5 shrink-0" />
-            <div className="text-sm font-bold">رقم الحجز غير موجود.</div>
+            <div className="text-sm font-bold">{L("رقم الحجز غير موجود.", "Booking number not found.")}</div>
           </div>
         )}
         {result.status === "wrong" && (
           <div className="mx-6 mb-6 flex items-start gap-3 rounded-2xl border border-rose-200 bg-rose-50 p-4 text-rose-700">
             <XCircle className="h-5 w-5 shrink-0" />
-            <div className="text-sm font-bold">رمز التأكيد غير صحيح.</div>
+            <div className="text-sm font-bold">{L("رمز التأكيد غير صحيح.", "Confirmation code is incorrect.")}</div>
           </div>
         )}
 
@@ -1880,61 +1893,61 @@ function VerifyTab({ partner }: { partner: Profile }) {
             <div className="flex items-center gap-3 bg-emerald-100/60 px-4 py-3 text-emerald-700">
               <CheckCircle2 className="h-5 w-5" />
               <div className="text-sm font-extrabold">
-                {result.alreadyRedeemed ? "تم استخدام هذا الحجز مسبقاً" : "الحجز صحيح ومؤكد"}
+                {result.alreadyRedeemed ? L("تم استخدام هذا الحجز مسبقاً", "This booking has already been redeemed") : L("الحجز صحيح ومؤكد", "Booking is valid and confirmed")}
               </div>
             </div>
             <div className="space-y-2 p-4 text-sm">
               {(() => {
                 const st = String(b.status || "").toLowerCase();
                 const ps = String((b as any).payment_status || (b as any).paymentStatus || "").toLowerCase();
-                const sb = verifyStatusBadge(st);
-                const pb = verifyPayBadge(ps, remaining);
+                const sb = verifyStatusBadge(st, lang);
+                const pb = verifyPayBadge(ps, remaining, lang);
                 return (
                   <div className="mb-2 grid grid-cols-2 gap-2">
                     <div className={`flex items-center justify-between rounded-xl border px-3 py-2 ${sb.cls}`}>
-                      <span className="text-[11px] font-bold">حالة الحجز</span>
+                      <span className="text-[11px] font-bold">{L("حالة الحجز", "Booking status")}</span>
                       <span className="text-xs font-extrabold">{sb.label}</span>
                     </div>
                     <div className={`flex items-center justify-between rounded-xl border px-3 py-2 ${pb.cls}`}>
-                      <span className="text-[11px] font-bold">حالة الدفع</span>
+                      <span className="text-[11px] font-bold">{L("حالة الدفع", "Payment status")}</span>
                       <span className="text-xs font-extrabold">{pb.label}</span>
                     </div>
                   </div>
                 );
               })()}
-              <VRow icon={Hash} label="رقم الحجز" value={String((b as any).booking_number || (b as any).qr_code || b.id || "—")} ltr />
-              <VRow icon={UserIcon} label="العميل" value={b.customer_name || "—"} />
-              <VRow icon={Tag} label="العرض" value={(b as any).offer_title || (b as any).offerTitle || "—"} />
-              <VRow icon={Phone} label="الجوال" value={b.customer_phone || "—"} ltr />
-              <VRow icon={Calendar} label="التاريخ" value={verifyFormatDate(b.booking_date) || "—"} ltr />
-              <VRow icon={Clock} label="الوقت" value={verifyFormatTime(b.booking_time) || "—"} ltr />
+              <VRow icon={Hash} label={L("رقم الحجز", "Booking #")} value={String((b as any).booking_number || (b as any).qr_code || b.id || "—")} ltr />
+              <VRow icon={UserIcon} label={L("العميل", "Customer")} value={b.customer_name || "—"} />
+              <VRow icon={Tag} label={L("العرض", "Offer")} value={(b as any).offer_title || (b as any).offerTitle || "—"} />
+              <VRow icon={Phone} label={L("الجوال", "Phone")} value={b.customer_phone || "—"} ltr />
+              <VRow icon={Calendar} label={L("التاريخ", "Date")} value={verifyFormatDate(b.booking_date) || "—"} ltr />
+              <VRow icon={Clock} label={L("الوقت", "Time")} value={verifyFormatTime(b.booking_time, lang) || "—"} ltr />
               {((b as any).partner_name || (b as any).partnerName) && (
-                <VRow icon={Building2} label="المركز" value={String((b as any).partner_name || (b as any).partnerName)} />
+                <VRow icon={Building2} label={L("المركز", "Center")} value={String((b as any).partner_name || (b as any).partnerName)} />
               )}
               {((b as any).partner_city || (b as any).partnerCity || (b as any).city) && (
-                <VRow icon={MapPin} label="المدينة" value={String((b as any).partner_city || (b as any).partnerCity || (b as any).city)} />
+                <VRow icon={MapPin} label={L("المدينة", "City")} value={String((b as any).partner_city || (b as any).partnerCity || (b as any).city)} />
               )}
               {((b as any).payment_method || (b as any).paymentMethod) && (
-                <VRow icon={CreditCard} label="طريقة الدفع" value={verifyMethodLabel(String((b as any).payment_method || (b as any).paymentMethod))} />
+                <VRow icon={CreditCard} label={L("طريقة الدفع", "Payment method")} value={verifyMethodLabel(String((b as any).payment_method || (b as any).paymentMethod), lang)} />
               )}
 
               <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
                 <div className="rounded-xl border border-emerald-200 bg-white px-3 py-2">
-                  <div className="text-[11px] font-bold text-emerald-700">إجمالي الحجز</div>
+                  <div className="text-[11px] font-bold text-emerald-700">{L("إجمالي الحجز", "Booking total")}</div>
                   <div dir="ltr" className="mt-0.5 text-sm font-extrabold text-foreground">
-                    {totalWithVat != null ? `${totalWithVat} ر.س` : "—"}
+                    {totalWithVat != null ? `${totalWithVat} ${sar}` : "—"}
                   </div>
                 </div>
                 <div className="rounded-xl border border-emerald-200 bg-white px-3 py-2">
-                  <div className="text-[11px] font-bold text-emerald-700">العربون المدفوع</div>
+                  <div className="text-[11px] font-bold text-emerald-700">{L("العربون المدفوع", "Deposit paid")}</div>
                   <div dir="ltr" className="mt-0.5 text-sm font-extrabold text-foreground">
-                    {paidOnline > 0 ? `${paidOnline} ر.س` : "0 ر.س"}
+                    {paidOnline > 0 ? `${paidOnline} ${sar}` : `0 ${sar}`}
                   </div>
                 </div>
                 <div className={`rounded-xl border px-3 py-2 ${remaining != null && remaining > 0 ? "border-amber-300 bg-amber-50" : "border-emerald-200 bg-white"}`}>
-                  <div className={`text-[11px] font-bold ${remaining != null && remaining > 0 ? "text-amber-700" : "text-emerald-700"}`}>المتبقي عند المركز</div>
+                  <div className={`text-[11px] font-bold ${remaining != null && remaining > 0 ? "text-amber-700" : "text-emerald-700"}`}>{L("المتبقي عند المركز", "Remaining at center")}</div>
                   <div dir="ltr" className={`mt-0.5 text-sm font-extrabold ${remaining != null && remaining > 0 ? "text-amber-800" : "text-foreground"}`}>
-                    {remaining != null ? `${remaining} ر.س` : "—"}
+                    {remaining != null ? `${remaining} ${sar}` : "—"}
                   </div>
                 </div>
               </div>
@@ -1947,7 +1960,7 @@ function VerifyTab({ partner }: { partner: Profile }) {
                     disabled={redeeming}
                     className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 py-2.5 text-sm font-bold text-white hover:bg-emerald-700 disabled:opacity-60"
                   >
-                    {redeeming && <Loader2 className="h-4 w-4 animate-spin" />} تأكيد استخدام الحجز
+                    {redeeming && <Loader2 className="h-4 w-4 animate-spin" />} {L("تأكيد استخدام الحجز", "Confirm booking redemption")}
                   </button>
                 )}
                 <button
@@ -1955,7 +1968,7 @@ function VerifyTab({ partner }: { partner: Profile }) {
                   onClick={reset}
                   className="flex-1 rounded-xl border border-border bg-white py-2.5 text-sm font-bold text-foreground hover:border-primary"
                 >
-                  تحقّق من حجز آخر
+                  {L("تحقّق من حجز آخر", "Verify another booking")}
                 </button>
               </div>
             </div>
@@ -1992,40 +2005,43 @@ function verifyFormatDate(s?: string | null): string {
   }
   return s;
 }
-function verifyFormatTime(s?: string | null): string {
+function verifyFormatTime(s?: string | null, lang: string = "ar"): string {
   if (!s) return "";
   const m = s.match(/^(\d{1,2}):(\d{2})/);
   if (!m) return s;
   const hh = parseInt(m[1]);
   const mm = m[2];
-  const ampm = hh >= 12 ? "م" : "ص";
+  const ampm = lang === "en" ? (hh >= 12 ? "PM" : "AM") : (hh >= 12 ? "م" : "ص");
   const h12 = ((hh + 11) % 12) + 1;
   return `${h12}:${mm} ${ampm}`;
 }
-function verifyStatusBadge(st: string): { label: string; cls: string } {
-  if (st === "completed" || st === "redeemed") return { label: "مكتمل", cls: "bg-emerald-100 text-emerald-800 border-emerald-300" };
-  if (st === "cancelled" || st === "canceled") return { label: "ملغي", cls: "bg-rose-100 text-rose-800 border-rose-300" };
-  if (st === "confirmed") return { label: "مؤكد", cls: "bg-emerald-100 text-emerald-800 border-emerald-300" };
-  if (st === "pending") return { label: "قيد الانتظار", cls: "bg-amber-100 text-amber-800 border-amber-300" };
-  if (st === "no_show") return { label: "لم يحضر", cls: "bg-rose-100 text-rose-800 border-rose-300" };
+function verifyStatusBadge(st: string, lang: string = "ar"): { label: string; cls: string } {
+  const L = (a: string, e: string) => (lang === "en" ? e : a);
+  if (st === "completed" || st === "redeemed") return { label: L("مكتمل", "Completed"), cls: "bg-emerald-100 text-emerald-800 border-emerald-300" };
+  if (st === "cancelled" || st === "canceled") return { label: L("ملغي", "Cancelled"), cls: "bg-rose-100 text-rose-800 border-rose-300" };
+  if (st === "confirmed") return { label: L("مؤكد", "Confirmed"), cls: "bg-emerald-100 text-emerald-800 border-emerald-300" };
+  if (st === "pending") return { label: L("قيد الانتظار", "Pending"), cls: "bg-amber-100 text-amber-800 border-amber-300" };
+  if (st === "no_show") return { label: L("لم يحضر", "No-show"), cls: "bg-rose-100 text-rose-800 border-rose-300" };
   return { label: st || "—", cls: "bg-slate-100 text-slate-800 border-slate-300" };
 }
-function verifyPayBadge(ps: string, remaining: number | null): { label: string; cls: string } {
-  if (ps === "paid" || ps === "completed" || ps === "success") return { label: "مدفوع بالكامل", cls: "bg-emerald-100 text-emerald-800 border-emerald-300" };
-  if (ps === "deposit_paid" || (remaining != null && remaining > 0 && ps && ps !== "unpaid" && ps !== "pending")) return { label: "عربون مدفوع", cls: "bg-amber-100 text-amber-800 border-amber-300" };
-  if (ps === "pending") return { label: "قيد الدفع", cls: "bg-amber-100 text-amber-800 border-amber-300" };
-  if (ps === "failed") return { label: "فشل الدفع", cls: "bg-rose-100 text-rose-800 border-rose-300" };
-  if (ps === "refunded") return { label: "مُسترجَع", cls: "bg-slate-100 text-slate-800 border-slate-300" };
-  return { label: "غير مدفوع", cls: "bg-rose-100 text-rose-800 border-rose-300" };
+function verifyPayBadge(ps: string, remaining: number | null, lang: string = "ar"): { label: string; cls: string } {
+  const L = (a: string, e: string) => (lang === "en" ? e : a);
+  if (ps === "paid" || ps === "completed" || ps === "success") return { label: L("مدفوع بالكامل", "Fully paid"), cls: "bg-emerald-100 text-emerald-800 border-emerald-300" };
+  if (ps === "deposit_paid" || (remaining != null && remaining > 0 && ps && ps !== "unpaid" && ps !== "pending")) return { label: L("عربون مدفوع", "Deposit paid"), cls: "bg-amber-100 text-amber-800 border-amber-300" };
+  if (ps === "pending") return { label: L("قيد الدفع", "Payment pending"), cls: "bg-amber-100 text-amber-800 border-amber-300" };
+  if (ps === "failed") return { label: L("فشل الدفع", "Payment failed"), cls: "bg-rose-100 text-rose-800 border-rose-300" };
+  if (ps === "refunded") return { label: L("مُسترجَع", "Refunded"), cls: "bg-slate-100 text-slate-800 border-slate-300" };
+  return { label: L("غير مدفوع", "Unpaid"), cls: "bg-rose-100 text-rose-800 border-rose-300" };
 }
-function verifyMethodLabel(m: string): string {
+function verifyMethodLabel(m: string, lang: string = "ar"): string {
+  const L = (a: string, e: string) => (lang === "en" ? e : a);
   const v = m.toLowerCase();
-  if (v === "tamara") return "تمارا";
-  if (v === "tabby") return "تابي";
-  if (v === "myfatoorah" || v === "mayfatoorah") return "ماي فاتورة";
-  if (v === "cod" || v === "cash") return "الدفع عند الخدمة";
-  if (v === "mada") return "مدى";
-  if (v === "visa") return "فيزا";
+  if (v === "tamara") return L("تمارا", "Tamara");
+  if (v === "tabby") return L("تابي", "Tabby");
+  if (v === "myfatoorah" || v === "mayfatoorah") return L("ماي فاتورة", "MyFatoorah");
+  if (v === "cod" || v === "cash") return L("الدفع عند الخدمة", "Pay at service");
+  if (v === "mada") return L("مدى", "Mada");
+  if (v === "visa") return L("فيزا", "Visa");
   if (v === "applepay") return "Apple Pay";
   if (v === "stcpay") return "STC Pay";
   return m || "—";
@@ -2033,6 +2049,9 @@ function verifyMethodLabel(m: string): string {
 
 /* -------------------- Sales Results -------------------- */
 function WalletTab() {
+  const { lang } = useLang();
+  const L = (a: string, e: string) => (lang === "en" ? e : a);
+  const sar = L("ر.س", "SAR");
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<any>(null);
   const [bookings, setBookings] = useState<Booking[]>([]);
@@ -2049,7 +2068,7 @@ function WalletTab() {
         setStats(s || {});
         setBookings((b?.items || []) as Booking[]);
       } catch (e: any) {
-        toast.error(e?.message || "تعذر تحميل النتائج");
+        toast.error(e?.message || L("تعذر تحميل النتائج", "Failed to load results"));
       }
       setLoading(false);
     })();
@@ -2070,18 +2089,20 @@ function WalletTab() {
   const cashAtService = Math.max(0, totalSales - platformCommission);
 
   const cards = [
-    { label: "إجمالي المبيعات", value: `${totalSales.toLocaleString()} ر.س`, icon: TrendingUp, color: "from-violet-500 to-purple-600" },
-    { label: "مبيعات آخر 30 يوم", value: `${monthSales.toLocaleString()} ر.س`, icon: BarChart3, color: "from-emerald-500 to-teal-600" },
-    { label: "حجوزات مكتملة", value: `${completedCount}`, icon: Check, color: "from-sky-500 to-indigo-600" },
+    { label: L("إجمالي المبيعات", "Total sales"), value: `${totalSales.toLocaleString()} ${sar}`, icon: TrendingUp, color: "from-violet-500 to-purple-600" },
+    { label: L("مبيعات آخر 30 يوم", "Sales (last 30 days)"), value: `${monthSales.toLocaleString()} ${sar}`, icon: BarChart3, color: "from-emerald-500 to-teal-600" },
+    { label: L("حجوزات مكتملة", "Completed bookings"), value: `${completedCount}`, icon: Check, color: "from-sky-500 to-indigo-600" },
   ];
 
   return (
     <div className="space-y-6">
       <div className="rounded-2xl border border-primary/20 bg-primary/5 p-4 text-sm text-foreground leading-7">
-        💡 العميل يدفع <span className="font-extrabold text-primary">العربون</span> للمنصة لتأكيد الحجز، ويسلّمك <span className="font-extrabold text-primary">المبلغ المتبقي</span> مباشرة عند الحضور. هذه الشاشة لمتابعة نتائج مبيعاتك فقط.
+        💡 {lang === "en"
+          ? <>The customer pays the <span className="font-extrabold text-primary">deposit</span> to the platform to confirm the booking, and hands you the <span className="font-extrabold text-primary">remaining amount</span> directly at arrival. This screen is for tracking your sales results only.</>
+          : <>العميل يدفع <span className="font-extrabold text-primary">العربون</span> للمنصة لتأكيد الحجز، ويسلّمك <span className="font-extrabold text-primary">المبلغ المتبقي</span> مباشرة عند الحضور. هذه الشاشة لمتابعة نتائج مبيعاتك فقط.</>}
       </div>
 
-      {loading && <div className="py-8 text-center text-sm text-muted-foreground">جارٍ التحميل…</div>}
+      {loading && <div className="py-8 text-center text-sm text-muted-foreground">{L("جارٍ التحميل…", "Loading…")}</div>}
 
       <div className="grid gap-4 sm:grid-cols-3">
         {cards.map((c) => (
@@ -2097,33 +2118,33 @@ function WalletTab() {
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="rounded-3xl border border-border bg-card p-5">
-          <div className="text-xs font-bold text-muted-foreground">المحصّل منك مباشرة عند الخدمة</div>
-          <div className="mt-2 text-xl font-black text-emerald-600" dir="ltr">{cashAtService.toLocaleString()} ر.س</div>
-          <p className="mt-2 text-xs text-muted-foreground leading-6">المبلغ الذي قبضته نقداً أو بالشبكة من العميل في مركزك.</p>
+          <div className="text-xs font-bold text-muted-foreground">{L("المحصّل منك مباشرة عند الخدمة", "Collected directly at service")}</div>
+          <div className="mt-2 text-xl font-black text-emerald-600" dir="ltr">{cashAtService.toLocaleString()} {sar}</div>
+          <p className="mt-2 text-xs text-muted-foreground leading-6">{L("المبلغ الذي قبضته نقداً أو بالشبكة من العميل في مركزك.", "The amount you received in cash or by card from the customer at your center.")}</p>
         </div>
         <div className="rounded-3xl border border-border bg-card p-5">
-          <div className="text-xs font-bold text-muted-foreground">عربون / عمولة المنصة</div>
-          <div className="mt-2 text-xl font-black text-rose-600" dir="ltr">{platformCommission.toLocaleString()} ر.س</div>
-          <p className="mt-2 text-xs text-muted-foreground leading-6">العربون الذي حصّلته المنصة من العملاء — وهو نفسه عمولة المنصة المتفق عليها.</p>
+          <div className="text-xs font-bold text-muted-foreground">{L("عربون / عمولة المنصة", "Deposit / platform commission")}</div>
+          <div className="mt-2 text-xl font-black text-rose-600" dir="ltr">{platformCommission.toLocaleString()} {sar}</div>
+          <p className="mt-2 text-xs text-muted-foreground leading-6">{L("العربون الذي حصّلته المنصة من العملاء — وهو نفسه عمولة المنصة المتفق عليها.", "The deposit collected by the platform from customers — which is the agreed platform commission.")}</p>
         </div>
       </div>
 
 
       <div className="overflow-hidden rounded-3xl border border-border bg-card">
         <div className="border-b border-border p-5">
-          <h3 className="text-lg font-extrabold text-foreground">سجل المبيعات</h3>
-          <p className="mt-1 text-xs text-muted-foreground">تفاصيل كل عملية بيع: السعر الكامل، العربون عبر المنصة، والمتبقي الذي قبضته منك مباشرة.</p>
+          <h3 className="text-lg font-extrabold text-foreground">{L("سجل المبيعات", "Sales log")}</h3>
+          <p className="mt-1 text-xs text-muted-foreground">{L("تفاصيل كل عملية بيع: السعر الكامل، العربون عبر المنصة، والمتبقي الذي قبضته منك مباشرة.", "Details of each sale: full price, deposit via the platform, and remaining you collected directly.")}</p>
         </div>
         <div className="hidden grid-cols-12 gap-3 border-b border-border bg-muted/40 p-4 text-xs font-bold text-muted-foreground sm:grid">
-          <div className="col-span-2">المرجع</div>
-          <div className="col-span-3">الخدمة</div>
-          <div className="col-span-2">التاريخ</div>
-          <div className="col-span-2 text-end">العربون (المنصة)</div>
-          <div className="col-span-2 text-end">قبضته عند الخدمة</div>
-          <div className="col-span-1 text-end">الإجمالي</div>
+          <div className="col-span-2">{L("المرجع", "Reference")}</div>
+          <div className="col-span-3">{L("الخدمة", "Service")}</div>
+          <div className="col-span-2">{L("التاريخ", "Date")}</div>
+          <div className="col-span-2 text-end">{L("العربون (المنصة)", "Deposit (platform)")}</div>
+          <div className="col-span-2 text-end">{L("قبضته عند الخدمة", "Collected at service")}</div>
+          <div className="col-span-1 text-end">{L("الإجمالي", "Total")}</div>
         </div>
         {counted.length === 0 && !loading ? (
-          <div className="p-8 text-center text-sm text-muted-foreground">لا توجد مبيعات بعد</div>
+          <div className="p-8 text-center text-sm text-muted-foreground">{L("لا توجد مبيعات بعد", "No sales yet")}</div>
         ) : counted.map((t: any) => {
           const dep = bookingCommissionValue(t);
           const total = bookingTotalValue(t);
@@ -2133,9 +2154,9 @@ function WalletTab() {
               <div className="text-xs font-bold text-muted-foreground sm:col-span-2" dir="ltr">#{String(t.id).slice(0, 8)}</div>
               <div className="text-sm font-bold sm:col-span-3">{t.offer_title || "—"}</div>
               <div className="text-xs text-muted-foreground sm:col-span-2">{t.booking_date} {t.booking_time || ""}</div>
-              <div className="text-sm font-extrabold text-sky-600 sm:col-span-2 sm:text-end" dir="ltr">{dep.toFixed(0)} ر.س</div>
-              <div className="text-sm font-extrabold text-emerald-600 sm:col-span-2 sm:text-end" dir="ltr">{cash.toFixed(0)} ر.س</div>
-              <div className="text-sm font-extrabold text-foreground sm:col-span-1 sm:text-end" dir="ltr">{total.toFixed(0)} ر.س</div>
+              <div className="text-sm font-extrabold text-sky-600 sm:col-span-2 sm:text-end" dir="ltr">{dep.toFixed(0)} {sar}</div>
+              <div className="text-sm font-extrabold text-emerald-600 sm:col-span-2 sm:text-end" dir="ltr">{cash.toFixed(0)} {sar}</div>
+              <div className="text-sm font-extrabold text-foreground sm:col-span-1 sm:text-end" dir="ltr">{total.toFixed(0)} {sar}</div>
             </div>
           );
         })}
@@ -2147,6 +2168,8 @@ function WalletTab() {
 
 /* -------------------- Reviews -------------------- */
 function ReviewsTab() {
+  const { lang } = useLang();
+  const L = (a: string, e: string) => (lang === "en" ? e : a);
   type RV = { id: string; name: string; avatar?: string | null; offer: string; rating: number; date: string; text: string; reply?: string | null };
   const [reviews, setReviews] = useState<RV[]>([]);
   const [loading, setLoading] = useState(true);
@@ -2166,14 +2189,14 @@ function ReviewsTab() {
       offers.forEach((o) => offerTitleById.set(String(o.id), o.title || o.title_en || ""));
       const fmtDate = (s?: string | null) => {
         if (!s) return "";
-        try { return new Date(s).toLocaleDateString("ar-EG", { year: "numeric", month: "short", day: "numeric" }); }
+        try { return new Date(s).toLocaleDateString(lang === "en" ? "en-GB" : "ar-EG", { year: "numeric", month: "short", day: "numeric" }); }
         catch { return s; }
       };
       const rows: RV[] = (revRes?.items || []).map((x: any) => {
         const oid = String(x.offerId ?? x.offer_id ?? "");
         return {
           id: String(x.id),
-          name: x.userName || x.user_name || x.customerName || x.customer_name || x.user?.name || "عميل",
+          name: x.userName || x.user_name || x.customerName || x.customer_name || x.user?.name || L("عميل", "Customer"),
           avatar: x.userAvatar || x.user_avatar || null,
           offer: offerTitleById.get(oid) || x.offerTitle || x.offer_title || "—",
           rating: Number(x.rating || 5),
@@ -2191,15 +2214,15 @@ function ReviewsTab() {
   useEffect(() => { load(); }, []);
 
   async function sendReply(id: string) {
-    if (!replyText.trim()) { toast.error("اكتب الرد أولاً"); return; }
+    if (!replyText.trim()) { toast.error(L("اكتب الرد أولاً", "Write your reply first")); return; }
     setSending(true);
     try {
       await partnerApi.replyReview(id, replyText.trim());
-      toast.success("تم إرسال الرد");
+      toast.success(L("تم إرسال الرد", "Reply sent"));
       setReplyId(null); setReplyText("");
       load();
     } catch (e: any) {
-      toast.error(e?.message || "فشل إرسال الرد");
+      toast.error(e?.message || L("فشل إرسال الرد", "Failed to send reply"));
     } finally {
       setSending(false);
     }
@@ -2219,7 +2242,7 @@ function ReviewsTab() {
           <div className="mt-1 flex text-amber-500">
             {Array.from({ length: 5 }).map((_, i) => <Star key={i} className="h-4 w-4 fill-amber-400" />)}
           </div>
-          <div className="mt-1 text-xs text-muted-foreground">{reviews.length} تقييم</div>
+          <div className="mt-1 text-xs text-muted-foreground">{reviews.length} {L("تقييم", "reviews")}</div>
         </div>
         <div className="rounded-3xl border border-border bg-card p-6 sm:col-span-3">
           <div className="space-y-1.5">
@@ -2269,7 +2292,7 @@ function ReviewsTab() {
             {rv.reply ? (
               <div className="mt-3 rounded-2xl border border-emerald-100 bg-emerald-50/60 p-3">
                 <div className="mb-1 flex items-center gap-1.5 text-[11px] font-bold text-emerald-700">
-                  <Check className="h-3 w-3" /> ردك على العميل
+                  <Check className="h-3 w-3" /> {L("ردك على العميل", "Your reply")}
                 </div>
                 <p className="text-xs leading-6 text-emerald-900">{rv.reply}</p>
               </div>
@@ -2279,7 +2302,7 @@ function ReviewsTab() {
                   value={replyText}
                   onChange={(e) => setReplyText(e.target.value)}
                   rows={3}
-                  placeholder="اكتب ردك للعميل..."
+                  placeholder={L("اكتب ردك للعميل...", "Write your reply to the customer...")}
                   className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm"
                 />
                 <div className="flex flex-wrap gap-2">
@@ -2288,13 +2311,13 @@ function ReviewsTab() {
                     onClick={() => sendReply(rv.id)}
                     className="inline-flex items-center gap-1.5 rounded-full bg-primary px-4 py-2 text-xs font-bold text-white hover:bg-primary/90 disabled:opacity-60"
                   >
-                    {sending && <Loader2 className="h-3 w-3 animate-spin" />} إرسال الرد
+                    {sending && <Loader2 className="h-3 w-3 animate-spin" />} {L("إرسال الرد", "Send reply")}
                   </button>
                   <button
                     onClick={() => { setReplyId(null); setReplyText(""); }}
                     className="rounded-full border border-border px-4 py-2 text-xs font-bold hover:bg-muted"
                   >
-                    إلغاء
+                    {L("إلغاء", "Cancel")}
                   </button>
                 </div>
               </div>
@@ -2304,7 +2327,7 @@ function ReviewsTab() {
                   onClick={() => { setReplyId(rv.id); setReplyText(""); }}
                   className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1.5 text-xs font-bold text-primary hover:bg-primary/20"
                 >
-                  <MessageSquare className="h-3.5 w-3.5" /> الرد على العميل
+                  <MessageSquare className="h-3.5 w-3.5" /> {L("الرد على العميل", "Reply to customer")}
                 </button>
               </div>
             )}
@@ -2317,6 +2340,8 @@ function ReviewsTab() {
 
 /* -------------------- Notifications (live) -------------------- */
 function NotificationsTab() {
+  const { lang } = useLang();
+  const L = (a: string, e: string) => (lang === "en" ? e : a);
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -2326,7 +2351,7 @@ function NotificationsTab() {
       const r = await partnerApi.listNotifications({ pageSize: 100 });
       setItems(r?.items || []);
     } catch (e: any) {
-      toast.error(e?.message || "تعذر تحميل الإشعارات");
+      toast.error(e?.message || L("تعذر تحميل الإشعارات", "Failed to load notifications"));
     }
     setLoading(false);
   };
@@ -2336,9 +2361,9 @@ function NotificationsTab() {
     try {
       await partnerApi.markAllNotificationsRead();
       setItems((xs) => xs.map((n) => ({ ...n, read: true })));
-      toast.success("تم وضع علامة مقروء على الكل");
+      toast.success(L("تم وضع علامة مقروء على الكل", "All marked as read"));
     } catch (e: any) {
-      toast.error(e?.message || "فشل التحديث");
+      toast.error(e?.message || L("فشل التحديث", "Update failed"));
     }
   };
 
@@ -2360,16 +2385,16 @@ function NotificationsTab() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-extrabold text-foreground">الإشعارات</h2>
+        <h2 className="text-xl font-extrabold text-foreground">{L("الإشعارات", "Notifications")}</h2>
         <button onClick={markAll} className="text-xs font-bold text-primary hover:underline">
-          تحديد الكل كمقروء
+          {L("تحديد الكل كمقروء", "Mark all as read")}
         </button>
       </div>
       <div className="overflow-hidden rounded-3xl border border-border bg-card">
         {loading ? (
           <div className="flex items-center justify-center p-10 text-muted-foreground"><Loader2 className="h-5 w-5 animate-spin" /></div>
         ) : items.length === 0 ? (
-          <div className="p-10 text-center text-sm text-muted-foreground">لا توجد إشعارات</div>
+          <div className="p-10 text-center text-sm text-muted-foreground">{L("لا توجد إشعارات", "No notifications")}</div>
         ) : items.map((n) => {
           const { I, c } = iconFor(n.type);
           const unread = !n.read;
@@ -2381,7 +2406,7 @@ function NotificationsTab() {
               <div className="min-w-0 flex-1">
                 <div className="flex items-center justify-between gap-2">
                   <div className="text-sm font-bold text-foreground">{n.title}</div>
-                  <div className="shrink-0 text-[11px] text-muted-foreground">{n.createdAt ? new Date(n.createdAt).toLocaleString("ar") : ""}</div>
+                  <div className="shrink-0 text-[11px] text-muted-foreground">{n.createdAt ? new Date(n.createdAt).toLocaleString(lang === "en" ? "en-GB" : "ar") : ""}</div>
                 </div>
                 {n.body && <p className="mt-0.5 text-xs text-muted-foreground">{n.body}</p>}
               </div>
@@ -2396,8 +2421,12 @@ function NotificationsTab() {
 
 /* -------------------- Schedule (Demo) -------------------- */
 function ScheduleTab({ partner }: { partner: Profile }) {
-  const days = ["السبت", "الأحد", "الإثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة"];
-  const defaults = days.map((d) => ({ day: d, open: "10:00", close: "23:00", closed: d === "الجمعة" }));
+  const { lang } = useLang();
+  const L = (a: string, e: string) => (lang === "en" ? e : a);
+  const daysAr = ["السبت", "الأحد", "الإثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة"];
+  const daysEn = ["Saturday", "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
+  const days = lang === "en" ? daysEn : daysAr;
+  const defaults = days.map((d, i) => ({ day: d, open: "10:00", close: "23:00", closed: i === 6 }));
 
   // Try to parse partner.working_hours as JSON; fall back to defaults
   const initial = useMemo(() => {
@@ -2440,9 +2469,9 @@ function ScheduleTab({ partner }: { partner: Profile }) {
     setSaving(true);
     try {
       await partnerApi.setWeeklySchedule(hours);
-      toast.success("تم حفظ الجدول");
+      toast.success(L("تم حفظ الجدول", "Schedule saved"));
     } catch (e: any) {
-      toast.error(e?.message || "فشل الحفظ");
+      toast.error(e?.message || L("فشل الحفظ", "Save failed"));
     }
     setSaving(false);
   }
@@ -2474,7 +2503,7 @@ function ScheduleTab({ partner }: { partner: Profile }) {
       setBlocked(r.slots || []);
       setDayOff(!!r.dayOff);
     } catch (e: any) {
-      toast.error(e?.message || "تعذر تحديث الوقت");
+      toast.error(e?.message || L("تعذر تحديث الوقت", "Failed to update time"));
     }
   }
   async function handleToggleDay() {
@@ -2482,9 +2511,9 @@ function ScheduleTab({ partner }: { partner: Profile }) {
       const r = await partnerApi.setBlockedDayOff(date, !dayOff);
       setDayOff(!!r.dayOff);
       setBlocked(r.slots || []);
-      toast.success(r.dayOff ? "تم تعطيل اليوم بالكامل" : "تم تفعيل اليوم");
+      toast.success(r.dayOff ? L("تم تعطيل اليوم بالكامل", "Day fully disabled") : L("تم تفعيل اليوم", "Day enabled"));
     } catch (e: any) {
-      toast.error(e?.message || "تعذر تحديث اليوم");
+      toast.error(e?.message || L("تعذر تحديث اليوم", "Failed to update day"));
     }
   }
 
@@ -2494,11 +2523,11 @@ function ScheduleTab({ partner }: { partner: Profile }) {
       <div className="rounded-3xl border border-border bg-card p-6">
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h3 className="text-lg font-extrabold text-foreground">ساعات العمل الأسبوعية</h3>
-            <p className="mt-1 text-xs text-muted-foreground">حدّد أوقات استقبال الحجوزات لكل يوم.</p>
+            <h3 className="text-lg font-extrabold text-foreground">{L("ساعات العمل الأسبوعية", "Weekly working hours")}</h3>
+            <p className="mt-1 text-xs text-muted-foreground">{L("حدّد أوقات استقبال الحجوزات لكل يوم.", "Set the booking acceptance hours for each day.")}</p>
           </div>
           <button onClick={saveHours} disabled={saving} className="rounded-full bg-gradient-to-r from-[#3F2A6B] to-[#E0254D] px-5 py-2.5 text-sm font-bold text-white shadow disabled:opacity-60">
-            {saving ? "جارٍ الحفظ…" : "حفظ الجدول"}
+            {saving ? L("جارٍ الحفظ…", "Saving…") : L("حفظ الجدول", "Save schedule")}
           </button>
         </div>
         <div className="space-y-2">
@@ -2507,14 +2536,14 @@ function ScheduleTab({ partner }: { partner: Profile }) {
               <div className="w-20 text-sm font-bold">{d.day}</div>
               <label className="flex items-center gap-2 text-xs">
                 <input type="checkbox" checked={!d.closed} onChange={(e) => upd(i, "closed", !e.target.checked)} />
-                مفتوح
+                {L("مفتوح", "Open")}
               </label>
               <div className="flex flex-1 items-center gap-2">
                 <input type="time" disabled={d.closed} value={d.open} onChange={(e) => upd(i, "open", e.target.value)} className="h-9 rounded-lg border border-border bg-background px-2 text-xs disabled:opacity-40" />
                 <span className="text-xs text-muted-foreground">—</span>
                 <input type="time" disabled={d.closed} value={d.close} onChange={(e) => upd(i, "close", e.target.value)} className="h-9 rounded-lg border border-border bg-background px-2 text-xs disabled:opacity-40" />
               </div>
-              {d.closed && <span className="rounded-full bg-rose-100 px-2.5 py-0.5 text-[11px] font-bold text-rose-700">إجازة</span>}
+              {d.closed && <span className="rounded-full bg-rose-100 px-2.5 py-0.5 text-[11px] font-bold text-rose-700">{L("إجازة", "Off")}</span>}
             </div>
           ))}
         </div>
@@ -2524,8 +2553,8 @@ function ScheduleTab({ partner }: { partner: Profile }) {
       <div className="rounded-3xl border border-border bg-card p-6">
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h3 className="text-lg font-extrabold text-foreground">تعطيل يوم أو ساعات معيّنة</h3>
-            <p className="mt-1 text-xs text-muted-foreground">لو صار زحمة، عطّل يوم كامل أو ساعات محددة. المواعيد المعطّلة تختفي من خيارات الحجز عند العميل.</p>
+            <h3 className="text-lg font-extrabold text-foreground">{L("تعطيل يوم أو ساعات معيّنة", "Block a day or specific hours")}</h3>
+            <p className="mt-1 text-xs text-muted-foreground">{L("لو صار زحمة، عطّل يوم كامل أو ساعات محددة. المواعيد المعطّلة تختفي من خيارات الحجز عند العميل.", "If you're busy, disable a full day or specific hours. Disabled slots disappear from the customer's booking options.")}</p>
           </div>
           <input
             type="date"
@@ -2538,8 +2567,8 @@ function ScheduleTab({ partner }: { partner: Profile }) {
 
         <div className="mb-3 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-muted/40 p-3">
           <div className="text-sm font-bold">
-            تعطيل اليوم بالكامل ({date})
-            {dayOff && <span className="ms-2 rounded-full bg-rose-100 px-2 py-0.5 text-[11px] font-extrabold text-rose-700">معطّل بالكامل</span>}
+            {L(`تعطيل اليوم بالكامل (${date})`, `Disable the whole day (${date})`)}
+            {dayOff && <span className="ms-2 rounded-full bg-rose-100 px-2 py-0.5 text-[11px] font-extrabold text-rose-700">{L("معطّل بالكامل", "Fully disabled")}</span>}
           </div>
           <button
             type="button"
@@ -2548,7 +2577,7 @@ function ScheduleTab({ partner }: { partner: Profile }) {
               dayOff ? "bg-emerald-600 text-white hover:bg-emerald-700" : "bg-rose-600 text-white hover:bg-rose-700"
             }`}
           >
-            {dayOff ? "تفعيل اليوم" : "تعطيل اليوم كامل"}
+            {dayOff ? L("تفعيل اليوم", "Enable day") : L("تعطيل اليوم كامل", "Disable whole day")}
           </button>
         </div>
 
@@ -2566,7 +2595,7 @@ function ScheduleTab({ partner }: { partner: Profile }) {
                     ? "border-dashed border-rose-300 bg-rose-50 text-rose-600 line-through"
                     : "border-emerald-200 bg-emerald-50 text-emerald-700 hover:border-emerald-400"
                 } ${dayOff ? "opacity-60 cursor-not-allowed" : ""}`}
-                title={dayOff ? "اليوم معطّل بالكامل" : isBlocked ? "اضغط للتفعيل" : "اضغط للتعطيل"}
+                title={dayOff ? L("اليوم معطّل بالكامل", "Day fully disabled") : isBlocked ? L("اضغط للتفعيل", "Click to enable") : L("اضغط للتعطيل", "Click to disable")}
               >
                 {s}
               </button>
@@ -2577,11 +2606,11 @@ function ScheduleTab({ partner }: { partner: Profile }) {
         <div className="mt-4 flex items-center gap-4 text-xs text-muted-foreground">
           <span className="flex items-center gap-1.5">
             <span className="inline-block h-3 w-3 rounded border-2 border-emerald-200 bg-emerald-50" />
-            متاح
+            {L("متاح", "Available")}
           </span>
           <span className="flex items-center gap-1.5">
             <span className="inline-block h-3 w-3 rounded border-2 border-dashed border-rose-300 bg-rose-50" />
-            معطّل
+            {L("معطّل", "Disabled")}
           </span>
         </div>
       </div>
@@ -2591,6 +2620,8 @@ function ScheduleTab({ partner }: { partner: Profile }) {
 
 /* -------------------- Messages (live) -------------------- */
 function MessagesTab() {
+  const { lang } = useLang();
+  const L = (a: string, e: string) => (lang === "en" ? e : a);
   const [threads, setThreads] = useState<any[]>([]);
   const [loadingThreads, setLoadingThreads] = useState(true);
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -2607,7 +2638,7 @@ function MessagesTab() {
       setThreads(items);
       if (!activeId && items[0]) setActiveId(items[0].id);
     } catch (e: any) {
-      toast.error(e?.message || "تعذر تحميل المحادثات");
+      toast.error(e?.message || L("تعذر تحميل المحادثات", "Failed to load conversations"));
     }
     setLoadingThreads(false);
   };
@@ -2625,7 +2656,7 @@ function MessagesTab() {
         await partnerApi.markThreadRead(activeId).catch(() => {});
         setThreads((xs) => xs.map((t) => (t.id === activeId ? { ...t, unreadCount: 0 } : t)));
       } catch (e: any) {
-        toast.error(e?.message || "تعذر تحميل الرسائل");
+        toast.error(e?.message || L("تعذر تحميل الرسائل", "Failed to load messages"));
       }
       setLoadingMsgs(false);
     })();
@@ -2640,7 +2671,7 @@ function MessagesTab() {
       setActive((cur) => cur ? { ...cur, messages: [...cur.messages, r.message] } : cur);
       setText("");
     } catch (e: any) {
-      toast.error(e?.message || "فشل الإرسال");
+      toast.error(e?.message || L("فشل الإرسال", "Send failed"));
     }
     setSending(false);
   };
@@ -2648,14 +2679,14 @@ function MessagesTab() {
   return (
     <div className="grid gap-4 md:grid-cols-[280px_1fr] md:h-[560px]">
       <div className="overflow-hidden rounded-3xl border border-border bg-card">
-        <div className="border-b border-border p-4 text-sm font-extrabold">المحادثات</div>
+        <div className="border-b border-border p-4 text-sm font-extrabold">{L("المحادثات", "Conversations")}</div>
         <div className="max-h-[500px] overflow-y-auto">
           {loadingThreads ? (
             <div className="flex items-center justify-center p-6"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>
           ) : threads.length === 0 ? (
-            <div className="p-6 text-center text-sm text-muted-foreground">لا توجد محادثات</div>
+            <div className="p-6 text-center text-sm text-muted-foreground">{L("لا توجد محادثات", "No conversations")}</div>
           ) : threads.map((th) => {
-            const subj = th.subject || "محادثة";
+            const subj = th.subject || L("محادثة", "Conversation");
             const last = th.lastMessage?.text || "";
             const time = th.lastMessage?.createdAt || th.updatedAt || th.createdAt;
             return (
@@ -2664,7 +2695,7 @@ function MessagesTab() {
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center justify-between gap-1">
                     <span className="truncate text-sm font-bold">{subj}</span>
-                    <span className="shrink-0 text-[10px] text-muted-foreground">{time ? new Date(time).toLocaleDateString("ar") : ""}</span>
+                    <span className="shrink-0 text-[10px] text-muted-foreground">{time ? new Date(time).toLocaleDateString(lang === "en" ? "en-GB" : "ar") : ""}</span>
                   </div>
                   <div className="flex items-center justify-between gap-2">
                     <span className="truncate text-xs text-muted-foreground">{last}</span>
@@ -2678,17 +2709,17 @@ function MessagesTab() {
       </div>
       <div className="flex flex-col overflow-hidden rounded-3xl border border-border bg-card">
         {!activeId ? (
-          <div className="flex flex-1 items-center justify-center text-sm text-muted-foreground">اختر محادثة</div>
+          <div className="flex flex-1 items-center justify-center text-sm text-muted-foreground">{L("اختر محادثة", "Pick a conversation")}</div>
         ) : loadingMsgs || !active ? (
           <div className="flex flex-1 items-center justify-center"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>
         ) : (
           <>
             <div className="flex items-center justify-between border-b border-border p-4">
-              <div className="text-sm font-extrabold">{active.thread?.subject || "محادثة"}</div>
+              <div className="text-sm font-extrabold">{active.thread?.subject || L("محادثة", "Conversation")}</div>
             </div>
             <div className="flex-1 space-y-3 overflow-y-auto bg-muted/20 p-4">
               {active.messages.length === 0 && (
-                <div className="text-center text-xs text-muted-foreground">لا توجد رسائل بعد</div>
+                <div className="text-center text-xs text-muted-foreground">{L("لا توجد رسائل بعد", "No messages yet")}</div>
               )}
               {active.messages.map((m) => {
                 const mine = m.sender === "partner";
@@ -2696,14 +2727,14 @@ function MessagesTab() {
                   <div key={m.id} className={`flex ${mine ? "justify-start" : "justify-end"}`}>
                     <div className={`max-w-[75%] rounded-2xl px-4 py-2 text-sm ${mine ? "bg-gradient-to-br from-[#3F2A6B] to-[#E0254D] text-white" : "bg-card border border-border"}`}>
                       <div>{m.text}</div>
-                      <div className={`mt-1 text-[10px] ${mine ? "text-white/70" : "text-muted-foreground"}`}>{m.createdAt ? new Date(m.createdAt).toLocaleTimeString("ar", { hour: "2-digit", minute: "2-digit" }) : ""}</div>
+                      <div className={`mt-1 text-[10px] ${mine ? "text-white/70" : "text-muted-foreground"}`}>{m.createdAt ? new Date(m.createdAt).toLocaleTimeString(lang === "en" ? "en-GB" : "ar", { hour: "2-digit", minute: "2-digit" }) : ""}</div>
                     </div>
                   </div>
                 );
               })}
             </div>
             <div className="flex items-center gap-2 border-t border-border p-3">
-              <input value={text} onChange={(e) => setText(e.target.value)} onKeyDown={(e) => e.key === "Enter" && !sending && send()} placeholder="اكتب رسالتك…" className="h-11 flex-1 rounded-full border border-border bg-background px-4 text-sm outline-none focus:border-primary" />
+              <input value={text} onChange={(e) => setText(e.target.value)} onKeyDown={(e) => e.key === "Enter" && !sending && send()} placeholder={L("اكتب رسالتك…", "Write your message…")} className="h-11 flex-1 rounded-full border border-border bg-background px-4 text-sm outline-none focus:border-primary" />
               <button onClick={send} disabled={sending || !text.trim()} className="rounded-full bg-gradient-to-r from-[#3F2A6B] to-[#E0254D] p-3 text-white shadow disabled:opacity-50">
                 {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
               </button>
@@ -2717,6 +2748,9 @@ function MessagesTab() {
 
 /* -------------------- Analytics -------------------- */
 function AnalyticsTab() {
+  const { lang } = useLang();
+  const L = (a: string, e: string) => (lang === "en" ? e : a);
+  const sar = L("ر.س", "SAR");
   const [range, setRange] = useState<"7d" | "30d" | "90d">("30d");
   const [stats, setStats] = useState<any>(null);
   const [topOffers, setTopOffers] = useState<{ name: string; bookings: number; revenue: number }[]>([]);
@@ -2763,7 +2797,6 @@ function AnalyticsTab() {
           dailyMap[day].revenue += bookingTotalValue(bk);
           dailyMap[day].commission += bookingCommissionValue(bk);
         }
-        const calculatedDaily = Object.values(dailyMap).sort((a, b) => a.day.localeCompare(b.day));
         const fullDaily: { day: string; bookings: number; revenue: number; commission: number }[] = [];
         for (let i = 0; i < days; i++) {
           const d = new Date(cutoff);
@@ -2784,7 +2817,7 @@ function AnalyticsTab() {
         }
         setTopOffers(Object.values(grouped).sort((a, b) => b.bookings - a.bookings).slice(0, 5));
       } catch (e: any) {
-        toast.error(e?.message || "تعذّر تحميل التحليلات");
+        toast.error(e?.message || L("تعذّر تحميل التحليلات", "Failed to load analytics"));
       }
       setLoading(false);
     })();
@@ -2803,10 +2836,10 @@ function AnalyticsTab() {
     : (totalRevenue > 0 ? Math.round((totalCommission / totalRevenue) * 1000) / 10 : 0);
 
   const kpis = [
-    { label: "إجمالي الإيرادات", value: `${totalRevenue.toLocaleString()} ر.س`, icon: TrendingUp, color: "from-violet-500 to-purple-600" },
-    { label: "صافي الربح بعد خصم العربون", value: `${(totalRevenue - totalCommission).toLocaleString()} ر.س`, icon: Percent, color: "from-emerald-500 to-teal-600", note: `تم تطبيق ${displayPct}% عمولة` },
-    { label: "عمولة المنصة", value: `${totalCommission.toLocaleString()} ر.س`, icon: Zap, color: "from-pink-500 to-rose-600" },
-    { label: "متوسط قيمة الحجز", value: `${avgValue.toFixed(0)} ر.س`, icon: Users, color: "from-amber-500 to-orange-600" },
+    { label: L("إجمالي الإيرادات", "Total revenue"), value: `${totalRevenue.toLocaleString()} ${sar}`, icon: TrendingUp, color: "from-violet-500 to-purple-600" },
+    { label: L("صافي الربح بعد خصم العربون", "Net profit after deposit deduction"), value: `${(totalRevenue - totalCommission).toLocaleString()} ${sar}`, icon: Percent, color: "from-emerald-500 to-teal-600", note: L(`تم تطبيق ${displayPct}% عمولة`, `${displayPct}% commission applied`) },
+    { label: L("عمولة المنصة", "Platform commission"), value: `${totalCommission.toLocaleString()} ${sar}`, icon: Zap, color: "from-pink-500 to-rose-600" },
+    { label: L("متوسط قيمة الحجز", "Average booking value"), value: `${avgValue.toFixed(0)} ${sar}`, icon: Users, color: "from-amber-500 to-orange-600" },
   ] as { label: string; value: string; icon: any; color: string; note?: string }[];
 
   const chart = daily.map((d) => Number(d.revenue || 0));
@@ -2815,7 +2848,7 @@ function AnalyticsTab() {
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-xl font-extrabold">التحليلات</h2>
+        <h2 className="text-xl font-extrabold">{L("التحليلات", "Analytics")}</h2>
         <div className="inline-flex rounded-full border border-border bg-card p-1 text-xs font-bold">
           {(["7d", "30d", "90d"] as const).map((r) => (
             <button
@@ -2823,7 +2856,7 @@ function AnalyticsTab() {
               onClick={() => setRange(r)}
               className={`rounded-full px-4 py-1.5 transition ${range === r ? "bg-gradient-to-r from-[#3F2A6B] to-[#E0254D] text-white" : "text-muted-foreground hover:text-foreground"}`}
             >
-              {r === "7d" ? "7 أيام" : r === "30d" ? "30 يوم" : "90 يوم"}
+              {r === "7d" ? L("7 أيام", "7 days") : r === "30d" ? L("30 يوم", "30 days") : L("90 يوم", "90 days")}
             </button>
           ))}
         </div>
@@ -2842,19 +2875,19 @@ function AnalyticsTab() {
 
       <div className="rounded-3xl border border-border bg-card p-6">
         <div className="mb-4 flex items-center justify-between">
-          <h3 className="text-lg font-extrabold">الإيرادات اليومية</h3>
-          <span className="text-xs text-muted-foreground">{daily.length} يوم</span>
+          <h3 className="text-lg font-extrabold">{L("الإيرادات اليومية", "Daily revenue")}</h3>
+          <span className="text-xs text-muted-foreground">{daily.length} {L("يوم", "days")}</span>
         </div>
         {loading ? (
-          <div className="py-12 text-center text-sm text-muted-foreground">جارٍ التحميل…</div>
+          <div className="py-12 text-center text-sm text-muted-foreground">{L("جارٍ التحميل…", "Loading…")}</div>
         ) : chart.length === 0 ? (
-          <div className="py-12 text-center text-sm text-muted-foreground">لا توجد بيانات بعد لعرضها</div>
+          <div className="py-12 text-center text-sm text-muted-foreground">{L("لا توجد بيانات بعد لعرضها", "No data to display yet")}</div>
         ) : (
           <div className="flex h-64 items-stretch gap-2 overflow-x-auto pb-1">
             {chart.map((v, i) => {
               const heightPct = v > 0 ? Math.max(14, (v / max) * 100) : 0;
               return (
-                <div key={i} className="flex h-full min-w-[28px] flex-1 flex-col items-center gap-1.5" title={`${daily[i]?.day}: ${v.toLocaleString()} ر.س`}>
+                <div key={i} className="flex h-full min-w-[28px] flex-1 flex-col items-center gap-1.5" title={`${daily[i]?.day}: ${v.toLocaleString()} ${sar}`}>
                   <div className="flex w-full min-h-0 flex-1 items-end">
                     <div
                       className="w-full rounded-t-xl bg-gradient-to-t from-[#3F2A6B] to-[#E0254D] shadow-sm transition-all"
@@ -2870,9 +2903,9 @@ function AnalyticsTab() {
       </div>
 
       <div className="rounded-3xl border border-border bg-card p-6">
-        <h3 className="mb-4 text-lg font-extrabold">أكثر العروض حجزاً</h3>
+        <h3 className="mb-4 text-lg font-extrabold">{L("أكثر العروض حجزاً", "Most booked offers")}</h3>
         {topOffers.length === 0 ? (
-          <div className="py-8 text-center text-sm text-muted-foreground">لا توجد حجوزات بعد</div>
+          <div className="py-8 text-center text-sm text-muted-foreground">{L("لا توجد حجوزات بعد", "No bookings yet")}</div>
         ) : (
           <div className="space-y-3">
             {topOffers.map((t, i) => (
@@ -2880,9 +2913,9 @@ function AnalyticsTab() {
                 <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-sm font-extrabold text-primary">{i + 1}</div>
                 <div className="min-w-0 flex-1">
                   <div className="truncate text-sm font-bold">{t.name}</div>
-                  <div className="text-xs text-muted-foreground">{t.bookings} حجز</div>
+                  <div className="text-xs text-muted-foreground">{t.bookings} {L("حجز", "bookings")}</div>
                 </div>
-                <div className="text-sm font-extrabold" dir="ltr">{t.revenue.toLocaleString()} ر.س</div>
+                <div className="text-sm font-extrabold" dir="ltr">{t.revenue.toLocaleString()} {sar}</div>
               </div>
             ))}
           </div>
@@ -2906,6 +2939,8 @@ type CommissionRequest = {
 };
 
 function CommissionRequestTab({ partner }: { partner: Profile }) {
+  const { lang } = useLang();
+  const L = (a: string, e: string) => (lang === "en" ? e : a);
   const currentCommission = Number(partner.commission_pct ?? 10);
   const [requests, setRequests] = useState<CommissionRequest[]>([]);
   const [loading, setLoading] = useState(true);
@@ -2919,7 +2954,7 @@ function CommissionRequestTab({ partner }: { partner: Profile }) {
       const r: any = await partnerApi.listCommissionRequests();
       setRequests((r?.items || r || []) as CommissionRequest[]);
     } catch (e: any) {
-      toast.error(e?.message || "تعذّر تحميل الطلبات");
+      toast.error(e?.message || L("تعذّر تحميل الطلبات", "Failed to load requests"));
     } finally {
       setLoading(false);
     }
@@ -2930,11 +2965,11 @@ function CommissionRequestTab({ partner }: { partner: Profile }) {
 
   async function submit() {
     if (reqCommission === currentCommission) {
-      toast.error("النسبة المقترحة مطابقة للحالية");
+      toast.error(L("النسبة المقترحة مطابقة للحالية", "Proposed rate matches the current one"));
       return;
     }
     if (reqCommission < 0 || reqCommission > 50) {
-      toast.error("أدخل نسبة بين 0 و 50");
+      toast.error(L("أدخل نسبة بين 0 و 50", "Enter a rate between 0 and 50"));
       return;
     }
     setSaving(true);
@@ -2944,13 +2979,13 @@ function CommissionRequestTab({ partner }: { partner: Profile }) {
         requestedDepositPct: reqCommission,
         reason: reason.trim() || null,
       } as any);
-      toast.success("تم إرسال الطلب للإدارة");
+      toast.success(L("تم إرسال الطلب للإدارة", "Request submitted to the admin"));
       setReason("");
       const item = (r?.item || r) as CommissionRequest;
       if (item?.id) setRequests((prev) => [item, ...prev]);
       else load();
     } catch (e: any) {
-      toast.error(e?.message || "تعذّر إرسال الطلب");
+      toast.error(e?.message || L("تعذّر إرسال الطلب", "Failed to submit request"));
     } finally {
       setSaving(false);
     }
@@ -2959,66 +2994,66 @@ function CommissionRequestTab({ partner }: { partner: Profile }) {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-extrabold text-foreground">طلب تعديل العمولة</h2>
+        <h2 className="text-xl font-extrabold text-foreground">{L("طلب تعديل العمولة", "Commission change request")}</h2>
         <span className="rounded-full bg-muted px-3 py-1 text-xs font-bold text-foreground/70">
-          النسبة الحالية: {currentCommission}%
+          {L("النسبة الحالية", "Current rate")}: {currentCommission}%
         </span>
       </div>
 
       <div className="rounded-3xl border border-border bg-card p-5">
         <div className="flex items-center gap-2 mb-3">
           <Send className="h-4 w-4 text-primary" />
-          <h3 className="font-extrabold">طلب جديد</h3>
+          <h3 className="font-extrabold">{L("طلب جديد", "New request")}</h3>
         </div>
         {hasPending && (
           <div className="mb-4 rounded-2xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">
-            لديك طلب قيد المراجعة، يرجى انتظار رد الإدارة قبل إرسال طلب جديد.
+            {L("لديك طلب قيد المراجعة، يرجى انتظار رد الإدارة قبل إرسال طلب جديد.", "You have a pending request. Please wait for the admin's response before submitting a new one.")}
           </div>
         )}
         <label className="block">
-          <span className="text-xs font-bold text-foreground/70">النسبة المقترحة (%) — تشمل العربون والعمولة معاً</span>
+          <span className="text-xs font-bold text-foreground/70">{L("النسبة المقترحة (%) — تشمل العربون والعمولة معاً", "Proposed rate (%) — includes deposit and commission together")}</span>
           <input type="number" min={0} max={50} step={0.5} value={reqCommission}
             onChange={(e) => setReqCommission(Number(e.target.value))}
             className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm" />
         </label>
         <label className="mt-3 block">
-          <span className="text-xs font-bold text-foreground/70">سبب الطلب (اختياري)</span>
+          <span className="text-xs font-bold text-foreground/70">{L("سبب الطلب (اختياري)", "Reason (optional)")}</span>
           <textarea value={reason} onChange={(e) => setReason(e.target.value)} rows={3}
-            placeholder="مثال: حجم الحجوزات الشهرية تجاوز 500 وأطلب مراجعة العمولة."
+            placeholder={L("مثال: حجم الحجوزات الشهرية تجاوز 500 وأطلب مراجعة العمولة.", "Example: Monthly bookings exceeded 500 and I'd like a commission review.")}
             className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm" />
         </label>
         <button onClick={submit} disabled={saving || hasPending}
           className="mt-4 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#3F2A6B] to-[#E0254D] px-5 py-2.5 text-sm font-bold text-white shadow disabled:opacity-50">
           {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-          إرسال الطلب للإدارة
+          {L("إرسال الطلب للإدارة", "Submit request")}
         </button>
       </div>
 
       <div className="rounded-3xl border border-border bg-card p-5">
-        <h3 className="font-extrabold mb-3">سجل الطلبات</h3>
+        <h3 className="font-extrabold mb-3">{L("سجل الطلبات", "Request history")}</h3>
         {loading ? (
           <div className="flex justify-center py-6"><Loader2 className="h-5 w-5 animate-spin text-primary" /></div>
         ) : requests.length === 0 ? (
-          <div className="text-sm text-muted-foreground py-6 text-center">لا توجد طلبات سابقة.</div>
+          <div className="text-sm text-muted-foreground py-6 text-center">{L("لا توجد طلبات سابقة.", "No previous requests.")}</div>
         ) : (
           <div className="space-y-3">
             {requests.map((r) => {
               const tone = r.status === "approved" ? "bg-emerald-100 text-emerald-700"
                 : r.status === "rejected" ? "bg-rose-100 text-rose-700"
                 : "bg-amber-100 text-amber-700";
-              const label = r.status === "approved" ? "تمت الموافقة"
-                : r.status === "rejected" ? "مرفوض" : "قيد المراجعة";
+              const label = r.status === "approved" ? L("تمت الموافقة", "Approved")
+                : r.status === "rejected" ? L("مرفوض", "Rejected") : L("قيد المراجعة", "Under review");
               return (
                 <div key={r.id} className="rounded-2xl border border-border p-4">
                   <div className="flex flex-wrap items-center justify-between gap-2">
-                    <div className="text-xs text-muted-foreground">{new Date(r.created_at).toLocaleString("ar")}</div>
+                    <div className="text-xs text-muted-foreground">{new Date(r.created_at).toLocaleString(lang === "en" ? "en-GB" : "ar")}</div>
                     <span className={`rounded-full px-3 py-1 text-[11px] font-bold ${tone}`}>{label}</span>
                   </div>
                   <div className="mt-2 text-xs">
-                    النسبة: <b>{r.current_commission_pct ?? "—"}%</b> ← <b className="text-primary">{r.requested_commission_pct}%</b>
+                    {L("النسبة", "Rate")}: <b>{r.current_commission_pct ?? "—"}%</b> ← <b className="text-primary">{r.requested_commission_pct}%</b>
                   </div>
-                  {r.reason && <div className="mt-2 text-xs text-foreground/70">السبب: {r.reason}</div>}
-                  {r.admin_notes && <div className="mt-2 text-xs text-foreground/70">ملاحظة الإدارة: {r.admin_notes}</div>}
+                  {r.reason && <div className="mt-2 text-xs text-foreground/70">{L("السبب", "Reason")}: {r.reason}</div>}
+                  {r.admin_notes && <div className="mt-2 text-xs text-foreground/70">{L("ملاحظة الإدارة", "Admin note")}: {r.admin_notes}</div>}
                 </div>
               );
             })}
@@ -3030,6 +3065,9 @@ function CommissionRequestTab({ partner }: { partner: Profile }) {
 }
 
 function AgreementTab({ partner, onPartnerUpdate }: { partner: Profile; onPartnerUpdate?: (p: Profile | null | ((prev: Profile | null) => Profile | null)) => void }) {
+  const { lang } = useLang();
+  const L = (a: string, e: string) => (lang === "en" ? e : a);
+  const sar = L("ر.س", "SAR");
   const [adminAgreement, setAdminAgreementState] = useState<any>(null);
   const setAdminAgreement = setAdminAgreementState;
   const currentCommission = Number(adminAgreement?.commission_pct ?? partner.commission_pct ?? 10);
@@ -3224,7 +3262,7 @@ function AgreementTab({ partner, onPartnerUpdate }: { partner: Profile; onPartne
       saveAgreementStore(s);
       setSigning(false);
       setViewing(false);
-      toast.success("تم توقيع الاتفاقية — تم تفعيل حسابك");
+      toast.success(L("تم توقيع الاتفاقية — تم تفعيل حسابك", "Agreement signed — your account is now active"));
       return;
     }
     try {
@@ -3250,9 +3288,9 @@ function AgreementTab({ partner, onPartnerUpdate }: { partner: Profile; onPartne
           if (real) onPartnerUpdate?.(real);
         } catch { /* ignore */ }
       }
-      toast.success("تم توقيع الاتفاقية — تم تفعيل حسابك");
+      toast.success(L("تم توقيع الاتفاقية — تم تفعيل حسابك", "Agreement signed — your account is now active"));
     } catch (e: any) {
-      toast.error(e?.message || "تعذر حفظ التوقيع، حاول مرة أخرى");
+      toast.error(e?.message || L("تعذر حفظ التوقيع، حاول مرة أخرى", "Could not save signature, please try again"));
     }
   }
 
@@ -3269,12 +3307,12 @@ function AgreementTab({ partner, onPartnerUpdate }: { partner: Profile; onPartne
   const hasPending = requests.some((x) => x.status === "pending");
 
   async function submit() {
-    if (hasPending) { toast.error("لديك طلب قيد المراجعة بالفعل"); return; }
+    if (hasPending) { toast.error(L("لديك طلب قيد المراجعة بالفعل", "You already have a pending request")); return; }
     if (reqCommission === currentCommission) {
-      toast.error("لم تقم بتغيير النسبة"); return;
+      toast.error(L("لم تقم بتغيير النسبة", "You haven't changed the rate")); return;
     }
     if (reqCommission < 0 || reqCommission > 50) {
-      toast.error("القيمة خارج النطاق المسموح (0% - 50%)"); return;
+      toast.error(L("القيمة خارج النطاق المسموح (0% - 50%)", "Value outside allowed range (0% - 50%)")); return;
     }
     setSaving(true);
     try {
@@ -3288,41 +3326,41 @@ function AgreementTab({ partner, onPartnerUpdate }: { partner: Profile; onPartne
       setRequests((p) => [item, ...p]);
     } catch (e: any) {
       setSaving(false);
-      toast.error(e?.message || "فشل إرسال الطلب"); return;
+      toast.error(e?.message || L("فشل إرسال الطلب", "Failed to submit request")); return;
     }
     setReason("");
-    toast.success("تم إرسال الطلب — بانتظار موافقة الإدارة");
+    toast.success(L("تم إرسال الطلب — بانتظار موافقة الإدارة", "Request submitted — awaiting admin approval"));
   }
 
   return (
     <div className="space-y-5">
       <div>
-        <h2 className="text-xl font-extrabold">الاتفاقية والعمولة</h2>
-        <p className="mt-1 text-xs text-muted-foreground">العربون الذي يدفعه العميل مقدماً هو نفسه عمولة المنصة — يُحصَّل عند الحجز ولا يُسلَّم للمركز.</p>
+        <h2 className="text-xl font-extrabold">{L("الاتفاقية والعمولة", "Agreement & commission")}</h2>
+        <p className="mt-1 text-xs text-muted-foreground">{L("العربون الذي يدفعه العميل مقدماً هو نفسه عمولة المنصة — يُحصَّل عند الحجز ولا يُسلَّم للمركز.", "The deposit the customer pays upfront is the platform commission — collected at booking and not handed to the center.")}</p>
       </div>
 
       {!adminAgreement && (
         <div className="rounded-2xl border-2 border-dashed border-amber-300 bg-amber-50 p-4 text-amber-800">
           <div className="flex items-center gap-2 font-extrabold">
-            <Clock className="h-5 w-5" /> بانتظار إرسال الاتفاقية من الإدارة
+            <Clock className="h-5 w-5" /> {L("بانتظار إرسال الاتفاقية من الإدارة", "Awaiting agreement from the admin")}
           </div>
           <p className="mt-1 text-xs text-amber-700/90">
-            تتم حالياً مراجعة بيانات مركزك. ستصلك اتفاقية الشراكة مع نسبة العمولة/العربون المخصّصة لمركزك هنا فور إرسالها من إدارة المنصة، وعند توقيعك عليها يتم تفعيل حسابك تلقائياً.
+            {L("تتم حالياً مراجعة بيانات مركزك. ستصلك اتفاقية الشراكة مع نسبة العمولة/العربون المخصّصة لمركزك هنا فور إرسالها من إدارة المنصة، وعند توقيعك عليها يتم تفعيل حسابك تلقائياً.", "Your center's details are being reviewed. The partnership agreement, with the commission/deposit rate set for your center, will appear here as soon as the admin sends it. Once you sign, your account is activated automatically.")}
           </p>
         </div>
       )}
       {adminAgreement && adminAgreement.status !== "signed" && (
         <div className="rounded-2xl border-2 border-primary bg-primary/10 p-4">
           <div className="flex items-center gap-2 font-extrabold text-primary">
-            <FileText className="h-5 w-5" /> لديك اتفاقية شراكة من الإدارة بانتظار توقيعك
+            <FileText className="h-5 w-5" /> {L("لديك اتفاقية شراكة من الإدارة بانتظار توقيعك", "A partnership agreement from the admin is awaiting your signature")}
           </div>
-          <p className="mt-1 text-xs text-foreground/80">العمولة / العربون: <b>{adminAgreement.commission_pct}%</b> — راجع البنود ووقّع لتفعيل حسابك.</p>
+          <p className="mt-1 text-xs text-foreground/80">{L("العمولة / العربون", "Commission / deposit")}: <b>{adminAgreement.commission_pct}%</b> — {L("راجع البنود ووقّع لتفعيل حسابك.", "Review the terms and sign to activate your account.")}</p>
           <div className="mt-3 flex flex-wrap gap-2">
             <button onClick={() => setViewing(true)} className="inline-flex items-center gap-2 rounded-full border border-primary bg-white px-4 py-2 text-xs font-bold text-primary hover:bg-primary/10">
-              <FileText className="h-4 w-4" /> عرض الاتفاقية
+              <FileText className="h-4 w-4" /> {L("عرض الاتفاقية", "View agreement")}
             </button>
             <button onClick={openSignDialog} className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#3F2A6B] to-[#E0254D] px-4 py-2 text-xs font-bold text-white shadow">
-              <Check className="h-4 w-4" /> الموافقة والتوقيع
+              <Check className="h-4 w-4" /> {L("الموافقة والتوقيع", "Approve & sign")}
             </button>
           </div>
         </div>
@@ -3333,19 +3371,19 @@ function AgreementTab({ partner, onPartnerUpdate }: { partner: Profile; onPartne
           <div className="flex items-start justify-between gap-4 flex-wrap">
             <div className="min-w-0">
               <div className="flex items-center gap-2 font-extrabold">
-                <FileText className="h-4 w-4 text-primary" /> باركود الاتفاقية الموقَّعة
+                <FileText className="h-4 w-4 text-primary" /> {L("باركود الاتفاقية الموقَّعة", "Signed agreement barcode")}
               </div>
               <p className="mt-2 text-xs text-muted-foreground leading-6">
-                امسح الباركود من أي جهاز لعرض نسخة الاتفاقية الموقَّعة للمركز. يمكنك طباعته ولصقه داخل المركز.
+                {L("امسح الباركود من أي جهاز لعرض نسخة الاتفاقية الموقَّعة للمركز. يمكنك طباعته ولصقه داخل المركز.", "Scan the barcode from any device to view the signed agreement copy. You can print and post it at the center.")}
               </p>
               {qr?.qrUrl && (
                 <div className="mt-3 flex flex-wrap gap-2">
                   <a href={qr.qrUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-full border border-border bg-white px-4 py-2 text-xs font-bold hover:bg-muted">
-                    فتح الرابط
+                    {L("فتح الرابط", "Open link")}
                   </a>
                   {qr.qrPngBase64 && (
                     <a href={`data:image/png;base64,${qr.qrPngBase64}`} download="agreement-qr.png" className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#3F2A6B] to-[#E0254D] px-4 py-2 text-xs font-bold text-white">
-                      <ArrowDownToLine className="h-4 w-4" /> تحميل الباركود
+                      <ArrowDownToLine className="h-4 w-4" /> {L("تحميل الباركود", "Download barcode")}
                     </a>
                   )}
                 </div>
@@ -3353,11 +3391,11 @@ function AgreementTab({ partner, onPartnerUpdate }: { partner: Profile; onPartne
             </div>
             <div className="shrink-0">
               {qrLoading ? (
-                <div className="h-40 w-40 rounded-2xl border border-dashed border-border bg-muted/40 flex items-center justify-center text-xs text-muted-foreground">…تحميل</div>
+                <div className="h-40 w-40 rounded-2xl border border-dashed border-border bg-muted/40 flex items-center justify-center text-xs text-muted-foreground">{L("…تحميل", "Loading…")}</div>
               ) : qr?.qrPngBase64 ? (
                 <img src={`data:image/png;base64,${qr.qrPngBase64}`} alt="QR" className="h-40 w-40 rounded-2xl border border-border bg-white p-2" />
               ) : (
-                <div className="h-40 w-40 rounded-2xl border border-dashed border-border bg-muted/40 flex items-center justify-center text-xs text-muted-foreground text-center p-2">الباركود غير متاح حالياً</div>
+                <div className="h-40 w-40 rounded-2xl border border-dashed border-border bg-muted/40 flex items-center justify-center text-xs text-muted-foreground text-center p-2">{L("الباركود غير متاح حالياً", "Barcode is unavailable right now")}</div>
               )}
             </div>
           </div>
@@ -3366,15 +3404,15 @@ function AgreementTab({ partner, onPartnerUpdate }: { partner: Profile; onPartne
       {adminAgreement && adminAgreement.status === "signed" && (
         <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
           <div className="flex items-center gap-2 font-extrabold text-emerald-700">
-            <FileText className="h-5 w-5" /> اتفاقية الشراكة موقّعة — حسابك مفعّل
+            <FileText className="h-5 w-5" /> {L("اتفاقية الشراكة موقّعة — حسابك مفعّل", "Partnership agreement signed — your account is active")}
           </div>
-          <p className="mt-1 text-xs text-emerald-700/80">وُقّعت بتاريخ {adminAgreement.signed_at ? new Date(adminAgreement.signed_at).toLocaleDateString("ar-SA") : "—"}</p>
+          <p className="mt-1 text-xs text-emerald-700/80">{L("وُقّعت بتاريخ", "Signed on")} {adminAgreement.signed_at ? new Date(adminAgreement.signed_at).toLocaleDateString(lang === "en" ? "en-GB" : "ar-SA") : "—"}</p>
           <div className="mt-3 flex flex-wrap gap-2">
             <button onClick={() => setViewing(true)} className="inline-flex items-center gap-2 rounded-full border border-emerald-300 bg-white px-4 py-2 text-xs font-bold text-emerald-700 hover:bg-emerald-100">
-              <FileText className="h-4 w-4" /> عرض الاتفاقية
+              <FileText className="h-4 w-4" /> {L("عرض الاتفاقية", "View agreement")}
             </button>
             <button onClick={downloadDemoAgreementPdf} className="inline-flex items-center gap-2 rounded-full bg-emerald-600 px-4 py-2 text-xs font-bold text-white shadow hover:bg-emerald-700">
-              <ArrowDownToLine className="h-4 w-4" /> تحميل PDF
+              <ArrowDownToLine className="h-4 w-4" /> {L("تحميل PDF", "Download PDF")}
             </button>
           </div>
         </div>

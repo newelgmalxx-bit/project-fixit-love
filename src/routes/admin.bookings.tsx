@@ -14,7 +14,7 @@ import { adminPartnersApi } from "@/lib/api/adminPartners";
 import { PartnerSelect } from "@/components/admin/PartnerSelect";
 
 export const Route = createFileRoute("/admin/bookings")({
-  head: () => ({ meta: [{ title: "الحجوزات | الإدارة" }] }),
+  head: () => ({ meta: [{ title: "Bookings | Admin" }] }),
   component: BookingsPage,
 });
 

@@ -543,7 +543,7 @@ function SlideVisual({ slide, slideIndex }: { slide: Slide; slideIndex: number }
           <div className="pointer-events-none absolute bottom-[8.5rem] start-3 sm:bottom-[9.5rem] sm:start-5">
             <span className="inline-flex items-center gap-1 rounded-full bg-white/90 px-2.5 py-1 text-[11px] font-extrabold text-foreground shadow backdrop-blur">
               <span className="text-sm leading-none">{(cat as any).icon}</span>
-              <span className="truncate max-w-[140px]">{(cat as any).nameAr}</span>
+              <span className="truncate max-w-[140px]">{lang === "en" ? ((cat as any).nameEn || (cat as any).nameAr) : ((cat as any).nameAr || (cat as any).nameEn)}</span>
             </span>
           </div>
         )}

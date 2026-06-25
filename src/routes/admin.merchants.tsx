@@ -561,10 +561,10 @@ function MerchantsPage() {
                             {m.status === "pending" && (
                               <>
                                 <DropdownMenuItem onClick={() => setStatus(m.id, "active")}>
-                                  <CheckCircle2 className="me-2 h-4 w-4 text-emerald-600" /> اعتماد المركز
+                                  <CheckCircle2 className="me-2 h-4 w-4 text-emerald-600" /> {L("اعتماد المركز", "Approve partner")}
                                 </DropdownMenuItem>
                                 <DropdownMenuItem onClick={() => setStatus(m.id, "rejected")}>
-                                  <XCircle className="me-2 h-4 w-4 text-rose-600" /> رفض الطلب
+                                  <XCircle className="me-2 h-4 w-4 text-rose-600" /> {L("رفض الطلب", "Reject request")}
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator />
                               </>

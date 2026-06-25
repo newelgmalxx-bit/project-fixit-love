@@ -104,7 +104,7 @@ function MyBookings() {
       toast.success(t("account.bookings.toast.cancelled"));
       refresh();
     } catch (e: any) {
-      toast.error(e?.message || "تعذر إلغاء الحجز");
+      toast.error(e?.message || (lang === "ar" ? "تعذر إلغاء الحجز" : "Failed to cancel booking"));
     }
   }
 

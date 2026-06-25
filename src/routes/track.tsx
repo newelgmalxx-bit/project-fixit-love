@@ -348,7 +348,7 @@ function TrackPage() {
         <section className="relative z-10 mx-auto -mt-10 max-w-5xl px-4 sm:px-6 lg:px-8">
           <div className="rounded-3xl border border-border bg-white p-6 pt-8 shadow-xl sm:p-8 sm:pt-10">
             <p className="mx-auto mb-4 max-w-md text-center text-xs text-muted-foreground">
-              ادخل رقم الحجز (BK-XXXXXX) ورمز التأكيد المكوّن من 6 أرقام الموجود في تذكرتك.
+              {L("ادخل رقم الحجز (BK-XXXXXX) ورمز التأكيد المكوّن من 6 أرقام الموجود في تذكرتك.", "Enter the booking number (BK-XXXXXX) and the 6-digit verification code from your ticket.")}
             </p>
             {/* Form */}
             <form
@@ -363,7 +363,7 @@ function TrackPage() {
                   type="text"
                   value={qrCode}
                   onChange={(e) => setQrCode(e.target.value)}
-                  placeholder="رقم الحجز مثال BK-DXECMR"
+                  placeholder={L("رقم الحجز مثال BK-DXECMR", "Booking number e.g. BK-DXECMR")}
                   className={`h-12 w-full rounded-full border border-border bg-background ps-5 pe-11 text-sm text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20 ${textEnd}`}
                 />
               </div>
@@ -376,7 +376,7 @@ function TrackPage() {
                   inputMode="numeric"
                   value={verifyCode}
                   onChange={(e) => setVerifyCode(e.target.value.replace(/\D/g, ""))}
-                  placeholder="رمز التأكيد (6 أرقام)"
+                  placeholder={L("رمز التأكيد (6 أرقام)", "Verification code (6 digits)")}
                   className={`h-12 w-full rounded-full border border-border bg-background ps-5 pe-11 text-sm text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20 ${textEnd}`}
                 />
               </div>

@@ -3452,25 +3452,25 @@ function AgreementTab({ partner, onPartnerUpdate }: { partner: Profile; onPartne
       {/* Current rate — one unified card */}
       {adminAgreement ? (
         <div className="rounded-3xl border border-border bg-gradient-to-br from-[#3F2A6B] to-[#E0254D] p-6 text-white">
-          <div className="flex items-center gap-2 text-xs opacity-90"><Percent className="h-4 w-4" /> نسبة العمولة / العربون</div>
+          <div className="flex items-center gap-2 text-xs opacity-90"><Percent className="h-4 w-4" /> {L("نسبة العمولة / العربون", "Commission / deposit rate")}</div>
           <div className="mt-2 text-5xl font-black">{currentCommission}%</div>
           <div className="mt-3 text-[12px] opacity-90 leading-6">
-            العميل يدفع هذه النسبة مقدماً للمنصة كعربون لتأكيد الحجز — وهي نفسها عمولة المنصة. الباقي ({100 - currentCommission}%) يُحصّله المركز نقداً عند الخدمة.
+            {L(`العميل يدفع هذه النسبة مقدماً للمنصة كعربون لتأكيد الحجز — وهي نفسها عمولة المنصة. الباقي (${100 - currentCommission}%) يُحصّله المركز نقداً عند الخدمة.`, `The customer pays this rate upfront to the platform as a deposit to confirm the booking — which is the platform commission. The remainder (${100 - currentCommission}%) is collected by the center in cash at service.`)}
           </div>
         </div>
       ) : (
         <div className="relative overflow-hidden rounded-3xl border border-dashed border-primary/40 bg-gradient-to-br from-[#3F2A6B]/10 via-background to-[#E0254D]/10 p-6">
           <div className="flex items-center gap-2 text-xs font-bold text-primary">
-            <Percent className="h-4 w-4" /> نسبة العمولة / العربون
+            <Percent className="h-4 w-4" /> {L("نسبة العمولة / العربون", "Commission / deposit rate")}
           </div>
           <div className="mt-3 flex items-end gap-3">
             <div className="text-5xl font-black tracking-tight text-muted-foreground/60">—</div>
             <span className="mb-2 inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-3 py-1 text-[11px] font-bold text-amber-800 border border-amber-200">
-              <Clock className="h-3.5 w-3.5" /> بانتظار تحديدها من الإدارة
+              <Clock className="h-3.5 w-3.5" /> {L("بانتظار تحديدها من الإدارة", "Awaiting admin assignment")}
             </span>
           </div>
           <p className="mt-3 text-[12px] leading-6 text-muted-foreground">
-            ستظهر هنا النسبة المخصّصة لمركزك فور إرسال الإدارة لاتفاقية الشراكة. لن تُحتسب أي عمولة قبل توقيعك على الاتفاقية وتفعيل الحساب.
+            {L("ستظهر هنا النسبة المخصّصة لمركزك فور إرسال الإدارة لاتفاقية الشراكة. لن تُحتسب أي عمولة قبل توقيعك على الاتفاقية وتفعيل الحساب.", "The rate set for your center will appear here as soon as the admin sends the partnership agreement. No commission is calculated before you sign and activate.")}
           </p>
         </div>
       )}
@@ -3480,17 +3480,17 @@ function AgreementTab({ partner, onPartnerUpdate }: { partner: Profile; onPartne
       <div className="rounded-3xl border border-border bg-card p-5">
         <div className="flex items-center gap-2 mb-3">
           <FileText className="h-4 w-4 text-primary" />
-          <h3 className="font-extrabold">بنود الاتفاقية</h3>
+          <h3 className="font-extrabold">{L("بنود الاتفاقية", "Agreement clauses")}</h3>
         </div>
         {signedAgreementClauses.length > 0 ? (
-          <ul className="space-y-2 text-sm text-foreground/80 list-disc pr-5">
+          <ul className="space-y-2 text-sm text-foreground/80 list-disc ps-5">
             {signedAgreementClauses.map((clause: string, index: number) => (
               <li key={`${index}-${clause}`}>{clause}</li>
             ))}
           </ul>
         ) : (
           <div className="rounded-2xl border border-dashed border-border bg-muted/30 p-4 text-sm text-muted-foreground">
-            ستظهر هنا البنود الفعلية لنفس الاتفاقية التي أرسلتها الإدارة لك ووقّعت عليها.
+            {L("ستظهر هنا البنود الفعلية لنفس الاتفاقية التي أرسلتها الإدارة لك ووقّعت عليها.", "The actual clauses of the agreement sent by admin and that you signed will appear here.")}
           </div>
         )}
       </div>
@@ -3498,18 +3498,18 @@ function AgreementTab({ partner, onPartnerUpdate }: { partner: Profile; onPartne
       {partner.status === "active" && (<>
       {/* Per-offer breakdown */}
       <div className="rounded-3xl border border-border bg-card p-5">
-        <h3 className="font-extrabold mb-3">تفاصيل العروض والصافي لكل عرض</h3>
+        <h3 className="font-extrabold mb-3">{L("تفاصيل العروض والصافي لكل عرض", "Offer details and net per offer")}</h3>
         {offers.length === 0 ? (
-          <div className="text-sm text-muted-foreground py-6 text-center">لا توجد عروض بعد. أضف أول عرض من قسم «العروض».</div>
+          <div className="text-sm text-muted-foreground py-6 text-center">{L("لا توجد عروض بعد. أضف أول عرض من قسم «العروض».", 'No offers yet. Add your first offer from the "Offers" section.')}</div>
         ) : (
           <div className="overflow-x-auto -mx-2 px-2">
             <table className="w-full text-sm min-w-[480px]">
               <thead>
-                <tr className="text-right text-xs text-muted-foreground border-b border-border">
-                  <th className="py-2 font-medium">العرض</th>
-                  <th className="py-2 font-medium">السعر</th>
-                  <th className="py-2 font-medium">العربون / العمولة ({currentCommission}%)</th>
-                  <th className="py-2 font-medium">صافي الشريك</th>
+                <tr className="text-start text-xs text-muted-foreground border-b border-border">
+                  <th className="py-2 font-medium">{L("العرض", "Offer")}</th>
+                  <th className="py-2 font-medium">{L("السعر", "Price")}</th>
+                  <th className="py-2 font-medium">{L("العربون / العمولة", "Deposit / commission")} ({currentCommission}%)</th>
+                  <th className="py-2 font-medium">{L("صافي الشريك", "Partner net")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -3520,9 +3520,9 @@ function AgreementTab({ partner, onPartnerUpdate }: { partner: Profile; onPartne
                   return (
                     <tr key={o.id} className="border-b border-border last:border-0">
                       <td className="py-3 font-bold">{o.title}</td>
-                      <td className="py-3">{price.toFixed(0)} ر.س</td>
-                      <td className="py-3 text-rose-600">{commission.toFixed(0)} ر.س</td>
-                      <td className="py-3 font-extrabold text-emerald-600">{net.toFixed(0)} ر.س</td>
+                      <td className="py-3">{price.toFixed(0)} {sar}</td>
+                      <td className="py-3 text-rose-600">{commission.toFixed(0)} {sar}</td>
+                      <td className="py-3 font-extrabold text-emerald-600">{net.toFixed(0)} {sar}</td>
                     </tr>
                   );
                 })}

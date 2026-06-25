@@ -851,17 +851,17 @@ function AddCenterDialog({
 
           {/* Description AR/EN */}
           <div>
-            <label className="text-xs font-bold">وصف المركز (عربي)</label>
+            <label className="text-xs font-bold">{L("وصف المركز (عربي)", "Partner description (Arabic)")}</label>
             <textarea
               rows={3}
               value={f.description}
               onChange={(e) => up("description", e.target.value)}
-              placeholder="نبذة عن المركز وخدماته..."
+              placeholder={L("نبذة عن المركز وخدماته...", "Brief about the partner and its services...")}
               className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm"
             />
           </div>
           <div>
-            <label className="text-xs font-bold">وصف المركز (إنجليزي)</label>
+            <label className="text-xs font-bold">{L("وصف المركز (إنجليزي)", "Partner description (English)")}</label>
             <textarea
               rows={3}
               dir="ltr"
@@ -874,17 +874,17 @@ function AddCenterDialog({
 
           {/* Terms AR/EN */}
           <div>
-            <label className="text-xs font-bold">شروط المركز (عربي)</label>
+            <label className="text-xs font-bold">{L("شروط المركز (عربي)", "Partner terms (Arabic)")}</label>
             <textarea
               rows={3}
               value={f.terms}
               onChange={(e) => up("terms", e.target.value)}
-              placeholder="سياسة الإلغاء، التحضير قبل الموعد..."
+              placeholder={L("سياسة الإلغاء، التحضير قبل الموعد...", "Cancellation policy, prep before appointment...")}
               className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm"
             />
           </div>
           <div>
-            <label className="text-xs font-bold">شروط المركز (إنجليزي)</label>
+            <label className="text-xs font-bold">{L("شروط المركز (إنجليزي)", "Partner terms (English)")}</label>
             <textarea
               rows={3}
               dir="ltr"

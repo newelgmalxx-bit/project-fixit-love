@@ -533,8 +533,8 @@ function SlideVisual({ slide, slideIndex }: { slide: Slide; slideIndex: number }
             </div>
           </div>
           {savings > 0 && (
-            <span className="inline-flex items-center rounded-lg bg-white/95 px-2 py-0.5 text-[10px] font-extrabold text-[#E0254D] shadow backdrop-blur" dir="rtl">
-              توفير {savings} ر.س
+            <span className="inline-flex items-center rounded-lg bg-white/95 px-2 py-0.5 text-[10px] font-extrabold text-[#E0254D] shadow backdrop-blur" dir={dir}>
+              {L(`توفير ${savings} ر.س`, `Save ${savings} SAR`)}
             </span>
           )}
         </div>

@@ -404,9 +404,9 @@ function SlideContent({
           {/* Quick category pills */}
           <div className="mt-3 flex flex-wrap gap-2 sm:mt-6">
             <span className="self-center text-xs font-medium text-muted-foreground">
-              شائع:
+              {L("شائع:", "Popular:")}
             </span>
-            {categories.slice(0, 5).map((c) => (
+            {categories.slice(0, 5).map((c: any) => (
               <Link
                 key={c.slug}
                 to="/offers/category/$slug"
@@ -414,16 +414,16 @@ function SlideContent({
                 className="rounded-full border border-border bg-card px-3 py-1.5 text-xs font-medium text-foreground transition hover:border-primary/40 hover:bg-primary/5 hover:text-primary"
               >
                 <span className="me-1 inline-flex h-4 w-4 items-center justify-center overflow-hidden">{renderCategoryIcon(c.icon)}</span>
-                {c.nameAr}
+                {lang === "en" ? (c.nameEn || c.nameAr) : (c.nameAr || c.nameEn)}
               </Link>
             ))}
           </div>
 
           {/* Stats */}
           <div className="mt-5 grid max-w-xl grid-cols-3 gap-2 border-t border-border pt-4 text-center sm:mt-10 sm:gap-4 sm:pt-6 sm:text-start">
-            <Stat value="+120" label="عرض حصري" />
-            <Stat value="+45" label="متجر معتمد" />
-            <Stat value="73%" label="أقصى خصم" />
+            <Stat value="+120" label={L("عرض حصري", "Exclusive offers")} />
+            <Stat value="+45" label={L("متجر معتمد", "Verified stores")} />
+            <Stat value="73%" label={L("أقصى خصم", "Max discount")} />
           </div>
         </div>
 

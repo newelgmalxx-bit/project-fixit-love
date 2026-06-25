@@ -12,7 +12,7 @@ import {
 } from "@/lib/agreementMock";
 
 export const Route = createFileRoute("/partner/agreement/$id")({
-  head: () => ({ meta: [{ title: "اتفاقية الشراكة | خصومات" }] }),
+  head: () => ({ meta: [{ title: "Partnership Agreement | Koswmat" }] }),
   component: PartnerAgreementPage,
 });
 

@@ -281,31 +281,31 @@ function PartnerDashboard() {
   }
 
   const navItems: { id: Tab; label: string; icon: any }[] = [
-    { id: "overview", label: "نظرة عامة", icon: BarChart3 },
-    { id: "offers", label: "العروض", icon: Tag },
-    { id: "bookings", label: "الحجوزات", icon: Calendar },
-    { id: "verify", label: "التحقق من الحجز", icon: ShieldCheck },
-    { id: "schedule", label: "الجدول", icon: CalendarDays },
-    { id: "analytics", label: "التحليلات", icon: LineChart },
-    { id: "wallet", label: "نتائج المبيعات", icon: Wallet },
-    { id: "reviews", label: "التقييمات", icon: Star },
-    { id: "agreement", label: "الاتفاقية والعمولة", icon: Percent },
-    { id: "commission-request", label: "طلب تعديل العمولة", icon: Send },
-    { id: "support", label: "الدعم", icon: LifeBuoy },
-    { id: "profile", label: "ملف المركز", icon: Store },
+    { id: "overview", label: L("نظرة عامة", "Overview"), icon: BarChart3 },
+    { id: "offers", label: L("العروض", "Offers"), icon: Tag },
+    { id: "bookings", label: L("الحجوزات", "Bookings"), icon: Calendar },
+    { id: "verify", label: L("التحقق من الحجز", "Verify booking"), icon: ShieldCheck },
+    { id: "schedule", label: L("الجدول", "Schedule"), icon: CalendarDays },
+    { id: "analytics", label: L("التحليلات", "Analytics"), icon: LineChart },
+    { id: "wallet", label: L("نتائج المبيعات", "Sales results"), icon: Wallet },
+    { id: "reviews", label: L("التقييمات", "Reviews"), icon: Star },
+    { id: "agreement", label: L("الاتفاقية والعمولة", "Agreement & commission"), icon: Percent },
+    { id: "commission-request", label: L("طلب تعديل العمولة", "Commission change request"), icon: Send },
+    { id: "support", label: L("الدعم", "Support"), icon: LifeBuoy },
+    { id: "profile", label: L("ملف المركز", "Center profile"), icon: Store },
   ];
 
   const activeNav = navItems.find((n) => n.id === tab);
 
   return (
-    <div className="min-h-screen bg-muted/40 flex" dir="rtl">
+    <div className="min-h-screen bg-muted/40 flex" dir={dir}>
       {/* Sidebar */}
       <aside
-        className={`${mobileOpen ? "translate-x-0" : "translate-x-full"} lg:translate-x-0 fixed lg:sticky top-0 right-0 z-40 h-screen w-72 shrink-0 border-l border-border bg-card transition-transform overflow-y-auto`}
+        className={`${mobileOpen ? "translate-x-0" : "translate-x-full"} lg:translate-x-0 fixed lg:sticky top-0 ltr:left-0 rtl:right-0 z-40 h-screen w-72 shrink-0 ltr:border-r rtl:border-l border-border bg-card transition-transform overflow-y-auto`}
       >
         <div className="flex h-16 items-center gap-2 border-b border-border px-5">
           <img src={logoImg} alt="logo" className="h-9 w-auto object-contain" />
-          <div className="text-[11px] text-muted-foreground">لوحة الشريك</div>
+          <div className="text-[11px] text-muted-foreground">{L("لوحة الشريك", "Partner dashboard")}</div>
         </div>
 
         {/* Vendor card */}
@@ -352,7 +352,7 @@ function PartnerDashboard() {
           <div className="my-3 h-px bg-border" />
           <button onClick={logout} className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-rose-600 hover:bg-rose-50">
             <LogOut className="h-4 w-4" />
-            تسجيل الخروج
+            {L("تسجيل الخروج", "Sign out")}
           </button>
         </nav>
       </aside>
@@ -366,24 +366,24 @@ function PartnerDashboard() {
             <div className="flex items-center gap-3 min-w-0">
               <button
                 onClick={() => setMobileOpen(true)}
-                aria-label="القائمة"
+                aria-label={L("القائمة", "Menu")}
                 className="lg:hidden flex h-10 w-10 items-center justify-center rounded-xl border border-border bg-card text-foreground shadow-sm hover:bg-muted"
               >
                 <Menu className="h-5 w-5" />
               </button>
               <div className="min-w-0">
-                <h1 className="text-base sm:text-xl font-bold truncate leading-tight">{activeNav?.label || "لوحة التحكم"}</h1>
-                <p className="text-[11px] sm:text-xs text-muted-foreground truncate">إدارة مركزك وعروضك</p>
+                <h1 className="text-base sm:text-xl font-bold truncate leading-tight">{activeNav?.label || L("لوحة التحكم", "Dashboard")}</h1>
+                <p className="text-[11px] sm:text-xs text-muted-foreground truncate">{L("إدارة مركزك وعروضك", "Manage your center and offers")}</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
               <Link
                 to={"/" as any}
-                title="عرض الموقع"
+                title={L("عرض الموقع", "View site")}
                 className="hidden sm:inline-flex h-9 items-center gap-2 rounded-lg border border-border bg-card px-3 text-xs font-bold text-foreground/80 hover:border-primary hover:text-primary"
               >
                 <ExternalLink className="h-3.5 w-3.5" />
-                <span>عرض الموقع</span>
+                <span>{L("عرض الموقع", "View site")}</span>
               </Link>
             </div>
           </div>
@@ -394,9 +394,13 @@ function PartnerDashboard() {
             <div className="mb-6 flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-amber-800">
               <Clock className="mt-0.5 h-5 w-5 shrink-0" />
               <div className="text-sm flex-1">
-                <div className="font-bold">حسابك قيد المراجعة</div>
+                <div className="font-bold">{L("حسابك قيد المراجعة", "Your account is under review")}</div>
                 <div className="mt-0.5 text-amber-700">
-                  استلمت الإدارة طلبك. ستراجع بياناتك وترسل لك اتفاقية الشراكة (مع نسبة العمولة/العربون الخاصة بمركزك) في تبويب <button onClick={() => setTab("agreement")} className="font-bold underline">الاتفاقية والعمولة</button>. بمجرد توقيعك على الاتفاقية يتم تفعيل حسابك تلقائياً.
+                  {lang === "en" ? (
+                    <>The admin has received your request. They will review your details and send you the partnership agreement (with your center's commission/deposit rate) in the <button onClick={() => setTab("agreement")} className="font-bold underline">Agreement & commission</button> tab. Once you sign the agreement, your account will be activated automatically.</>
+                  ) : (
+                    <>استلمت الإدارة طلبك. ستراجع بياناتك وترسل لك اتفاقية الشراكة (مع نسبة العمولة/العربون الخاصة بمركزك) في تبويب <button onClick={() => setTab("agreement")} className="font-bold underline">الاتفاقية والعمولة</button>. بمجرد توقيعك على الاتفاقية يتم تفعيل حسابك تلقائياً.</>
+                  )}
                 </div>
               </div>
             </div>
@@ -409,12 +413,12 @@ function PartnerDashboard() {
               return (
                 <div className="rounded-3xl border-2 border-dashed border-amber-300 bg-amber-50 p-8 text-center">
                   <Shield className="mx-auto h-12 w-12 text-amber-500" />
-                  <h3 className="mt-3 text-lg font-extrabold text-amber-900">هذا القسم مغلق حالياً</h3>
+                  <h3 className="mt-3 text-lg font-extrabold text-amber-900">{L("هذا القسم مغلق حالياً", "This section is currently locked")}</h3>
                   <p className="mt-2 text-sm text-amber-800/90 max-w-md mx-auto">
-                    لا يمكنك الوصول لهذا القسم قبل توقيع اتفاقية الشراكة وتفعيل حسابك. توجّه لتبويب «الاتفاقية والعمولة» لمراجعة وتوقيع الاتفاقية.
+                    {L("لا يمكنك الوصول لهذا القسم قبل توقيع اتفاقية الشراكة وتفعيل حسابك. توجّه لتبويب «الاتفاقية والعمولة» لمراجعة وتوقيع الاتفاقية.", "You cannot access this section until you sign the partnership agreement and activate your account. Go to the \"Agreement & commission\" tab to review and sign.")}
                   </p>
                   <button onClick={() => setTab("agreement")} className="mt-4 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#3F2A6B] to-[#E0254D] px-5 py-2.5 text-sm font-bold text-white shadow">
-                    <FileText className="h-4 w-4" /> الذهاب للاتفاقية
+                    <FileText className="h-4 w-4" /> {L("الذهاب للاتفاقية", "Go to agreement")}
                   </button>
                 </div>
               );

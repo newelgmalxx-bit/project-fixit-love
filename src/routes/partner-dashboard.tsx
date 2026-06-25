@@ -3540,6 +3540,8 @@ function AgreementTab({ partner, onPartnerUpdate }: { partner: Profile; onPartne
 }
 
 function SignatureDialog({ defaultName, commission, onCancel, onConfirm }: { defaultName: string; commission: number; onCancel: () => void; onConfirm: (name: string, dataUrl: string) => void }) {
+  const { lang } = useLang();
+  const L = (a: string, e: string) => (lang === "en" ? e : a);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [name, setName] = useState(defaultName || "");
   const [agreed, setAgreed] = useState(false);

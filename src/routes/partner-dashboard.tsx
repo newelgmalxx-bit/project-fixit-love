@@ -269,12 +269,12 @@ function PartnerDashboard() {
 
   if (!profile) {
     return (
-      <div className="flex min-h-screen flex-col bg-background" dir="rtl">
+      <div className="flex min-h-screen flex-col bg-background" dir={dir}>
         <main className="mx-auto flex w-full max-w-md flex-1 flex-col items-center justify-center px-4 py-16 text-center">
           <AlertCircle className="h-12 w-12 text-amber-500" />
-          <h2 className="mt-4 text-xl font-extrabold">لم نجد ملف شريك مرتبط بحسابك</h2>
-          <p className="mt-2 text-sm text-muted-foreground">سجّل بياناتك أولاً كشريك</p>
-          <Link to="/partner" className="mt-6 rounded-full bg-primary px-6 py-3 text-sm font-bold text-primary-foreground">سجّل كشريك</Link>
+          <h2 className="mt-4 text-xl font-extrabold">{L("لم نجد ملف شريك مرتبط بحسابك", "We couldn't find a partner profile linked to your account")}</h2>
+          <p className="mt-2 text-sm text-muted-foreground">{L("سجّل بياناتك أولاً كشريك", "Register as a partner first")}</p>
+          <Link to="/partner" className="mt-6 rounded-full bg-primary px-6 py-3 text-sm font-bold text-primary-foreground">{L("سجّل كشريك", "Register as a partner")}</Link>
         </main>
       </div>
     );

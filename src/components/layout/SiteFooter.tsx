@@ -8,10 +8,11 @@ import stcPay from "@/assets/payments/stc-pay.png";
 import { useSiteSettings, waHref } from "@/hooks/useSiteSettings";
 import { useCategories } from "@/hooks/useCatalog";
 import { renderCategoryIcon } from "@/lib/categoryIcon";
+import { useLang } from "@/i18n/LanguageProvider";
 
 const paymentMethods = [
   { src: visaMc, alt: "Visa & Mastercard" },
-  { src: mada, alt: "مدى" },
+  { src: mada, alt: "Mada" },
   { src: applePay, alt: "Apple Pay" },
   { src: stcPay, alt: "STC Pay" },
 ];
@@ -19,6 +20,9 @@ const paymentMethods = [
 export function SiteFooter() {
   const site = useSiteSettings();
   const { categories } = useCategories();
+  const { lang } = useLang();
+  const L = (a: string, e: string) => (lang === "en" ? e : a);
+
   const socials = ([
     [site.instagram, Instagram],
     [site.tiktok, Music2],
@@ -27,12 +31,17 @@ export function SiteFooter() {
   ] as const).filter(([u]) => !!u);
 
   const quickLinks: { label: string; to: any; hash?: string }[] = [
-    { label: "الرئيسية", to: "/" },
-    { label: "كل العروض", to: "/offers" },
-    { label: "من نحن", to: "/about" },
-    { label: "متابعة الحجز", to: "/track" },
-    { label: "تواصل معنا", to: "/contact" },
+    { label: L("الرئيسية", "Home"), to: "/" },
+    { label: L("كل العروض", "All offers"), to: "/offers" },
+    { label: L("من نحن", "About us"), to: "/about" },
+    { label: L("متابعة الحجز", "Track booking"), to: "/track" },
+    { label: L("تواصل معنا", "Contact us"), to: "/contact" },
   ];
+
+  const defaultDesc = L(
+    "منصتك الأولى لأقوى خصومات الصالونات، متاجر التجميل، السبا، اللياقة، والعيادات — احجز ادفع واستخدم الباركود.",
+    "Your top destination for the best discounts on salons, beauty stores, spa, fitness, and clinics — book, pay, and use the barcode."
+  );
 
   return (
     <footer className="bg-primary-dark text-white">
@@ -40,10 +49,10 @@ export function SiteFooter() {
         {/* Brand */}
         <div className="lg:col-span-1">
           <div className="mb-5 inline-flex items-center gap-3">
-            <img src={logo} alt="خصومات" width={180} height={72} className="h-14 w-auto object-contain sm:h-16" />
+            <img src={logo} alt={L("خصومات", "Khosomat")} width={180} height={72} className="h-14 w-auto object-contain sm:h-16" />
           </div>
           <p className="text-base leading-8 text-white/80" suppressHydrationWarning>
-            {site.footerDescription || site.descriptionAr || "منصتك الأولى لأقوى خصومات الصالونات، متاجر التجميل، السبا، اللياقة، والعيادات — احجز ادفع واستخدم الباركود."}
+            {site.footerDescription || site.descriptionAr || defaultDesc}
           </p>
           <div className="mt-6 flex items-center gap-3">
             {socials.map(([url, Icon], i) => (
@@ -62,7 +71,7 @@ export function SiteFooter() {
 
         {/* Quick Links */}
         <div>
-          <h4 className="mb-5 text-lg font-bold">روابط سريعة</h4>
+          <h4 className="mb-5 text-lg font-bold">{L("روابط سريعة", "Quick links")}</h4>
           <ul className="space-y-3 text-base text-white/85">
             {quickLinks.map((l) => (
               <li key={l.label}>
@@ -76,31 +85,34 @@ export function SiteFooter() {
 
         {/* Categories */}
         <div>
-          <h4 className="mb-5 text-lg font-bold">تصنيفات الخدمات</h4>
+          <h4 className="mb-5 text-lg font-bold">{L("تصنيفات الخدمات", "Service categories")}</h4>
           <ul className="space-y-3 text-base text-white/85">
-            {categories.map((c) => (
-              <li key={c.slug}>
-                <Link
-                  to="/offers/category/$slug"
-                  params={{ slug: c.slug }}
-                  className="inline-flex items-center gap-2 transition hover:text-white"
-                >
-                  <span className="inline-flex h-4 w-4 items-center justify-center overflow-hidden">{renderCategoryIcon(c.icon)}</span>
-                  <span>{c.nameAr}</span>
-                </Link>
-              </li>
-            ))}
+            {categories.map((c: any) => {
+              const name = lang === "en" ? (c.nameEn || c.nameAr) : (c.nameAr || c.nameEn);
+              return (
+                <li key={c.slug}>
+                  <Link
+                    to="/offers/category/$slug"
+                    params={{ slug: c.slug }}
+                    className="inline-flex items-center gap-2 transition hover:text-white"
+                  >
+                    <span className="inline-flex h-4 w-4 items-center justify-center overflow-hidden">{renderCategoryIcon(c.icon)}</span>
+                    <span>{name}</span>
+                  </Link>
+                </li>
+              );
+            })}
           </ul>
         </div>
 
         {/* Contact */}
         <div>
-          <h4 className="mb-5 text-lg font-bold">تواصل معنا</h4>
+          <h4 className="mb-5 text-lg font-bold">{L("تواصل معنا", "Contact us")}</h4>
           <ul className="space-y-3">
             {([
               site.phone ? { Icon: Phone, text: site.phone } : null,
               site.email ? { Icon: Mail, text: site.email } : null,
-              { Icon: MapPin, text: site.address || "المملكة العربية السعودية" },
+              { Icon: MapPin, text: site.address || L("المملكة العربية السعودية", "Saudi Arabia") },
             ].filter(Boolean) as { Icon: any; text: string }[]).map(({ Icon, text }, i) => (
               <li key={i} className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-3 py-2.5 backdrop-blur-sm transition hover:border-white/25 hover:bg-white/10">
                 <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/10">
@@ -114,14 +126,14 @@ export function SiteFooter() {
             to="/offers"
             className="mt-4 flex h-12 w-full items-center justify-center rounded-full bg-white text-sm font-bold text-primary-dark shadow-md transition hover:-translate-y-0.5"
           >
-            تصفح كل العروض
+            {L("تصفح كل العروض", "Browse all offers")}
           </Link>
         </div>
       </div>
 
       <div className="border-t border-white/10">
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 px-4 py-5 text-sm text-white/70 sm:px-6 lg:flex-row lg:px-8">
-          <p className="order-3 lg:order-1">© 2022 خصومات. جميع الحقوق محفوظة.</p>
+          <p className="order-3 lg:order-1">{L("© 2022 خصومات. جميع الحقوق محفوظة.", "© 2022 Khosomat. All rights reserved.")}</p>
 
           <div className="order-2 flex flex-wrap items-center justify-center gap-2">
             {paymentMethods.map((p) => (
@@ -135,8 +147,8 @@ export function SiteFooter() {
           </div>
 
           <div className="order-1 flex items-center gap-5 lg:order-3">
-            <Link to={"/privacy" as any} className="hover:text-white">سياسة الخصوصية</Link>
-            <Link to={"/terms" as any} className="hover:text-white">الشروط والأحكام</Link>
+            <Link to={"/privacy" as any} className="hover:text-white">{L("سياسة الخصوصية", "Privacy policy")}</Link>
+            <Link to={"/terms" as any} className="hover:text-white">{L("الشروط والأحكام", "Terms & conditions")}</Link>
           </div>
         </div>
       </div>

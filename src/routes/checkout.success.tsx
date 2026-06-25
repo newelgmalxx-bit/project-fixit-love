@@ -252,7 +252,7 @@ function SuccessPage() {
                   <span>{t("account.order.total")}</span>
                   <span className="text-primary" data-ltr-number>{formatCurrency(displayOrder.total, lang)}</span>
                 </div>
-                <p className="text-[11px] text-muted-foreground text-end">السعر شامل ضريبة القيمة المضافة</p>
+                <p className="text-[11px] text-muted-foreground text-end">{lang === "ar" ? "السعر شامل ضريبة القيمة المضافة" : "Price includes VAT"}</p>
               </div>
               <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-background p-3 text-sm">
                 <div className="flex items-center gap-2">

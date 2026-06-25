@@ -7,6 +7,7 @@ import { SiteFooter } from "@/components/layout/SiteFooter";
 import { useOffer } from "@/hooks/useCatalog";
 import { SarIcon } from "@/components/ui/SarIcon";
 import { account } from "@/lib/api/account";
+import { useLang } from "@/i18n/LanguageProvider";
 
 export const Route = createFileRoute("/booking/$bookingId")({
   component: BookingConfirmation,
@@ -16,7 +17,6 @@ type Booking = {
   bookingId: string;
   verifyCode?: string;
   offerId: string;
-  // Optional snapshot fields persisted at creation time
   offerTitle?: string;
   vendorName?: string;
   vendorCity?: string;
@@ -49,58 +49,59 @@ type StatusMeta = {
   badgeClass: string;
 };
 
-function getStatusMeta(status?: string): StatusMeta {
+function getStatusMeta(status: string | undefined, lang: "ar" | "en"): StatusMeta {
+  const L = (a: string, e: string) => (lang === "en" ? e : a);
   switch (status) {
     case "confirmed":
       return {
-        label: "تم تأكيد حجزك بنجاح 🎉",
-        subtitle: "أظهر الباركود التالي عند وصولك للمنشأة لاستخدام الخدمة.",
-        badge: "مؤكد",
+        label: L("تم تأكيد حجزك بنجاح 🎉", "Your booking is confirmed 🎉"),
+        subtitle: L("أظهر الباركود التالي عند وصولك للمنشأة لاستخدام الخدمة.", "Show the QR below at the venue to use the service."),
+        badge: L("مؤكد", "Confirmed"),
         Icon: Check,
         iconWrap: "bg-emerald-100 text-emerald-600 shadow-emerald-200",
         badgeClass: "bg-emerald-100 text-emerald-700",
       };
     case "in_progress":
       return {
-        label: "الخدمة قيد التنفيذ",
-        subtitle: "بدأ تقديم الخدمة في المنشأة.",
-        badge: "قيد التنفيذ",
+        label: L("الخدمة قيد التنفيذ", "Service in progress"),
+        subtitle: L("بدأ تقديم الخدمة في المنشأة.", "Service has started at the venue."),
+        badge: L("قيد التنفيذ", "In progress"),
         Icon: PlayCircle,
         iconWrap: "bg-sky-100 text-sky-600 shadow-sky-200",
         badgeClass: "bg-sky-100 text-sky-700",
       };
     case "review":
       return {
-        label: "بانتظار المراجعة",
-        subtitle: "تمت الخدمة وبانتظار تقييمك.",
-        badge: "مراجعة",
+        label: L("بانتظار المراجعة", "Awaiting review"),
+        subtitle: L("تمت الخدمة وبانتظار تقييمك.", "Service completed — waiting for your rating."),
+        badge: L("مراجعة", "Review"),
         Icon: Star,
         iconWrap: "bg-violet-100 text-violet-600 shadow-violet-200",
         badgeClass: "bg-violet-100 text-violet-700",
       };
     case "completed":
       return {
-        label: "تم إكمال الحجز",
-        subtitle: "شكراً لاستخدامك المنصة.",
-        badge: "مكتمل",
+        label: L("تم إكمال الحجز", "Booking completed"),
+        subtitle: L("شكراً لاستخدامك المنصة.", "Thanks for using the platform."),
+        badge: L("مكتمل", "Completed"),
         Icon: Check,
         iconWrap: "bg-emerald-100 text-emerald-600 shadow-emerald-200",
         badgeClass: "bg-emerald-100 text-emerald-700",
       };
     case "cancelled":
       return {
-        label: "تم إلغاء الحجز",
-        subtitle: "تم إلغاء هذا الحجز ولن يتم تقديم الخدمة.",
-        badge: "ملغي",
+        label: L("تم إلغاء الحجز", "Booking cancelled"),
+        subtitle: L("تم إلغاء هذا الحجز ولن يتم تقديم الخدمة.", "This booking is cancelled and the service will not be provided."),
+        badge: L("ملغي", "Cancelled"),
         Icon: XCircle,
         iconWrap: "bg-rose-100 text-rose-600 shadow-rose-200",
         badgeClass: "bg-rose-100 text-rose-700",
       };
     case "no_show":
       return {
-        label: "لم يتم الحضور",
-        subtitle: "تم تسجيل عدم الحضور لهذا الحجز.",
-        badge: "لم يحضر",
+        label: L("لم يتم الحضور", "No show"),
+        subtitle: L("تم تسجيل عدم الحضور لهذا الحجز.", "A no-show has been recorded for this booking."),
+        badge: L("لم يحضر", "No show"),
         Icon: UserX,
         iconWrap: "bg-zinc-100 text-zinc-600 shadow-zinc-200",
         badgeClass: "bg-zinc-100 text-zinc-700",
@@ -108,9 +109,9 @@ function getStatusMeta(status?: string): StatusMeta {
     case "pending":
     default:
       return {
-        label: "حجزك قيد المراجعة",
-        subtitle: "سيتم تأكيد الحجز بعد إتمام الدفع أو مراجعة المنشأة.",
-        badge: "بانتظار التأكيد",
+        label: L("حجزك قيد المراجعة", "Your booking is under review"),
+        subtitle: L("سيتم تأكيد الحجز بعد إتمام الدفع أو مراجعة المنشأة.", "It will be confirmed after payment or venue review."),
+        badge: L("بانتظار التأكيد", "Awaiting confirmation"),
         Icon: Clock3,
         iconWrap: "bg-amber-100 text-amber-600 shadow-amber-200",
         badgeClass: "bg-amber-100 text-amber-700",
@@ -126,6 +127,9 @@ function fmtMoney(n?: number) {
 }
 
 function BookingConfirmation() {
+  const { lang, dir } = useLang();
+  const L = (a: string, e: string) => (lang === "en" ? e : a);
+  const sar = L("ر.س", "SAR");
   const { bookingId } = Route.useParams();
   const [booking, setBooking] = useState<Booking | null>(null);
 
@@ -187,13 +191,13 @@ function BookingConfirmation() {
 
   if (!booking) {
     return (
-      <div dir="rtl" className="flex min-h-screen flex-col bg-background">
+      <div dir={dir} className="flex min-h-screen flex-col bg-background">
         <SiteHeader />
         <main className="flex flex-1 items-center justify-center px-4">
           <div className="text-center">
-            <p className="text-muted-foreground">لم يتم العثور على بيانات الحجز.</p>
+            <p className="text-muted-foreground">{L("لم يتم العثور على بيانات الحجز.", "Booking data not found.")}</p>
             <Link to="/" className="mt-4 inline-flex items-center gap-1 text-sm font-bold text-primary hover:underline">
-              <Home className="h-4 w-4" /> العودة للرئيسية
+              <Home className="h-4 w-4" /> {L("العودة للرئيسية", "Back to home")}
             </Link>
           </div>
         </main>
@@ -205,7 +209,7 @@ function BookingConfirmation() {
 
   // Prefer snapshot fields baked into booking; fall back to live offer fetch.
   const offer = {
-    title: booking.offerTitle ?? liveOffer?.title ?? "خدمة",
+    title: booking.offerTitle ?? liveOffer?.title ?? L("خدمة", "Service"),
     priceAfter: booking.priceAfter ?? liveOffer?.priceAfter ?? 0,
     vendor: {
       name: booking.vendorName ?? liveOffer?.vendor?.name ?? "—",
@@ -242,7 +246,7 @@ function BookingConfirmation() {
   // Derive effective status: trust explicit booking.status, otherwise infer
   // from payment state (paid → confirmed, otherwise pending).
   const effectiveStatus = booking.status ?? (isPaid ? "confirmed" : "pending");
-  const statusMeta = getStatusMeta(effectiveStatus);
+  const statusMeta = getStatusMeta(effectiveStatus, lang);
   const StatusIcon = statusMeta.Icon;
 
   const demoPayload = {
@@ -261,7 +265,7 @@ function BookingConfirmation() {
   const qrPayload = `${typeof window !== "undefined" ? window.location.origin : ""}/verify?b=${encodeURIComponent(booking.bookingId)}&c=${encodeURIComponent(booking.verifyCode ?? "")}&demo=${encodeURIComponent(demoParam)}`;
 
   return (
-    <div dir="rtl" className="flex min-h-screen flex-col bg-muted/30">
+    <div dir={dir} className="flex min-h-screen flex-col bg-muted/30">
       <SiteHeader />
       <main className="flex-1 py-10">
         <div className="mx-auto max-w-3xl px-4 sm:px-6">
@@ -278,15 +282,14 @@ function BookingConfirmation() {
             </p>
           </div>
 
-          {/* Unpaid banner — keep the user on this page but prompt to pay */}
           {showPayBanner && (
             <div className="mb-6 flex flex-col items-stretch gap-3 rounded-2xl border border-amber-300 bg-amber-50 p-4 text-amber-900 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-start gap-3">
                 <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
                 <div className="text-sm">
-                  <div className="font-extrabold">لم يتم دفع العربون بعد</div>
+                  <div className="font-extrabold">{L("لم يتم دفع العربون بعد", "Deposit not paid yet")}</div>
                   <div className="text-xs text-amber-800/80">
-                    حجزك غير مؤكد حتى تتم عملية الدفع. اضغط على "ادفع الآن" لإتمام الحجز.
+                    {L('حجزك غير مؤكد حتى تتم عملية الدفع. اضغط على "ادفع الآن" لإتمام الحجز.', 'Your booking is not confirmed until payment is completed. Click "Pay now" to finalize the booking.')}
                   </div>
                 </div>
               </div>
@@ -295,18 +298,16 @@ function BookingConfirmation() {
                 params={{ bookingId }}
                 className="inline-flex items-center justify-center gap-2 rounded-full bg-amber-600 px-5 py-2.5 text-sm font-bold text-white shadow transition hover:bg-amber-700"
               >
-                <CreditCard className="h-4 w-4" /> ادفع الآن
+                <CreditCard className="h-4 w-4" /> {L("ادفع الآن", "Pay now")}
               </Link>
             </div>
           )}
 
-          {/* Ticket card */}
           <div className="overflow-hidden rounded-3xl border border-border bg-white shadow-xl">
-            {/* Header strip */}
             <div className="bg-gradient-to-r from-primary to-primary/80 p-6 text-white">
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <div className="text-xs font-bold uppercase tracking-wider opacity-80">رقم الحجز</div>
+                  <div className="text-xs font-bold uppercase tracking-wider opacity-80">{L("رقم الحجز", "Booking #")}</div>
                   <div className="mt-1 text-2xl font-black tracking-wider" dir="ltr">{booking.bookingId}</div>
                 </div>
                 <div className={`rounded-full px-3 py-1 text-[11px] font-bold ${statusMeta.badgeClass}`}>
@@ -316,52 +317,51 @@ function BookingConfirmation() {
             </div>
 
             <div className="grid gap-6 p-6 sm:grid-cols-[1fr,auto] sm:items-center">
-              {/* Details */}
               <div className="space-y-4">
                 <div>
-                  <div className="text-xs font-bold uppercase tracking-wider text-muted-foreground">الخدمة</div>
+                  <div className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{L("الخدمة", "Service")}</div>
                   <div className="mt-1 text-base font-extrabold text-foreground">{offer.title}</div>
                 </div>
 
                 <div className="grid gap-3 text-sm">
-                  <Row icon={<Calendar className="h-4 w-4 text-primary" />} label="التاريخ">
+                  <Row icon={<Calendar className="h-4 w-4 text-primary" />} label={L("التاريخ", "Date")}>
                     {booking.date}
                   </Row>
-                  <Row icon={<Clock className="h-4 w-4 text-primary" />} label="الوقت">
+                  <Row icon={<Clock className="h-4 w-4 text-primary" />} label={L("الوقت", "Time")}>
                     {booking.time}
                   </Row>
-                  <Row icon={<MapPin className="h-4 w-4 text-primary" />} label="المنشأة">
+                  <Row icon={<MapPin className="h-4 w-4 text-primary" />} label={L("المنشأة", "Venue")}>
                     <div>
                       <div className="font-bold text-foreground">{offer.vendor.name}</div>
                       {isPaid ? (
                         <>
                           <div className="text-xs text-muted-foreground">
-                            {offer.vendor.address}، {offer.vendor.city}
+                            {offer.vendor.address}{offer.vendor.address && offer.vendor.city ? L("، ", ", ") : ""}{offer.vendor.city}
                           </div>
                           {(() => {
                             const mapsUrl = (offer.vendor as any).mapsUrl || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${offer.vendor.name} ${offer.vendor.address} ${offer.vendor.city}`)}`;
                             return (
                               <a href={mapsUrl} target="_blank" rel="noopener noreferrer" className="mt-2 inline-flex items-center gap-1.5 rounded-md border border-primary/40 bg-primary/5 px-2.5 py-1 text-xs font-bold text-primary hover:bg-primary/10">
-                                <MapPin className="h-3 w-3" /> الذهاب للفرع عبر خرائط جوجل
+                                <MapPin className="h-3 w-3" /> {L("الذهاب للفرع عبر خرائط جوجل", "Open in Google Maps")}
                               </a>
                             );
                           })()}
                         </>
                       ) : (
                         <div className="text-xs text-muted-foreground">
-                          {offer.vendor.city ? `${offer.vendor.city} — ` : ""}سيظهر العنوان التفصيلي بعد إتمام الدفع
+                          {offer.vendor.city ? `${offer.vendor.city} — ` : ""}{L("سيظهر العنوان التفصيلي بعد إتمام الدفع", "The detailed address will appear after payment is completed")}
                         </div>
                       )}
                     </div>
                   </Row>
-                  <Row icon={<Phone className="h-4 w-4 text-primary" />} label="هاتف المنشأة">
+                  <Row icon={<Phone className="h-4 w-4 text-primary" />} label={L("هاتف المنشأة", "Venue phone")}>
                     <span dir="ltr">{offer.vendor.phone}</span>
                   </Row>
                 </div>
 
                 <div className="border-t border-dashed border-border pt-4">
                   <div className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">
-                    بيانات العميل
+                    {L("بيانات العميل", "Customer details")}
                   </div>
                   <div className="text-sm font-bold text-foreground">{booking.customerName}</div>
                   <div className="text-xs text-muted-foreground" dir="ltr">{booking.customerPhone}</div>
@@ -370,21 +370,21 @@ function BookingConfirmation() {
                 {hasDeposit ? (
                   <div className="space-y-2 border-t border-dashed border-border pt-4 text-sm">
                     <div className="flex items-center justify-between text-muted-foreground">
-                      <span>الإجمالي</span>
-                      <span dir="ltr" className="font-bold text-foreground">{fmtMoney(booking.total)} ر.س</span>
+                      <span>{L("الإجمالي", "Total")}</span>
+                      <span dir="ltr" className="font-bold text-foreground">{fmtMoney(booking.total)} {sar}</span>
                     </div>
                     <div className={`flex items-center justify-between rounded-lg px-3 py-2 font-extrabold ${isPaid ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"}`}>
-                      <span>{isPaid ? "العربون المدفوع" : "العربون المطلوب"}{booking.depositPct ? ` (${booking.depositPct}%)` : ""}</span>
-                      <span dir="ltr">{fmtMoney(derivedDeposit)} ر.س</span>
+                      <span>{isPaid ? L("العربون المدفوع", "Deposit paid") : L("العربون المطلوب", "Deposit required")}{booking.depositPct ? ` (${booking.depositPct}%)` : ""}</span>
+                      <span dir="ltr">{fmtMoney(derivedDeposit)} {sar}</span>
                     </div>
                     <div className="flex items-center justify-between text-xs text-muted-foreground">
-                      <span>يُدفع عند الخدمة</span>
-                      <span dir="ltr">{fmtMoney(derivedRemaining)} ر.س</span>
+                      <span>{L("يُدفع عند الخدمة", "Paid at service")}</span>
+                      <span dir="ltr">{fmtMoney(derivedRemaining)} {sar}</span>
                     </div>
                   </div>
                 ) : (
                   <div className="flex items-baseline justify-between border-t border-dashed border-border pt-4">
-                    <span className="text-sm font-bold text-foreground">المبلغ المدفوع</span>
+                    <span className="text-sm font-bold text-foreground">{L("المبلغ المدفوع", "Amount paid")}</span>
                     <span className="flex items-baseline gap-1" dir="ltr">
                       <span className="text-2xl font-black text-primary">{offer.priceAfter}</span>
                       <SarIcon className="h-[0.9em] text-primary" />
@@ -393,47 +393,45 @@ function BookingConfirmation() {
                 )}
               </div>
 
-              {/* QR code */}
               <div className="flex flex-col items-center gap-3 rounded-2xl border border-border bg-muted/30 p-5">
                 <QRCodeSVG value={qrPayload} size={180} level="H" includeMargin />
                 {booking.verifyCode && (
                   <div className="w-full rounded-xl border border-dashed border-primary/40 bg-primary/5 p-2 text-center">
-                    <div className="text-[10px] font-bold text-muted-foreground">رمز التأكيد</div>
+                    <div className="text-[10px] font-bold text-muted-foreground">{L("رمز التأكيد", "Confirmation code")}</div>
                     <div dir="ltr" className="text-xl font-black tracking-[0.35em] text-primary">{booking.verifyCode}</div>
                   </div>
                 )}
                 <div className="text-center">
-                  <div className="text-[11px] font-bold text-muted-foreground">امسح الباركود أو أعطِ الرمز</div>
-                  <div className="text-[10px] text-muted-foreground">للمركز عند الوصول</div>
+                  <div className="text-[11px] font-bold text-muted-foreground">{L("امسح الباركود أو أعطِ الرمز", "Scan QR or share code")}</div>
+                  <div className="text-[10px] text-muted-foreground">{L("للمركز عند الوصول", "with the center on arrival")}</div>
                 </div>
               </div>
             </div>
 
-            {/* Footer actions */}
             <div className="flex flex-col gap-2 border-t border-border bg-muted/30 p-4 sm:flex-row">
               <button
                 onClick={() => window.print()}
                 className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl border border-border bg-white py-3 text-sm font-bold text-foreground transition hover:border-primary hover:text-primary"
               >
-                <Printer className="h-4 w-4" /> طباعة
+                <Printer className="h-4 w-4" /> {L("طباعة", "Print")}
               </button>
               <button
                 onClick={() => window.print()}
                 className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl border border-border bg-white py-3 text-sm font-bold text-foreground transition hover:border-primary hover:text-primary"
               >
-                <Download className="h-4 w-4" /> حفظ PDF
+                <Download className="h-4 w-4" /> {L("حفظ PDF", "Save PDF")}
               </button>
               <Link
                 to="/"
                 className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-primary py-3 text-sm font-bold text-primary-foreground transition hover:bg-primary/90"
               >
-                <Home className="h-4 w-4" /> الرئيسية
+                <Home className="h-4 w-4" /> {L("الرئيسية", "Home")}
               </Link>
             </div>
           </div>
 
           <p className="mt-6 text-center text-xs text-muted-foreground">
-            تم إرسال نسخة من بيانات الحجز إلى رقم جوالك.
+            {L("تم إرسال نسخة من بيانات الحجز إلى رقم جوالك.", "A copy of the booking details was sent to your phone.")}
           </p>
         </div>
       </main>

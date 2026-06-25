@@ -1,10 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
-import { ShieldCheck, Lock, ChevronLeft, Loader2, Wallet } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { ShieldCheck, Lock, ChevronLeft, Loader2 } from "lucide-react";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { SarIcon } from "@/components/ui/SarIcon";
 import { account } from "@/lib/api/account";
+import { useLang } from "@/i18n/LanguageProvider";
 import mada from "@/assets/payments/mada.png";
 import visaMc from "@/assets/payments/visa-mastercard.png";
 import applePay from "@/assets/payments/apple-pay.jpg";
@@ -41,19 +42,27 @@ type Booking = {
 
 type UiMethod = { id: string; label: string; img?: string; desc: string };
 
-const METHOD_META: Record<string, { label: string; img?: string; desc: string }> = {
-  myfatoorah: { label: "ماي فاتورة (بطاقات / Apple Pay / STC Pay)", img: visaMc, desc: "ادفع بأمان عبر بوابة MyFatoorah" },
-  mada: { label: "مدى", img: mada, desc: "بطاقة مدى البنكية" },
-  visa: { label: "Visa / Mastercard", img: visaMc, desc: "بطاقة ائتمانية" },
-  applepay: { label: "Apple Pay", img: applePay, desc: "ادفع بـ Apple Pay" },
-  stcpay: { label: "STC Pay", img: stcPay, desc: "ادفع عبر محفظة STC Pay" },
-  tabby: { label: "تابي", img: tabby, desc: "قسّمها على 4 دفعات بدون فوائد" },
-  cod: { label: "الدفع عند الاستلام", img: cod, desc: "ادفع نقداً عند الخدمة" },
+type MethodMeta = { labelAr: string; labelEn: string; img?: string; descAr: string; descEn: string };
+
+const METHOD_META: Record<string, MethodMeta> = {
+  myfatoorah: { labelAr: "ماي فاتورة (بطاقات / Apple Pay / STC Pay)", labelEn: "MyFatoorah (Cards / Apple Pay / STC Pay)", img: visaMc, descAr: "ادفع بأمان عبر بوابة MyFatoorah", descEn: "Pay securely via the MyFatoorah gateway" },
+  mada: { labelAr: "مدى", labelEn: "Mada", img: mada, descAr: "بطاقة مدى البنكية", descEn: "Mada bank card" },
+  visa: { labelAr: "Visa / Mastercard", labelEn: "Visa / Mastercard", img: visaMc, descAr: "بطاقة ائتمانية", descEn: "Credit card" },
+  applepay: { labelAr: "Apple Pay", labelEn: "Apple Pay", img: applePay, descAr: "ادفع بـ Apple Pay", descEn: "Pay with Apple Pay" },
+  stcpay: { labelAr: "STC Pay", labelEn: "STC Pay", img: stcPay, descAr: "ادفع عبر محفظة STC Pay", descEn: "Pay via STC Pay wallet" },
+  tabby: { labelAr: "تابي", labelEn: "Tabby", img: tabby, descAr: "قسّمها على 4 دفعات بدون فوائد", descEn: "Split it into 4 interest-free payments" },
+  cod: { labelAr: "الدفع عند الاستلام", labelEn: "Cash on delivery", img: cod, descAr: "ادفع نقداً عند الخدمة", descEn: "Pay cash at service" },
 };
 
-const FALLBACK_METHODS: UiMethod[] = [
-  { id: "myfatoorah", ...METHOD_META.myfatoorah },
-];
+function metaToUi(key: string, lang: "ar" | "en", overrideImg?: string): UiMethod {
+  const m = METHOD_META[key];
+  return {
+    id: key,
+    label: lang === "en" ? m.labelEn : m.labelAr,
+    img: overrideImg || m.img,
+    desc: lang === "en" ? m.descEn : m.descAr,
+  };
+}
 
 function firstString(...values: unknown[]): string | undefined {
   for (const value of values) {
@@ -68,11 +77,17 @@ function toMoney(value: unknown) {
 }
 
 function BookingPayPage() {
+  const { lang, dir } = useLang();
+  const L = (a: string, e: string) => (lang === "en" ? e : a);
   const { bookingId } = Route.useParams();
   const [booking, setBooking] = useState<Booking | null>(null);
-  const [methods, setMethods] = useState<UiMethod[]>(FALLBACK_METHODS);
+  const fallback = useMemo<UiMethod[]>(() => [metaToUi("myfatoorah", lang)], [lang]);
+  const [methods, setMethods] = useState<UiMethod[]>(fallback);
   const [method, setMethod] = useState<string>("myfatoorah");
   const [processing, setProcessing] = useState(false);
+
+  // Keep fallback labels localized when language toggles
+  useEffect(() => { setMethods((prev) => prev.length === 1 && prev[0].id === "myfatoorah" ? fallback : prev); }, [fallback]);
 
   useEffect(() => {
     let cancelled = false;
@@ -147,7 +162,7 @@ function BookingPayPage() {
         }
         // If backend exposes any MyFatoorah child (visa/mada/applepay/stcpay), expose a top-level MyFatoorah option too.
         if (!found.has("myfatoorah") && items.some((m) => ["2", "6", "11", "12", "13"].includes(String(m.id)))) {
-          found.set("myfatoorah", { id: "myfatoorah", name: METHOD_META.myfatoorah.label } as PaymentMethodInfo);
+          found.set("myfatoorah", { id: "myfatoorah", name: METHOD_META.myfatoorah.labelAr } as PaymentMethodInfo);
         }
 
         const order = ["myfatoorah"];
@@ -155,13 +170,7 @@ function BookingPayPage() {
           .filter((k) => found.has(k))
           .map((k) => {
             const m = found.get(k)!;
-            const meta = METHOD_META[k];
-            return {
-              id: k,
-              label: meta.label,
-              img: meta.img || m.logo || undefined,
-              desc: meta.desc,
-            };
+            return metaToUi(k, lang, m.logo || undefined);
           });
 
         if (!cancelled && mapped.length) {
@@ -222,7 +231,7 @@ function BookingPayPage() {
           items: [
             {
               offerId: booking.offerId,
-              offerTitle: booking.offerTitle ?? "حجز",
+              offerTitle: booking.offerTitle ?? L("حجز", "Booking"),
               price: (booking as any).priceAfter ?? booking.total ?? 0,
               qty: booking.qty ?? 1,
             },
@@ -265,21 +274,21 @@ function BookingPayPage() {
         return;
       }
 
-      alert("تم إنشاء طلب الدفع لكن الباك إند لم يرجع رابط الدفع paymentUrl");
+      alert(L("تم إنشاء طلب الدفع لكن الباك إند لم يرجع رابط الدفع paymentUrl", "Payment request created but the backend did not return a paymentUrl"));
       setProcessing(false);
     } catch (e: any) {
       console.error("Pay error", e);
-      alert(e?.message || "تعذّر بدء الدفع، حاول مرة أخرى");
+      alert(e?.message || L("تعذّر بدء الدفع، حاول مرة أخرى", "Could not start payment, please try again"));
       setProcessing(false);
     }
   }
 
   if (!booking) {
     return (
-      <div dir="rtl" className="flex min-h-screen flex-col bg-background">
+      <div dir={dir} className="flex min-h-screen flex-col bg-background">
         <SiteHeader />
         <main className="mx-auto flex w-full max-w-3xl flex-1 items-center justify-center px-4 py-16">
-          <p className="text-sm text-muted-foreground">لم نعثر على بيانات الحجز…</p>
+          <p className="text-sm text-muted-foreground">{L("لم نعثر على بيانات الحجز…", "Booking not found…")}</p>
         </main>
         <SiteFooter />
       </div>
@@ -297,26 +306,26 @@ function BookingPayPage() {
       : 0;
 
   return (
-    <div dir="rtl" className="flex min-h-screen flex-col bg-background">
+    <div dir={dir} className="flex min-h-screen flex-col bg-background">
       <SiteHeader />
       <main className="flex-1">
         <div className="mx-auto max-w-3xl px-4 py-6 sm:px-6 sm:py-10">
           <div className="mb-5 flex items-center gap-1 text-xs text-muted-foreground">
-            <Link to="/" className="hover:text-primary">الرئيسية</Link>
-            <ChevronLeft className="h-3 w-3" />
-            <span className="text-foreground">الدفع</span>
+            <Link to="/" className="hover:text-primary">{L("الرئيسية", "Home")}</Link>
+            <ChevronLeft className={`h-3 w-3 ${dir === "ltr" ? "rotate-180" : ""}`} />
+            <span className="text-foreground">{L("الدفع", "Payment")}</span>
           </div>
 
-          <h1 className="text-2xl font-extrabold sm:text-3xl">اختر طريقة الدفع</h1>
+          <h1 className="text-2xl font-extrabold sm:text-3xl">{L("اختر طريقة الدفع", "Choose payment method")}</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            ادفع العربون لتأكيد حجزك. المبلغ المتبقي يُدفع عند الخدمة.
+            {L("ادفع العربون لتأكيد حجزك. المبلغ المتبقي يُدفع عند الخدمة.", "Pay the deposit to confirm your booking. The remaining amount is paid at the service.")}
           </p>
 
           {/* Summary strip */}
           <div className="mt-5 rounded-2xl border border-border bg-card p-4 shadow-sm sm:p-5">
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
-                <div className="text-xs text-muted-foreground">رقم الحجز</div>
+                <div className="text-xs text-muted-foreground">{L("رقم الحجز", "Booking #")}</div>
                 <div className="font-extrabold tracking-wider">{booking.bookingId}</div>
                 {offer && <div className="mt-1 truncate text-sm font-bold">{offer.title}</div>}
                 <div className="mt-1 text-xs text-muted-foreground">
@@ -324,7 +333,7 @@ function BookingPayPage() {
                 </div>
               </div>
               <div className="text-end">
-                <div className="text-xs text-muted-foreground">المطلوب الآن (عربون)</div>
+                <div className="text-xs text-muted-foreground">{L("المطلوب الآن (عربون)", "Due now (deposit)")}</div>
                 <div className="inline-flex items-center gap-1 text-2xl font-black text-primary">
                   <span dir="ltr">{deposit}</span>
                   <SarIcon className="h-5 w-5" />
@@ -365,8 +374,8 @@ function BookingPayPage() {
 
           {/* Trust badges */}
           <div className="mt-5 flex flex-wrap items-center gap-3 rounded-2xl border border-emerald-200 bg-emerald-50/60 p-3 text-xs text-emerald-800">
-            <span className="inline-flex items-center gap-1.5"><ShieldCheck className="h-4 w-4" /> دفع آمن ومشفّر</span>
-            <span className="inline-flex items-center gap-1.5"><Lock className="h-4 w-4" /> بياناتك محمية</span>
+            <span className="inline-flex items-center gap-1.5"><ShieldCheck className="h-4 w-4" /> {L("دفع آمن ومشفّر", "Secure encrypted payment")}</span>
+            <span className="inline-flex items-center gap-1.5"><Lock className="h-4 w-4" /> {L("بياناتك محمية", "Your data is protected")}</span>
           </div>
 
           {/* Pay button */}
@@ -377,15 +386,15 @@ function BookingPayPage() {
           >
             {processing ? (
               <>
-                <Loader2 className="h-5 w-5 animate-spin" /> جاري معالجة الدفع…
+                <Loader2 className="h-5 w-5 animate-spin" /> {L("جاري معالجة الدفع…", "Processing payment…")}
               </>
             ) : (
-              <>ادفع الآن — {deposit} ر.س</>
+              <>{L("ادفع الآن", "Pay now")} — {deposit} {L("ر.س", "SAR")}</>
             )}
           </button>
 
           <p className="mt-3 text-center text-xs text-muted-foreground">
-            بالضغط على "ادفع الآن" فإنك توافق على شروط الحجز وسياسة الإلغاء.
+            {L('بالضغط على "ادفع الآن" فإنك توافق على شروط الحجز وسياسة الإلغاء.', 'By clicking "Pay now" you agree to the booking terms and cancellation policy.')}
           </p>
         </div>
       </main>

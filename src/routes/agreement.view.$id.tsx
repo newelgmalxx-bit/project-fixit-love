@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { publicApi } from "@/lib/api/public";
 import { Loader2, Printer } from "lucide-react";
+import { useLang } from "@/i18n/LanguageProvider";
 import {
   buildAgreementHtmlForPartner,
   printAgreementPdf,
@@ -15,6 +16,8 @@ export const Route = createFileRoute("/agreement/view/$id")({
 });
 
 function AgreementPdfView() {
+  const { lang, dir } = useLang();
+  const L = (a: string, e: string) => (lang === "en" ? e : a);
   const { id } = Route.useParams();
   const [loading, setLoading] = useState(true);
   const [agreement, setAgreement] = useState<MockAgreement | null>(null);
@@ -74,21 +77,21 @@ function AgreementPdfView() {
     return <div className="flex min-h-screen items-center justify-center"><Loader2 className="h-8 w-8 animate-spin" /></div>;
   }
   if (!agreement) {
-    return <div className="p-10 text-center" dir="rtl">الاتفاقية غير موجودة</div>;
+    return <div className="p-10 text-center" dir={dir}>{L("الاتفاقية غير موجودة", "Agreement not found")}</div>;
   }
 
   return (
-    <div dir="rtl" className="min-h-screen bg-gray-100">
+    <div dir={dir} className="min-h-screen bg-gray-100">
       <div className="sticky top-0 z-10 bg-white border-b px-4 py-3 flex items-center justify-between">
-        <span className="text-sm text-gray-600">اضغط الزر لطباعة الاتفاقية أو حفظها PDF</span>
+        <span className="text-sm text-gray-600">{L("اضغط الزر لطباعة الاتفاقية أو حفظها PDF", "Click the button to print the agreement or save as PDF")}</span>
         <button
           onClick={() => printAgreementPdf(html)}
           className="inline-flex items-center gap-1.5 rounded-full bg-primary px-4 py-2 text-sm font-bold text-primary-foreground"
         >
-          <Printer className="h-4 w-4" /> طباعة / حفظ PDF
+          <Printer className="h-4 w-4" /> {L("طباعة / حفظ PDF", "Print / Save PDF")}
         </button>
       </div>
-      <iframe srcDoc={html} title="اتفاقية الشراكة" className="w-full" style={{ height: "calc(100vh - 56px)", border: 0, background: "#fff" }} />
+      <iframe srcDoc={html} title={L("اتفاقية الشراكة", "Partnership Agreement")} className="w-full" style={{ height: "calc(100vh - 56px)", border: 0, background: "#fff" }} />
     </div>
   );
 }

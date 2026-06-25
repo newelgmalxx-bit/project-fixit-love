@@ -228,6 +228,8 @@ function PartnerDashboard() {
     const sp = loadAgreementStore().partners.find((p) => p.id === DEMO_PARTNER_ID);
     return { ...DEMO_PROFILE, status: sp?.status || "pending" };
   });
+  const { lang, dir } = useLang();
+  const L = (a: string, e: string) => (lang === "en" ? e : a);
   useEffect(() => {
     // Refresh real partner from API
     (async () => {

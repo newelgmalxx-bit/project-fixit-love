@@ -11,7 +11,7 @@ import { toast } from "sonner";
 
 export const Route = createFileRoute("/account/tickets/new")({
   validateSearch: z.object({ order: z.string().optional() }),
-  head: () => ({ meta: [{ title: "تذكرة جديدة | خصومات" }] }),
+  head: () => ({ meta: [{ title: "New Ticket | koswmat" }] }),
   component: NewTicket,
 });
 

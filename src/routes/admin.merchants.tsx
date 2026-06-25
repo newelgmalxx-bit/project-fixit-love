@@ -465,17 +465,17 @@ function MerchantsPage() {
           <table className="min-w-full text-sm">
             <thead className="bg-muted/40 text-xs font-bold text-muted-foreground">
               <tr>
-                <th className="p-3 text-start">المركز</th>
-                <th className="p-3 text-start">التواصل</th>
-                <th className="p-3 text-start">رقم التواصل</th>
-                <th className="p-3 text-start">التصنيف · المدينة</th>
-                <th className="p-3 text-start">الباقة</th>
-                <th className="p-3 text-start">العروض</th>
-                <th className="p-3 text-start">الحجوزات</th>
-                <th className="p-3 text-start">الإيراد</th>
-                <th className="p-3 text-start">التقييم</th>
-                <th className="p-3 text-start">الحالة</th>
-                <th className="p-3 text-end">إجراءات</th>
+                <th className="p-3 text-start">{L("المركز", "Partner")}</th>
+                <th className="p-3 text-start">{L("التواصل", "Email")}</th>
+                <th className="p-3 text-start">{L("رقم التواصل", "Phone")}</th>
+                <th className="p-3 text-start">{L("التصنيف · المدينة", "Category · City")}</th>
+                <th className="p-3 text-start">{L("الباقة", "Package")}</th>
+                <th className="p-3 text-start">{L("العروض", "Offers")}</th>
+                <th className="p-3 text-start">{L("الحجوزات", "Bookings")}</th>
+                <th className="p-3 text-start">{L("الإيراد", "Revenue")}</th>
+                <th className="p-3 text-start">{L("التقييم", "Rating")}</th>
+                <th className="p-3 text-start">{L("الحالة", "Status")}</th>
+                <th className="p-3 text-end">{L("إجراءات", "Actions")}</th>
               </tr>
             </thead>
             <tbody>

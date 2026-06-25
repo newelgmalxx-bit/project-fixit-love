@@ -2,6 +2,7 @@ import { useRef, useState } from "react";
 import { Upload, X, Loader2, Image as ImageIcon } from "lucide-react";
 import { toast } from "sonner";
 import { uploadFile, type UploadBucket } from "@/lib/api/adminContent";
+import { useLang } from "@/i18n/LanguageProvider";
 
 type Props = {
   value?: string | null;
@@ -54,26 +55,28 @@ export function ImageUpload({
   className = "",
   aspect = "aspect-video",
 }: Props) {
+  const { lang } = useLang();
+  const L = (a: string, e: string) => (lang === "en" ? e : a);
   const inputRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
 
   async function handleFile(file: File) {
     if (!file) return;
     if (file.size > 8 * 1024 * 1024) {
-      toast.error("الحد الأقصى 8 ميجا");
+      toast.error(L("الحد الأقصى 8 ميجا", "Max size is 8 MB"));
       return;
     }
     if (!file.type.startsWith("image/")) {
-      toast.error("الملف يجب أن يكون صورة");
+      toast.error(L("الملف يجب أن يكون صورة", "File must be an image"));
       return;
     }
     setBusy(true);
     try {
       const res = await uploadFile(file, resolveBucket(folder));
       onChange(res.url);
-      toast.success("تم رفع الصورة");
+      toast.success(L("تم رفع الصورة", "Image uploaded"));
     } catch (e: any) {
-      toast.error(e?.message || "فشل رفع الصورة");
+      toast.error(e?.message || L("فشل رفع الصورة", "Image upload failed"));
     } finally {
       setBusy(false);
     }
@@ -104,14 +107,14 @@ export function ImageUpload({
               className="inline-flex items-center gap-1 rounded-full bg-white/90 px-3 py-1 text-xs font-bold text-foreground hover:bg-white"
             >
               {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
-              تغيير
+              {L("تغيير", "Change")}
             </button>
             <button
               type="button"
               onClick={() => onChange(null)}
               className="inline-flex items-center gap-1 rounded-full bg-rose-500/90 px-3 py-1 text-xs font-bold text-white hover:bg-rose-600"
             >
-              <X className="h-3.5 w-3.5" /> حذف
+              <X className="h-3.5 w-3.5" /> {L("حذف", "Remove")}
             </button>
           </div>
         </div>
@@ -127,8 +130,8 @@ export function ImageUpload({
           ) : (
             <>
               <ImageIcon className="h-6 w-6" />
-              <div className="text-xs font-bold">اضغط لرفع صورة</div>
-              <div className="text-[10px]">JPG / PNG / WEBP — حتى 8 ميجا</div>
+              <div className="text-xs font-bold">{L("اضغط لرفع صورة", "Click to upload an image")}</div>
+              <div className="text-[10px]">{L("JPG / PNG / WEBP — حتى 8 ميجا", "JPG / PNG / WEBP — up to 8 MB")}</div>
             </>
           )}
         </button>
@@ -146,6 +149,8 @@ type MultiProps = {
 };
 
 export function ImageUploadMulti({ values, onChange, max = 6, folder = "general", label }: MultiProps) {
+  const { lang } = useLang();
+  const L = (a: string, e: string) => (lang === "en" ? e : a);
   const inputRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
 
@@ -153,7 +158,7 @@ export function ImageUploadMulti({ values, onChange, max = 6, folder = "general"
     const remaining = Math.max(0, max - values.length);
     const list = Array.from(files).slice(0, remaining);
     if (!list.length) {
-      toast.error(`الحد الأقصى ${max} صور`);
+      toast.error(L(`الحد الأقصى ${max} صور`, `Max ${max} images`));
       return;
     }
     setBusy(true);
@@ -162,19 +167,19 @@ export function ImageUploadMulti({ values, onChange, max = 6, folder = "general"
       for (const file of list) {
         if (!file.type.startsWith("image/")) continue;
         if (file.size > 8 * 1024 * 1024) {
-          toast.error(`${file.name} أكبر من 8MB`);
+          toast.error(L(`${file.name} أكبر من 8MB`, `${file.name} is larger than 8MB`));
           continue;
         }
         try {
           const res = await uploadFile(file, resolveBucket(folder));
           next.push(res.url);
         } catch (e: any) {
-          toast.error(e?.message || `فشل رفع ${file.name}`);
+          toast.error(e?.message || L(`فشل رفع ${file.name}`, `Failed to upload ${file.name}`));
         }
       }
       if (next.length) {
         onChange([...values, ...next]);
-        toast.success(`تم رفع ${next.length} صورة`);
+        toast.success(L(`تم رفع ${next.length} صورة`, `Uploaded ${next.length} image(s)`));
       }
     } finally {
       setBusy(false);
@@ -216,11 +221,11 @@ export function ImageUploadMulti({ values, onChange, max = 6, folder = "general"
             className="flex aspect-square flex-col items-center justify-center gap-1 rounded-lg border-2 border-dashed border-border bg-muted/30 text-muted-foreground hover:border-primary"
           >
             {busy ? <Loader2 className="h-5 w-5 animate-spin" /> : <Upload className="h-5 w-5" />}
-            <span className="text-[10px] font-bold">إضافة</span>
+            <span className="text-[10px] font-bold">{L("إضافة", "Add")}</span>
           </button>
         )}
       </div>
-      <div className="text-[10px] text-muted-foreground">{values.length} / {max} — JPG / PNG / WEBP حتى 8 ميجا</div>
+      <div className="text-[10px] text-muted-foreground">{values.length} / {max} — {L("JPG / PNG / WEBP حتى 8 ميجا", "JPG / PNG / WEBP up to 8 MB")}</div>
     </div>
   );
 }

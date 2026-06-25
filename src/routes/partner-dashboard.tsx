@@ -3592,9 +3592,9 @@ function SignatureDialog({ defaultName, commission, onCancel, onConfirm }: { def
     setHasInk(false);
   }
   function confirm() {
-    if (!name.trim()) { toast.error("اكتب اسمك الكامل"); return; }
-    if (!hasInk) { toast.error("ارسم توقيعك في المربع"); return; }
-    if (!agreed) { toast.error("لازم توافق على بنود الاتفاقية"); return; }
+    if (!name.trim()) { toast.error(L("اكتب اسمك الكامل", "Enter your full name")); return; }
+    if (!hasInk) { toast.error(L("ارسم توقيعك في المربع", "Draw your signature in the box")); return; }
+    if (!agreed) { toast.error(L("لازم توافق على بنود الاتفاقية", "You must accept the agreement terms")); return; }
     onConfirm(name.trim(), canvasRef.current!.toDataURL("image/png"));
   }
 
@@ -3602,21 +3602,23 @@ function SignatureDialog({ defaultName, commission, onCancel, onConfirm }: { def
     <div onClick={onCancel} className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 p-4">
       <div onClick={(e) => e.stopPropagation()} className="w-full max-w-lg overflow-hidden rounded-2xl bg-white shadow-2xl">
         <div className="flex items-center justify-between border-b border-border p-4">
-          <div className="font-extrabold">توقيع الاتفاقية</div>
+          <div className="font-extrabold">{L("توقيع الاتفاقية", "Sign agreement")}</div>
           <button onClick={onCancel} className="rounded-full border border-border p-1.5 hover:bg-muted"><X className="h-4 w-4" /></button>
         </div>
         <div className="space-y-4 p-5">
           <div className="rounded-xl bg-primary/5 border border-primary/20 p-3 text-xs text-foreground/80">
-            ستوقع بصفتك المسؤول عن المركز على اتفاقية الشراكة بنسبة عمولة/عربون <b>{commission}%</b>. عند التوقيع يتم تفعيل حسابك مباشرة.
+            {lang === "en"
+              ? <>You will sign as the center's responsible party on the partnership agreement at a commission/deposit rate of <b>{commission}%</b>. Once signed, your account is activated immediately.</>
+              : <>ستوقع بصفتك المسؤول عن المركز على اتفاقية الشراكة بنسبة عمولة/عربون <b>{commission}%</b>. عند التوقيع يتم تفعيل حسابك مباشرة.</>}
           </div>
           <label className="block">
-            <span className="text-xs font-bold text-foreground/70">الاسم الكامل</span>
-            <input value={name} onChange={(e) => setName(e.target.value)} className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm" placeholder="اكتب اسمك الكامل" />
+            <span className="text-xs font-bold text-foreground/70">{L("الاسم الكامل", "Full name")}</span>
+            <input value={name} onChange={(e) => setName(e.target.value)} className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm" placeholder={L("اكتب اسمك الكامل", "Type your full name")} />
           </label>
           <div>
             <div className="mb-2 flex items-center justify-between">
-              <span className="text-xs font-bold text-foreground/70">ارسم توقيعك اليدوي</span>
-              <button onClick={clear} type="button" className="text-[11px] font-bold text-rose-600 hover:underline">مسح</button>
+              <span className="text-xs font-bold text-foreground/70">{L("ارسم توقيعك اليدوي", "Draw your handwritten signature")}</span>
+              <button onClick={clear} type="button" className="text-[11px] font-bold text-rose-600 hover:underline">{L("مسح", "Clear")}</button>
             </div>
             <canvas
               ref={canvasRef}
@@ -3626,16 +3628,16 @@ function SignatureDialog({ defaultName, commission, onCancel, onConfirm }: { def
               onPointerLeave={end}
               className="block h-40 w-full touch-none cursor-crosshair rounded-xl border-2 border-dashed border-border bg-[linear-gradient(transparent_38px,#e5e7eb_39px)] bg-[length:100%_40px]"
             />
-            <p className="mt-1 text-[11px] text-muted-foreground">استخدم الماوس أو إصبعك للتوقيع داخل المربع.</p>
+            <p className="mt-1 text-[11px] text-muted-foreground">{L("استخدم الماوس أو إصبعك للتوقيع داخل المربع.", "Use the mouse or your finger to sign inside the box.")}</p>
           </div>
           <label className="flex items-start gap-2 text-xs text-foreground/80 cursor-pointer">
             <input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} className="mt-0.5 h-4 w-4 accent-primary" />
-            <span>أقر بأني اطلعت على بنود اتفاقية الشراكة ووافقت عليها وأقبل التوقيع إلكترونياً.</span>
+            <span>{L("أقر بأني اطلعت على بنود اتفاقية الشراكة ووافقت عليها وأقبل التوقيع إلكترونياً.", "I confirm I've read and accepted the partnership agreement terms and accept signing electronically.")}</span>
           </label>
           <div className="flex justify-end gap-2 pt-2">
-            <button onClick={onCancel} className="rounded-full border border-border px-4 py-2 text-xs font-bold text-foreground/70 hover:bg-muted">إلغاء</button>
+            <button onClick={onCancel} className="rounded-full border border-border px-4 py-2 text-xs font-bold text-foreground/70 hover:bg-muted">{L("إلغاء", "Cancel")}</button>
             <button onClick={confirm} className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#3F2A6B] to-[#E0254D] px-5 py-2 text-xs font-bold text-white shadow">
-              <Check className="h-4 w-4" /> تأكيد التوقيع وتفعيل الحساب
+              <Check className="h-4 w-4" /> {L("تأكيد التوقيع وتفعيل الحساب", "Confirm signature & activate account")}
             </button>
           </div>
         </div>

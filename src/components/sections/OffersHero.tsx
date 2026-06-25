@@ -277,6 +277,8 @@ function SlideContent({
   offers: any[];
   onSearchFocus: () => void;
 }) {
+  const { lang } = useLang();
+  const L = (a: string, e: string) => (lang === "en" ? e : a);
   const { categories } = useCategories();
   const [open, setOpen] = useState(false);
   const boxRef = useRef<HTMLDivElement>(null);

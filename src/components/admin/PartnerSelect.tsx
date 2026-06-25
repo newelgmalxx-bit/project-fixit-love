@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Loader2, Search, X } from "lucide-react";
 import { adminPartnersApi, partnerLabel, type AdminPartner } from "@/lib/api/adminPartners";
+import { useLang } from "@/i18n/LanguageProvider";
 
 type Props = {
   value: string;
@@ -13,7 +14,10 @@ type Props = {
  * Searchable async dropdown for admin partner selection.
  * Hits GET /admin/partners?q= and shows a typeahead list.
  */
-export function PartnerSelect({ value, onChange, placeholder = "ابحث بالاسم...", disabled }: Props) {
+export function PartnerSelect({ value, onChange, placeholder, disabled }: Props) {
+  const { lang } = useLang();
+  const L = (a: string, e: string) => (lang === "en" ? e : a);
+  const ph = placeholder ?? L("ابحث بالاسم...", "Search by name...");
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState("");
   const [items, setItems] = useState<AdminPartner[]>([]);

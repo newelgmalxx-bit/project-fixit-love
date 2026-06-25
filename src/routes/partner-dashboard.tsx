@@ -3788,10 +3788,10 @@ function SupportTab() {
           >
             <div className="flex items-center justify-between gap-3 border-b border-border p-5">
               <div className="min-w-0">
-                <h3 className="truncate text-lg font-extrabold">{activeTicket?.subject || "تذكرة دعم"}</h3>
+                <h3 className="truncate text-lg font-extrabold">{activeTicket?.subject || L("تذكرة دعم", "Support ticket")}</h3>
                 <p className="text-xs text-muted-foreground" dir="ltr">
                   {activeTicket?.number || activeId}
-                  {activeTicket?.createdAt ? ` · ${new Date(activeTicket.createdAt).toLocaleString("ar")}` : ""}
+                  {activeTicket?.createdAt ? ` · ${new Date(activeTicket.createdAt).toLocaleString(lang === "en" ? "en-GB" : "ar")}` : ""}
                 </p>
               </div>
               <div className="flex items-center gap-2">
@@ -3811,7 +3811,7 @@ function SupportTab() {
                 <div className="flex items-center justify-center p-8"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>
               ) : activeMessages.length === 0 ? (
                 <div className="rounded-2xl border border-border bg-card p-4 text-sm">
-                  {activeTicket?.body || "لا توجد رسائل."}
+                  {activeTicket?.body || L("لا توجد رسائل.", "No messages.")}
                 </div>
               ) : (
                 activeMessages.map((m: any, i: number) => {
@@ -3822,7 +3822,7 @@ function SupportTab() {
                         <div className="whitespace-pre-wrap leading-relaxed">{m.text || m.body || m.message}</div>
                         {m.createdAt && (
                           <div className={`mt-1 text-[10px] ${isPartner ? "text-white/70" : "text-muted-foreground"}`} dir="ltr">
-                            {new Date(m.createdAt).toLocaleString("ar")}
+                            {new Date(m.createdAt).toLocaleString(lang === "en" ? "en-GB" : "ar")}
                           </div>
                         )}
                       </div>
@@ -3839,7 +3839,7 @@ function SupportTab() {
                     value={reply}
                     onChange={(e) => setReply(e.target.value)}
                     rows={2}
-                    placeholder="اكتب ردك…"
+                    placeholder={L("اكتب ردك…", "Write your reply…")}
                     className="flex-1 resize-none rounded-2xl border border-border bg-background p-3 text-sm outline-none focus:border-primary"
                   />
                   <button
@@ -3848,7 +3848,7 @@ function SupportTab() {
                     className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#3F2A6B] to-[#E0254D] px-5 py-2.5 text-sm font-bold text-white shadow disabled:opacity-60"
                   >
                     {sendingReply ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-                    إرسال
+                    {L("إرسال", "Send")}
                   </button>
                 </div>
               </div>

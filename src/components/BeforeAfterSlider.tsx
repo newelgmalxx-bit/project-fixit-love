@@ -1,4 +1,5 @@
 import { useCallback, useRef, useState } from "react";
+import { useLang } from "@/i18n/LanguageProvider";
 
 type Props = {
   before: string;
@@ -14,9 +15,13 @@ export function BeforeAfterSlider({
   after,
   alt = "",
   className = "",
-  beforeLabel = "قبل",
-  afterLabel = "بعد",
+  beforeLabel,
+  afterLabel,
 }: Props) {
+  const { lang } = useLang();
+  const L = (a: string, e: string) => (lang === "en" ? e : a);
+  beforeLabel = beforeLabel ?? L("قبل", "Before");
+  afterLabel = afterLabel ?? L("بعد", "After");
   const [pos, setPos] = useState(50);
   const ref = useRef<HTMLDivElement>(null);
   const dragging = useRef(false);

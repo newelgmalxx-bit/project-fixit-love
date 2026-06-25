@@ -402,25 +402,25 @@ function MerchantsPage() {
 
   return (
     <AdminLayout
-      title="إدارة المراكز"
-      subtitle="راجع وفعّل المراكز، تابع أداءها والتزامها بمعايير المنصة"
+      title={L("إدارة المراكز", "Partner management")}
+      subtitle={L("راجع وفعّل المراكز، تابع أداءها والتزامها بمعايير المنصة", "Review and activate partners, track performance and compliance")}
       action={
         <PrimaryButton onClick={() => setAddOpen(true)}>
-          <Store className="h-4 w-4" /> إضافة مركز يدوي
+          <Store className="h-4 w-4" /> {L("إضافة مركز يدوي", "Add partner manually")}
         </PrimaryButton>
       }
     >
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard label="إجمالي المراكز" value={counts.all} icon={Store} accent="primary" hint={`${counts.active} نشط`} />
-        <StatCard label="بانتظار المراجعة" value={counts.pending} icon={Clock} accent="amber" hint="يحتاج إجراء" />
-        <StatCard label="مراكز موقوفة" value={counts.suspended} icon={Ban} accent="rose" />
-        <StatCard label="إجمالي الإيرادات" value={`${revenueTotal.toLocaleString()} ر.س`} icon={BadgeCheck} accent="emerald" />
+        <StatCard label={L("إجمالي المراكز", "Total partners")} value={counts.all} icon={Store} accent="primary" hint={`${counts.active} ${L("نشط", "active")}`} />
+        <StatCard label={L("بانتظار المراجعة", "Pending review")} value={counts.pending} icon={Clock} accent="amber" hint={L("يحتاج إجراء", "Needs action")} />
+        <StatCard label={L("مراكز موقوفة", "Suspended")} value={counts.suspended} icon={Ban} accent="rose" />
+        <StatCard label={L("إجمالي الإيرادات", "Total revenue")} value={`${revenueTotal.toLocaleString()} ${L("ر.س", "SAR")}`} icon={BadgeCheck} accent="emerald" />
       </div>
 
       <PanelCard
         className="mt-6"
-        title={`قائمة المراكز (${filtered.length})`}
-        subtitle="اعتمد أو ارفض طلبات الانضمام، وعدّل حالة المراكز النشطة."
+        title={L(`قائمة المراكز (${filtered.length})`, `Partners list (${filtered.length})`)}
+        subtitle={L("اعتمد أو ارفض طلبات الانضمام، وعدّل حالة المراكز النشطة.", "Approve or reject join requests, and manage active partners.")}
         action={
           <div className="flex flex-wrap items-center gap-2">
             <div className="relative">
@@ -428,21 +428,21 @@ function MerchantsPage() {
               <input
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
-                placeholder="ابحث باسم المركز، المالك، السجل التجاري…"
+                placeholder={L("ابحث باسم المركز، المالك، السجل التجاري…", "Search by partner name, owner, CR…")}
                 className="h-10 w-64 rounded-xl border border-border bg-background pe-9 ps-3 text-sm outline-none focus:border-primary"
               />
             </div>
-            <button onClick={load} className="rounded-xl border border-border px-3 py-2 text-xs font-bold hover:bg-muted">تحديث</button>
+            <button onClick={load} className="rounded-xl border border-border px-3 py-2 text-xs font-bold hover:bg-muted">{L("تحديث", "Refresh")}</button>
           </div>
         }
       >
         <div className="mb-4 flex flex-wrap gap-2">
           {[
-            { v: "all", l: "الكل", c: counts.all },
-            { v: "pending", l: "قيد المراجعة", c: counts.pending },
-            { v: "active", l: "نشط", c: counts.active },
-            { v: "suspended", l: "موقوف", c: counts.suspended },
-            { v: "rejected", l: "مرفوض", c: counts.rejected },
+            { v: "all", l: L("الكل", "All"), c: counts.all },
+            { v: "pending", l: L("قيد المراجعة", "Pending"), c: counts.pending },
+            { v: "active", l: L("نشط", "Active"), c: counts.active },
+            { v: "suspended", l: L("موقوف", "Suspended"), c: counts.suspended },
+            { v: "rejected", l: L("مرفوض", "Rejected"), c: counts.rejected },
           ].map((o) => (
             <button
               key={o.v}
@@ -456,6 +456,7 @@ function MerchantsPage() {
             </button>
           ))}
         </div>
+
 
         {loading ? (
           <div className="flex justify-center py-16"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>

@@ -780,36 +780,36 @@ function AddCenterDialog({
         <DialogHeader><DialogTitle className="text-end">{initial ? L("تعديل بيانات المركز", "Edit partner details") : L("إضافة مركز يدوي", "Add partner manually")}</DialogTitle></DialogHeader>
         <form onSubmit={submit} className="grid gap-3 sm:grid-cols-2">
           <div>
-            <label className="text-xs font-bold">اسم المركز (عربي) *</label>
+            <label className="text-xs font-bold">{L("اسم المركز (عربي) *", "Partner name (Arabic) *")}</label>
             <input value={f.name} onChange={(e) => up("name", e.target.value)} className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm" />
           </div>
           <div>
-            <label className="text-xs font-bold">اسم المركز (إنجليزي)</label>
+            <label className="text-xs font-bold">{L("اسم المركز (إنجليزي)", "Partner name (English)")}</label>
             <input dir="ltr" value={f.nameEn} onChange={(e) => up("nameEn", e.target.value)} placeholder="Center name" className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm" />
           </div>
 
           <div>
-            <label className="text-xs font-bold">اسم المالك *</label>
+            <label className="text-xs font-bold">{L("اسم المالك *", "Owner name *")}</label>
             <input value={f.owner} onChange={(e) => up("owner", e.target.value)} className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm" />
           </div>
           <div>
-            <label className="text-xs font-bold">المدينة *</label>
+            <label className="text-xs font-bold">{L("المدينة *", "City *")}</label>
             <input value={f.city} onChange={(e) => up("city", e.target.value)} className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm" />
           </div>
           <div>
-            <label className="text-xs font-bold">رقم الجوال *</label>
+            <label className="text-xs font-bold">{L("رقم الجوال *", "Phone *")}</label>
             <input value={f.phone} onChange={(e) => up("phone", e.target.value)} placeholder="+966…" className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm" />
           </div>
           <div>
-            <label className="text-xs font-bold">البريد الإلكتروني {initial ? "" : "*"}</label>
+            <label className="text-xs font-bold">{L("البريد الإلكتروني", "Email")} {initial ? "" : "*"}</label>
             <input value={f.email} onChange={(e) => up("email", e.target.value)} className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm" />
           </div>
           <div>
-            <label className="text-xs font-bold">السجل التجاري</label>
+            <label className="text-xs font-bold">{L("السجل التجاري", "Commercial registration")}</label>
             <input value={f.commercialNumber} onChange={(e) => up("commercialNumber", e.target.value)} className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm" />
           </div>
           <div className="sm:col-span-2">
-            <label className="text-xs font-bold">رابط الموقع على خرائط جوجل</label>
+            <label className="text-xs font-bold">{L("رابط الموقع على خرائط جوجل", "Google Maps URL")}</label>
             <input dir="ltr" value={f.mapsUrl} onChange={(e) => up("mapsUrl", e.target.value)} placeholder="https://maps.app.goo.gl/..." className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm" />
           </div>
 

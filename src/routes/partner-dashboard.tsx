@@ -3739,36 +3739,36 @@ function SupportTab() {
           <div className="flex items-center gap-3">
             <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-[#3F2A6B] to-[#E0254D] text-white shadow"><LifeBuoy className="h-5 w-5" /></div>
             <div>
-              <h3 className="text-lg font-extrabold">فتح تذكرة دعم جديدة</h3>
-              <p className="text-xs text-muted-foreground">سيتم الرد خلال 24 ساعة على أيام العمل.</p>
+              <h3 className="text-lg font-extrabold">{L("فتح تذكرة دعم جديدة", "Open a new support ticket")}</h3>
+              <p className="text-xs text-muted-foreground">{L("سيتم الرد خلال 24 ساعة على أيام العمل.", "You'll get a reply within 24 hours on business days.")}</p>
             </div>
           </div>
           <div className="mt-4 space-y-3">
-            <input value={subject} onChange={(e) => setSubject(e.target.value)} placeholder="موضوع التذكرة" className="h-11 w-full rounded-xl border border-border bg-background px-4 text-sm outline-none focus:border-primary" />
-            <textarea value={body} onChange={(e) => setBody(e.target.value)} rows={5} placeholder="اشرح مشكلتك أو استفسارك بالتفصيل…" className="w-full rounded-xl border border-border bg-background p-4 text-sm outline-none focus:border-primary" />
+            <input value={subject} onChange={(e) => setSubject(e.target.value)} placeholder={L("موضوع التذكرة", "Ticket subject")} className="h-11 w-full rounded-xl border border-border bg-background px-4 text-sm outline-none focus:border-primary" />
+            <textarea value={body} onChange={(e) => setBody(e.target.value)} rows={5} placeholder={L("اشرح مشكلتك أو استفسارك بالتفصيل…", "Describe your issue or question in detail…")} className="w-full rounded-xl border border-border bg-background p-4 text-sm outline-none focus:border-primary" />
             <button onClick={submit} disabled={submitting} className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#3F2A6B] to-[#E0254D] px-6 py-2.5 text-sm font-bold text-white shadow disabled:opacity-60">
-              {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />} إرسال التذكرة
+              {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />} {L("إرسال التذكرة", "Send ticket")}
             </button>
           </div>
         </div>
 
         <div className="overflow-hidden rounded-3xl border border-border bg-card">
-          <div className="border-b border-border p-5"><h3 className="text-lg font-extrabold">تذاكري السابقة</h3></div>
+          <div className="border-b border-border p-5"><h3 className="text-lg font-extrabold">{L("تذاكري السابقة", "My previous tickets")}</h3></div>
           {loading ? (
             <div className="flex items-center justify-center p-8"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>
           ) : tickets.length === 0 ? (
-            <div className="p-8 text-center text-sm text-muted-foreground">لا توجد تذاكر بعد</div>
+            <div className="p-8 text-center text-sm text-muted-foreground">{L("لا توجد تذاكر بعد", "No tickets yet")}</div>
           ) : tickets.map((t) => {
             const s = statusLabel(t.status);
             return (
               <button
                 key={t.id}
                 onClick={() => openTicket(t.id)}
-                className="flex w-full items-center justify-between gap-3 border-b border-border p-4 text-right transition hover:bg-muted/40 last:border-b-0"
+                className="flex w-full items-center justify-between gap-3 border-b border-border p-4 text-start transition hover:bg-muted/40 last:border-b-0"
               >
                 <div>
                   <div className="text-sm font-extrabold">{t.subject}</div>
-                  <div className="text-xs text-muted-foreground" dir="ltr">{t.number || t.id} · {t.createdAt ? new Date(t.createdAt).toLocaleDateString("ar") : ""}</div>
+                  <div className="text-xs text-muted-foreground" dir="ltr">{t.number || t.id} · {t.createdAt ? new Date(t.createdAt).toLocaleDateString(lang === "en" ? "en-GB" : "ar") : ""}</div>
                 </div>
                 <span className={`rounded-full px-3 py-1 text-[11px] font-bold ${s.c}`}>{s.t}</span>
               </button>

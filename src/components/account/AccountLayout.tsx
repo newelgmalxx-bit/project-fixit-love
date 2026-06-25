@@ -16,12 +16,12 @@ import { useAuth } from "@/hooks/useAuth";
 import { AuthGuard } from "@/components/auth/AuthGuard";
 import { toast } from "sonner";
 
-const nav: { to: string; label: string; icon: any; exact: boolean }[] = [
-  { to: "/account", label: "نظرة عامة", icon: LayoutDashboard, exact: true },
-  { to: "/account/bookings", label: "حجوزاتي", icon: Ticket, exact: false },
-  { to: "/account/favorites", label: "المفضلة", icon: Heart, exact: false },
-  { to: "/account/tickets", label: "الدعم والتذاكر", icon: LifeBuoy, exact: false },
-  { to: "/account/profile", label: "الملف الشخصي", icon: User, exact: false },
+const nav: { to: string; labelKey: any; icon: any; exact: boolean }[] = [
+  { to: "/account", labelKey: "account.nav.overview", icon: LayoutDashboard, exact: true },
+  { to: "/account/bookings", labelKey: "account.nav.orders", icon: Ticket, exact: false },
+  { to: "/account/favorites", labelKey: "account.nav.favorites", icon: Heart, exact: false },
+  { to: "/account/tickets", labelKey: "account.nav.tickets", icon: LifeBuoy, exact: false },
+  { to: "/account/profile", labelKey: "account.nav.profile", icon: User, exact: false },
 ];
 
 
@@ -82,7 +82,7 @@ export function AccountLayout({ children, title, subtitle }: { children: React.R
                       }`}
                     >
                       <Icon className="h-4 w-4" />
-                      <span>{n.label}</span>
+                      <span>{t(n.labelKey)}</span>
                     </Link>
                   );
                 })}

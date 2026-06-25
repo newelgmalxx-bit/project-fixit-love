@@ -91,7 +91,7 @@ function TicketDetail() {
       setMessages((m) => m.filter((x) => x.id !== optimistic.id));
       setText(body);
       console.error("[ticket reply] failed", e);
-      toast.error(e?.message || "تعذّر إرسال الرسالة");
+      toast.error(e?.message || (lang === "ar" ? "تعذّر إرسال الرسالة" : "Failed to send message"));
     } finally {
       setSending(false);
     }

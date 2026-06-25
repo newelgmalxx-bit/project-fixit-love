@@ -7,7 +7,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useLang } from "@/i18n/LanguageProvider";
 
 export const Route = createFileRoute("/account/messages")({
-  head: () => ({ meta: [{ title: "الرسائل | حسابي" }] }),
+  head: () => ({ meta: [{ title: "Messages | My Account" }] }),
   component: AccountMessagesPage,
 });
 

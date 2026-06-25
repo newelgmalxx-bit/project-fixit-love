@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import { uploadImage } from "@/lib/image";
 
 export const Route = createFileRoute("/account/profile")({
-  head: () => ({ meta: [{ title: "ملفي الشخصي | خصومات" }] }),
+  head: () => ({ meta: [{ title: "My Profile | koswmat" }] }),
   component: Profile,
 });
 

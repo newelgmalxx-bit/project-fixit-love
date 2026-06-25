@@ -8,7 +8,7 @@ import { account } from "@/lib/api/account";
 
 
 export const Route = createFileRoute("/account/bookings")({
-  head: () => ({ meta: [{ title: "حجوزاتي | بوكينج" }] }),
+  head: () => ({ meta: [{ title: "My Bookings | koswmat" }] }),
   component: MyBookings,
 });
 
@@ -70,7 +70,7 @@ function loadLocal(): StoredBooking[] {
 }
 
 function MyBookings() {
-  const { t } = useLang();
+  const { t, lang } = useLang();
   const [items, setItems] = useState<StoredBooking[]>([]);
   const [loading, setLoading] = useState(true);
   const [edit, setEdit] = useState<StoredBooking | null>(null);
@@ -88,7 +88,7 @@ function MyBookings() {
       setItems(list.sort((a, b) => (b.createdAt || "").localeCompare(a.createdAt || "")));
     } catch (e) {
       console.error("[account.bookings] fetch failed", e);
-      toast.error("تعذّر تحميل الحجوزات من السيرفر");
+      toast.error(lang === "ar" ? "تعذّر تحميل الحجوزات من السيرفر" : "Failed to load bookings from the server");
       setItems([]);
     } finally {
       setLoading(false);
@@ -104,7 +104,7 @@ function MyBookings() {
       toast.success(t("account.bookings.toast.cancelled"));
       refresh();
     } catch (e: any) {
-      toast.error(e?.message || "تعذر إلغاء الحجز");
+      toast.error(e?.message || (lang === "ar" ? "تعذر إلغاء الحجز" : "Failed to cancel booking"));
     }
   }
 
@@ -123,7 +123,7 @@ function MyBookings() {
       setEdit(null);
       refresh();
     } catch (e: any) {
-      toast.error(e?.message || "تعذر تعديل الحجز");
+      toast.error(e?.message || (lang === "ar" ? "تعذر تعديل الحجز" : "Failed to update booking"));
     }
   }
 
@@ -164,12 +164,12 @@ function MyBookings() {
                   ) : (
                     <div className="flex flex-wrap items-center gap-1.5">
                       {isUnpaid ? (
-                        <span className="rounded-full bg-amber-100 px-2.5 py-1 text-[11px] font-bold text-amber-700">قيد الدفع</span>
+                        <span className="rounded-full bg-amber-100 px-2.5 py-1 text-[11px] font-bold text-amber-700">{lang === "ar" ? "قيد الدفع" : "Awaiting payment"}</span>
                       ) : (
                         <span className="rounded-full bg-primary/10 px-2.5 py-1 text-[11px] font-bold text-primary">{t("account.bookings.status.confirmed")}</span>
                       )}
                       <span className={`rounded-full px-2.5 py-1 text-[11px] font-bold ${isUnpaid ? "bg-rose-100 text-rose-700" : "bg-emerald-100 text-emerald-700"}`}>
-                        {isUnpaid ? "غير مدفوع" : "مدفوع"}
+                        {isUnpaid ? (lang === "ar" ? "غير مدفوع" : "Unpaid") : (lang === "ar" ? "مدفوع" : "Paid")}
                       </span>
                     </div>
                   )}
@@ -198,7 +198,7 @@ function MyBookings() {
                         params={{ bookingId: b.bookingRef }}
                         className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-amber-500 px-4 py-2.5 text-xs font-bold text-white hover:bg-amber-600"
                       >
-                        <Wallet className="h-4 w-4" /> إعادة الدفع
+                        <Wallet className="h-4 w-4" /> {lang === "ar" ? "إعادة الدفع" : "Pay now"}
                       </Link>
                     )}
                     <Link

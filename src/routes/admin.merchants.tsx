@@ -952,59 +952,62 @@ function AddCenterDialog({
           <div className="sm:col-span-2">
             <label className="text-xs font-bold flex items-center gap-2">
               <KeyRound className="h-3.5 w-3.5" />
-              {initial ? "تغيير كلمة مرور المركز (اختياري)" : "كلمة مرور المركز (اختياري)"}
+          <div className="sm:col-span-2">
+            <label className="text-xs font-bold flex items-center gap-2">
+              <KeyRound className="h-3.5 w-3.5" />
+              {initial ? L("تغيير كلمة مرور المركز (اختياري)", "Change partner password (optional)") : L("كلمة مرور المركز (اختياري)", "Partner password (optional)")}
             </label>
             <div className="mt-1 flex gap-2">
               <input
                 dir="ltr"
                 value={f.password}
                 onChange={(e) => up("password", e.target.value)}
-                placeholder={initial ? "اتركها فارغة للإبقاء على كلمة المرور الحالية" : "اتركها فارغة لتوليد تلقائي وإرسالها بالإيميل"}
+                placeholder={initial ? L("اتركها فارغة للإبقاء على كلمة المرور الحالية", "Leave empty to keep the current password") : L("اتركها فارغة لتوليد تلقائي وإرسالها بالإيميل", "Leave empty to auto-generate and send via email")}
                 className="flex-1 rounded-xl border border-border bg-background px-3 py-2 text-sm font-mono"
               />
-              <button type="button" onClick={genPwd} className="rounded-xl border border-border bg-muted px-3 py-2 text-xs font-bold hover:bg-muted/70">توليد</button>
+              <button type="button" onClick={genPwd} className="rounded-xl border border-border bg-muted px-3 py-2 text-xs font-bold hover:bg-muted/70">{L("توليد", "Generate")}</button>
             </div>
             <p className="mt-1 text-[11px] text-muted-foreground">
               {initial
-                ? "أي قيمة هنا ستحل محل كلمة مرور المركز فوراً."
-                : "سيتم إرسال بيانات الدخول للمركز على بريده الإلكتروني تلقائياً."}
+                ? L("أي قيمة هنا ستحل محل كلمة مرور المركز فوراً.", "Any value here will immediately replace the partner password.")
+                : L("سيتم إرسال بيانات الدخول للمركز على بريده الإلكتروني تلقائياً.", "Login credentials will be sent to the partner's email automatically.")}
             </p>
           </div>
 
 
           <div className="sm:col-span-2">
-            <label className="text-xs font-bold">الحالة</label>
+            <label className="text-xs font-bold">{L("الحالة", "Status")}</label>
             <select value={f.status} onChange={(e) => up("status", e.target.value as Status)} className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm">
-              <option value="active">نشط</option>
-              <option value="pending">قيد المراجعة</option>
-              <option value="suspended">موقوف</option>
+              <option value="active">{L("نشط", "Active")}</option>
+              <option value="pending">{L("قيد المراجعة", "Pending review")}</option>
+              <option value="suspended">{L("موقوف", "Suspended")}</option>
             </select>
           </div>
 
           <div className="sm:col-span-2">
             <label className="text-xs font-bold flex items-center gap-2">
               <Tag className="h-3.5 w-3.5" />
-              اشتراك المركز (الباقة)
+              {L("اشتراك المركز (الباقة)", "Partner subscription (Package)")}
             </label>
             <select
               value={f.packageId || ""}
               onChange={(e) => up("packageId", e.target.value)}
               className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm"
             >
-              <option value="">— بدون اشتراك —</option>
+              <option value="">{L("— بدون اشتراك —", "— No subscription —")}</option>
               {(packages || []).map((p) => (
                 <option key={p.id} value={p.id}>
-                  {(p.nameAr || p.name || p.nameEn)} {p.price ? `· ${p.price.toLocaleString()} ر.س` : ""}
+                  {(lang === "en" ? (p.nameEn || p.name || p.nameAr) : (p.nameAr || p.name || p.nameEn))} {p.price ? `· ${p.price.toLocaleString()} ${L("ر.س", "SAR")}` : ""}
                 </option>
               ))}
             </select>
             {(packages || []).length === 0 && (
-              <p className="mt-1 text-[11px] text-muted-foreground">لا توجد باقات — أضفها من صفحة باقات الشركاء أولاً.</p>
+              <p className="mt-1 text-[11px] text-muted-foreground">{L("لا توجد باقات — أضفها من صفحة باقات الشركاء أولاً.", "No packages — add them from the Partner Packages page first.")}</p>
             )}
           </div>
           <DialogFooter className="sm:col-span-2">
-            <button type="button" onClick={() => { reset(); onClose(); }} className="rounded-xl border border-border px-4 py-2 text-sm font-bold">إلغاء</button>
-            <button type="submit" className="rounded-xl bg-primary px-5 py-2 text-sm font-bold text-primary-foreground">حفظ المركز</button>
+            <button type="button" onClick={() => { reset(); onClose(); }} className="rounded-xl border border-border px-4 py-2 text-sm font-bold">{L("إلغاء", "Cancel")}</button>
+            <button type="submit" className="rounded-xl bg-primary px-5 py-2 text-sm font-bold text-primary-foreground">{L("حفظ المركز", "Save partner")}</button>
           </DialogFooter>
         </form>
       </DialogContent>

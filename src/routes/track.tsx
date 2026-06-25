@@ -436,7 +436,7 @@ function TrackPage() {
               {/* Timeline */}
               <div className="rounded-3xl border border-border bg-white p-6 sm:p-8">
                 <h2 className={`mb-8 ${textEnd} text-xl font-extrabold text-foreground`}>{t("track.statusTitle")}</h2>
-              <Timeline currentIndex={currentIndex} dir={dir} t={t} timeline={result.timeline} locale={locale} />
+              <Timeline currentIndex={currentIndex} dir={dir} t={t} timeline={result.timeline} locale={locale} lang={lang} />
               </div>
 
               {/* Info cards */}

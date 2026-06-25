@@ -678,6 +678,8 @@ type SponsoredAd = {
 
 
 function SponsoredAdOverlay({ slideIndex }: { slideIndex: number }) {
+  const { lang } = useLang();
+  const L = (a: string, e: string) => (lang === "en" ? e : a);
   const { ads, offers, partners } = useSponsoredAdsBundle();
 
   const getPartnerName = (partner: any) => {

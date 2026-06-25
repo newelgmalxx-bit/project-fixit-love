@@ -28,8 +28,8 @@ import bookingLogo from "@/assets/booking-logo.png";
 export const Route = createFileRoute("/partner-login")({
   head: () => ({
     meta: [
-      { title: "تسجيل دخول الشركاء | خصومات" },
-      { name: "description", content: "ادخل إلى لوحة تحكم الشريك لإدارة عروضك وحجوزاتك ومتابعة إيراداتك على خصومات." },
+      { title: "Partner Login | Koswmat" },
+      { name: "description", content: "Sign in to your partner dashboard to manage offers, bookings, and revenue on Koswmat." },
     ],
   }),
   component: PartnerLoginPage,

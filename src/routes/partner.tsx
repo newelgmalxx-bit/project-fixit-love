@@ -17,10 +17,10 @@ import partnerHero from "@/assets/partner-hero.webp";
 export const Route = createFileRoute("/partner")({
   head: () => ({
     meta: [
-      { title: "كن شريكاً | خصومات" },
-      { name: "description", content: "انضم إلى شبكة شركاء خصومات في السعودية — سجّل مركزك (طبي، صالون، حجامة، لياقة، مختبر، سبا، غسيل سيارات) واستقبل حجوزات جديدة بكل سهولة عبر لوحة تحكم خاصة بك." },
-      { property: "og:title", content: "كن شريكاً | خصومات" },
-      { property: "og:description", content: "وسّع نشاطك واستقبل عملاء جدد في 7 تصنيفات مختلفة عبر منصة خصومات في المملكة." },
+      { title: "Become a Partner | Koswmat" },
+      { name: "description", content: "Join Koswmat's partner network in Saudi Arabia — register your center (medical, salon, cupping, fitness, lab, spa, car wash) and receive new bookings easily through your private dashboard." },
+      { property: "og:title", content: "Become a Partner | Koswmat" },
+      { property: "og:description", content: "Grow your business and reach new customers across 7 categories on Koswmat's platform in Saudi Arabia." },
       { property: "og:image", content: partnerHero },
     ],
   }),

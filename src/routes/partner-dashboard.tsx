@@ -22,9 +22,10 @@ import {
 
 
 import { PartnerGuard } from "@/components/auth/PartnerGuard";
+import { useLang } from "@/i18n/LanguageProvider";
 
 export const Route = createFileRoute("/partner-dashboard")({
-  head: () => ({ meta: [{ title: "لوحة تحكم الشريك | خصومات" }] }),
+  head: () => ({ meta: [{ title: "Partner Dashboard | Koswmat" }] }),
   component: () => (
     <PartnerGuard>
       <PartnerDashboard />
@@ -35,14 +36,14 @@ export const Route = createFileRoute("/partner-dashboard")({
 type Tab = "overview" | "profile" | "offers" | "bookings" | "verify" | "schedule" | "wallet" | "reviews" | "messages" | "analytics" | "agreement" | "commission-request" | "notifications" | "support";
 
 type WorkingHour = { day: string; open: string; close: string; closed?: boolean };
-const WEEK_DAYS: { key: string; ar: string }[] = [
-  { key: "saturday", ar: "السبت" },
-  { key: "sunday", ar: "الأحد" },
-  { key: "monday", ar: "الاثنين" },
-  { key: "tuesday", ar: "الثلاثاء" },
-  { key: "wednesday", ar: "الأربعاء" },
-  { key: "thursday", ar: "الخميس" },
-  { key: "friday", ar: "الجمعة" },
+const WEEK_DAYS: { key: string; ar: string; en: string }[] = [
+  { key: "saturday", ar: "السبت", en: "Saturday" },
+  { key: "sunday", ar: "الأحد", en: "Sunday" },
+  { key: "monday", ar: "الاثنين", en: "Monday" },
+  { key: "tuesday", ar: "الثلاثاء", en: "Tuesday" },
+  { key: "wednesday", ar: "الأربعاء", en: "Wednesday" },
+  { key: "thursday", ar: "الخميس", en: "Thursday" },
+  { key: "friday", ar: "الجمعة", en: "Friday" },
 ];
 function defaultWorkingHours(): WorkingHour[] {
   return WEEK_DAYS.map((d) => ({
@@ -141,9 +142,18 @@ type Booking = {
   confirmed_at?: string | null;
 };
 
-const PAY_METHOD_LABEL: Record<string, string> = { mada: "مدى", visa: "فيزا", mastercard: "ماستر كارد", applepay: "Apple Pay", stcpay: "STC Pay", mayfatoorah: "ماي فاتورة", cod: "الدفع في المركز" };
-const PAY_STATUS_LABEL: Record<string, string> = { paid: "مدفوع بالكامل", deposit_paid: "عربون مدفوع", unpaid: "غير مدفوع", refunded: "مسترجع" };
-const SOURCE_LABEL: Record<string, string> = { app: "التطبيق", web: "الويب", partner: "من المركز" };
+const PAY_METHOD_LABEL_AR: Record<string, string> = { mada: "مدى", visa: "فيزا", mastercard: "ماستر كارد", applepay: "Apple Pay", stcpay: "STC Pay", mayfatoorah: "ماي فاتورة", cod: "الدفع في المركز" };
+const PAY_METHOD_LABEL_EN: Record<string, string> = { mada: "Mada", visa: "Visa", mastercard: "Mastercard", applepay: "Apple Pay", stcpay: "STC Pay", mayfatoorah: "MyFatoorah", cod: "Pay at center" };
+const PAY_STATUS_LABEL_AR: Record<string, string> = { paid: "مدفوع بالكامل", deposit_paid: "عربون مدفوع", unpaid: "غير مدفوع", refunded: "مسترجع" };
+const PAY_STATUS_LABEL_EN: Record<string, string> = { paid: "Fully paid", deposit_paid: "Deposit paid", unpaid: "Unpaid", refunded: "Refunded" };
+const SOURCE_LABEL_AR: Record<string, string> = { app: "التطبيق", web: "الويب", partner: "من المركز" };
+const SOURCE_LABEL_EN: Record<string, string> = { app: "App", web: "Web", partner: "From center" };
+const PAY_METHOD_LABEL = PAY_METHOD_LABEL_AR;
+const PAY_STATUS_LABEL = PAY_STATUS_LABEL_AR;
+const SOURCE_LABEL = SOURCE_LABEL_AR;
+function payMethodLabel(k: string, lang: string) { return (lang === "en" ? PAY_METHOD_LABEL_EN : PAY_METHOD_LABEL_AR)[k] || k; }
+function payStatusLabel(k: string, lang: string) { return (lang === "en" ? PAY_STATUS_LABEL_EN : PAY_STATUS_LABEL_AR)[k] || k; }
+function sourceLabel(k: string, lang: string) { return (lang === "en" ? SOURCE_LABEL_EN : SOURCE_LABEL_AR)[k] || k; }
 
 function safeAmount(v: any): number {
   const n = Number(v ?? 0);
@@ -218,6 +228,8 @@ function PartnerDashboard() {
     const sp = loadAgreementStore().partners.find((p) => p.id === DEMO_PARTNER_ID);
     return { ...DEMO_PROFILE, status: sp?.status || "pending" };
   });
+  const { lang, dir } = useLang();
+  const L = (a: string, e: string) => (lang === "en" ? e : a);
   useEffect(() => {
     // Refresh real partner from API
     (async () => {
@@ -257,43 +269,43 @@ function PartnerDashboard() {
 
   if (!profile) {
     return (
-      <div className="flex min-h-screen flex-col bg-background" dir="rtl">
+      <div className="flex min-h-screen flex-col bg-background" dir={dir}>
         <main className="mx-auto flex w-full max-w-md flex-1 flex-col items-center justify-center px-4 py-16 text-center">
           <AlertCircle className="h-12 w-12 text-amber-500" />
-          <h2 className="mt-4 text-xl font-extrabold">لم نجد ملف شريك مرتبط بحسابك</h2>
-          <p className="mt-2 text-sm text-muted-foreground">سجّل بياناتك أولاً كشريك</p>
-          <Link to="/partner" className="mt-6 rounded-full bg-primary px-6 py-3 text-sm font-bold text-primary-foreground">سجّل كشريك</Link>
+          <h2 className="mt-4 text-xl font-extrabold">{L("لم نجد ملف شريك مرتبط بحسابك", "We couldn't find a partner profile linked to your account")}</h2>
+          <p className="mt-2 text-sm text-muted-foreground">{L("سجّل بياناتك أولاً كشريك", "Register as a partner first")}</p>
+          <Link to="/partner" className="mt-6 rounded-full bg-primary px-6 py-3 text-sm font-bold text-primary-foreground">{L("سجّل كشريك", "Register as a partner")}</Link>
         </main>
       </div>
     );
   }
 
   const navItems: { id: Tab; label: string; icon: any }[] = [
-    { id: "overview", label: "نظرة عامة", icon: BarChart3 },
-    { id: "offers", label: "العروض", icon: Tag },
-    { id: "bookings", label: "الحجوزات", icon: Calendar },
-    { id: "verify", label: "التحقق من الحجز", icon: ShieldCheck },
-    { id: "schedule", label: "الجدول", icon: CalendarDays },
-    { id: "analytics", label: "التحليلات", icon: LineChart },
-    { id: "wallet", label: "نتائج المبيعات", icon: Wallet },
-    { id: "reviews", label: "التقييمات", icon: Star },
-    { id: "agreement", label: "الاتفاقية والعمولة", icon: Percent },
-    { id: "commission-request", label: "طلب تعديل العمولة", icon: Send },
-    { id: "support", label: "الدعم", icon: LifeBuoy },
-    { id: "profile", label: "ملف المركز", icon: Store },
+    { id: "overview", label: L("نظرة عامة", "Overview"), icon: BarChart3 },
+    { id: "offers", label: L("العروض", "Offers"), icon: Tag },
+    { id: "bookings", label: L("الحجوزات", "Bookings"), icon: Calendar },
+    { id: "verify", label: L("التحقق من الحجز", "Verify booking"), icon: ShieldCheck },
+    { id: "schedule", label: L("الجدول", "Schedule"), icon: CalendarDays },
+    { id: "analytics", label: L("التحليلات", "Analytics"), icon: LineChart },
+    { id: "wallet", label: L("نتائج المبيعات", "Sales results"), icon: Wallet },
+    { id: "reviews", label: L("التقييمات", "Reviews"), icon: Star },
+    { id: "agreement", label: L("الاتفاقية والعمولة", "Agreement & commission"), icon: Percent },
+    { id: "commission-request", label: L("طلب تعديل العمولة", "Commission change request"), icon: Send },
+    { id: "support", label: L("الدعم", "Support"), icon: LifeBuoy },
+    { id: "profile", label: L("ملف المركز", "Center profile"), icon: Store },
   ];
 
   const activeNav = navItems.find((n) => n.id === tab);
 
   return (
-    <div className="min-h-screen bg-muted/40 flex" dir="rtl">
+    <div className="min-h-screen bg-muted/40 flex" dir={dir}>
       {/* Sidebar */}
       <aside
-        className={`${mobileOpen ? "translate-x-0" : "translate-x-full"} lg:translate-x-0 fixed lg:sticky top-0 right-0 z-40 h-screen w-72 shrink-0 border-l border-border bg-card transition-transform overflow-y-auto`}
+        className={`${mobileOpen ? "translate-x-0" : "translate-x-full"} lg:translate-x-0 fixed lg:sticky top-0 ltr:left-0 rtl:right-0 z-40 h-screen w-72 shrink-0 ltr:border-r rtl:border-l border-border bg-card transition-transform overflow-y-auto`}
       >
         <div className="flex h-16 items-center gap-2 border-b border-border px-5">
           <img src={logoImg} alt="logo" className="h-9 w-auto object-contain" />
-          <div className="text-[11px] text-muted-foreground">لوحة الشريك</div>
+          <div className="text-[11px] text-muted-foreground">{L("لوحة الشريك", "Partner dashboard")}</div>
         </div>
 
         {/* Vendor card */}
@@ -340,7 +352,7 @@ function PartnerDashboard() {
           <div className="my-3 h-px bg-border" />
           <button onClick={logout} className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-rose-600 hover:bg-rose-50">
             <LogOut className="h-4 w-4" />
-            تسجيل الخروج
+            {L("تسجيل الخروج", "Sign out")}
           </button>
         </nav>
       </aside>
@@ -354,24 +366,24 @@ function PartnerDashboard() {
             <div className="flex items-center gap-3 min-w-0">
               <button
                 onClick={() => setMobileOpen(true)}
-                aria-label="القائمة"
+                aria-label={L("القائمة", "Menu")}
                 className="lg:hidden flex h-10 w-10 items-center justify-center rounded-xl border border-border bg-card text-foreground shadow-sm hover:bg-muted"
               >
                 <Menu className="h-5 w-5" />
               </button>
               <div className="min-w-0">
-                <h1 className="text-base sm:text-xl font-bold truncate leading-tight">{activeNav?.label || "لوحة التحكم"}</h1>
-                <p className="text-[11px] sm:text-xs text-muted-foreground truncate">إدارة مركزك وعروضك</p>
+                <h1 className="text-base sm:text-xl font-bold truncate leading-tight">{activeNav?.label || L("لوحة التحكم", "Dashboard")}</h1>
+                <p className="text-[11px] sm:text-xs text-muted-foreground truncate">{L("إدارة مركزك وعروضك", "Manage your center and offers")}</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
               <Link
                 to={"/" as any}
-                title="عرض الموقع"
+                title={L("عرض الموقع", "View site")}
                 className="hidden sm:inline-flex h-9 items-center gap-2 rounded-lg border border-border bg-card px-3 text-xs font-bold text-foreground/80 hover:border-primary hover:text-primary"
               >
                 <ExternalLink className="h-3.5 w-3.5" />
-                <span>عرض الموقع</span>
+                <span>{L("عرض الموقع", "View site")}</span>
               </Link>
             </div>
           </div>
@@ -382,9 +394,13 @@ function PartnerDashboard() {
             <div className="mb-6 flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-amber-800">
               <Clock className="mt-0.5 h-5 w-5 shrink-0" />
               <div className="text-sm flex-1">
-                <div className="font-bold">حسابك قيد المراجعة</div>
+                <div className="font-bold">{L("حسابك قيد المراجعة", "Your account is under review")}</div>
                 <div className="mt-0.5 text-amber-700">
-                  استلمت الإدارة طلبك. ستراجع بياناتك وترسل لك اتفاقية الشراكة (مع نسبة العمولة/العربون الخاصة بمركزك) في تبويب <button onClick={() => setTab("agreement")} className="font-bold underline">الاتفاقية والعمولة</button>. بمجرد توقيعك على الاتفاقية يتم تفعيل حسابك تلقائياً.
+                  {lang === "en" ? (
+                    <>The admin has received your request. They will review your details and send you the partnership agreement (with your center's commission/deposit rate) in the <button onClick={() => setTab("agreement")} className="font-bold underline">Agreement & commission</button> tab. Once you sign the agreement, your account will be activated automatically.</>
+                  ) : (
+                    <>استلمت الإدارة طلبك. ستراجع بياناتك وترسل لك اتفاقية الشراكة (مع نسبة العمولة/العربون الخاصة بمركزك) في تبويب <button onClick={() => setTab("agreement")} className="font-bold underline">الاتفاقية والعمولة</button>. بمجرد توقيعك على الاتفاقية يتم تفعيل حسابك تلقائياً.</>
+                  )}
                 </div>
               </div>
             </div>
@@ -397,12 +413,12 @@ function PartnerDashboard() {
               return (
                 <div className="rounded-3xl border-2 border-dashed border-amber-300 bg-amber-50 p-8 text-center">
                   <Shield className="mx-auto h-12 w-12 text-amber-500" />
-                  <h3 className="mt-3 text-lg font-extrabold text-amber-900">هذا القسم مغلق حالياً</h3>
+                  <h3 className="mt-3 text-lg font-extrabold text-amber-900">{L("هذا القسم مغلق حالياً", "This section is currently locked")}</h3>
                   <p className="mt-2 text-sm text-amber-800/90 max-w-md mx-auto">
-                    لا يمكنك الوصول لهذا القسم قبل توقيع اتفاقية الشراكة وتفعيل حسابك. توجّه لتبويب «الاتفاقية والعمولة» لمراجعة وتوقيع الاتفاقية.
+                    {L("لا يمكنك الوصول لهذا القسم قبل توقيع اتفاقية الشراكة وتفعيل حسابك. توجّه لتبويب «الاتفاقية والعمولة» لمراجعة وتوقيع الاتفاقية.", "You cannot access this section until you sign the partnership agreement and activate your account. Go to the \"Agreement & commission\" tab to review and sign.")}
                   </p>
                   <button onClick={() => setTab("agreement")} className="mt-4 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#3F2A6B] to-[#E0254D] px-5 py-2.5 text-sm font-bold text-white shadow">
-                    <FileText className="h-4 w-4" /> الذهاب للاتفاقية
+                    <FileText className="h-4 w-4" /> {L("الذهاب للاتفاقية", "Go to agreement")}
                   </button>
                 </div>
               );
@@ -432,11 +448,13 @@ function PartnerDashboard() {
 }
 
 function StatusBadge({ status }: { status: string }) {
+  const { lang } = useLang();
+  const L = (a: string, e: string) => (lang === "en" ? e : a);
   const map: Record<string, { label: string; cls: string }> = {
-    pending: { label: "قيد المراجعة", cls: "bg-amber-100 text-amber-800 border-amber-200" },
-    active: { label: "نشط", cls: "bg-emerald-100 text-emerald-800 border-emerald-200" },
-    rejected: { label: "مرفوض", cls: "bg-rose-100 text-rose-800 border-rose-200" },
-    suspended: { label: "موقوف", cls: "bg-gray-200 text-gray-800 border-gray-300" },
+    pending: { label: L("قيد المراجعة", "Under review"), cls: "bg-amber-100 text-amber-800 border-amber-200" },
+    active: { label: L("نشط", "Active"), cls: "bg-emerald-100 text-emerald-800 border-emerald-200" },
+    rejected: { label: L("مرفوض", "Rejected"), cls: "bg-rose-100 text-rose-800 border-rose-200" },
+    suspended: { label: L("موقوف", "Suspended"), cls: "bg-gray-200 text-gray-800 border-gray-300" },
   };
   const c = map[status] || map.pending;
   return <span className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-bold ${c.cls}`}>{c.label}</span>;
@@ -444,6 +462,8 @@ function StatusBadge({ status }: { status: string }) {
 
 /* -------------------- Overview -------------------- */
 function OverviewTab({ partner, onNavigate }: { partner: Profile; onNavigate: (t: Tab) => void }) {
+  const { lang } = useLang();
+  const L = (a: string, e: string) => (lang === "en" ? e : a);
   const isDemo = partner.id === DEMO_PARTNER_ID;
   const [stats, setStats] = useState({ offers: 0, bookings: 0, revenue: 0, pendingBookings: 0 });
   const [recentBookings, setRecentBookings] = useState<Booking[]>([]);
@@ -483,26 +503,27 @@ function OverviewTab({ partner, onNavigate }: { partner: Profile; onNavigate: (t
         setRecentBookings(((brecent?.items || []) as Booking[]).slice(0, 4));
         setTopOffers(offersList.filter((o: any) => o.status === "active").slice(0, 3));
       } catch (e: any) {
-        toast.error(e?.message || "تعذّر تحميل الإحصائيات");
+        toast.error(e?.message || L("تعذّر تحميل الإحصائيات", "Failed to load statistics"));
       }
     })();
   }, [partner.id, isDemo]);
 
   const commissionPct = Number(partner.commission_pct ?? 10);
   const netProfit = Math.max(0, stats.revenue * (1 - commissionPct / 100));
+  const sar = L("ر.س", "SAR");
   const cards = [
-    { label: "إجمالي العروض", value: stats.offers, icon: Tag, color: "from-violet-500 to-purple-600" },
-    { label: "إجمالي الحجوزات", value: stats.bookings, icon: Calendar, color: "from-pink-500 to-rose-600" },
-    { label: "الإيرادات (ر.س)", value: stats.revenue.toFixed(2), icon: DollarSign, color: "from-emerald-500 to-teal-600" },
-    { label: "صافي الربح بعد خصم العربون", value: `ر.س ${netProfit.toLocaleString(undefined, { maximumFractionDigits: 0 })}`, icon: Percent, color: "from-emerald-500 to-teal-600", note: `تم تطبيق ${commissionPct}% عمولة` },
+    { label: L("إجمالي العروض", "Total offers"), value: stats.offers, icon: Tag, color: "from-violet-500 to-purple-600" },
+    { label: L("إجمالي الحجوزات", "Total bookings"), value: stats.bookings, icon: Calendar, color: "from-pink-500 to-rose-600" },
+    { label: L(`الإيرادات (${sar})`, `Revenue (${sar})`), value: stats.revenue.toFixed(2), icon: DollarSign, color: "from-emerald-500 to-teal-600" },
+    { label: L("صافي الربح بعد خصم العربون", "Net profit after deposit deduction"), value: `${sar} ${netProfit.toLocaleString(undefined, { maximumFractionDigits: 0 })}`, icon: Percent, color: "from-emerald-500 to-teal-600", note: L(`تم تطبيق ${commissionPct}% عمولة`, `${commissionPct}% commission applied`) },
   ] as { label: string; value: any; icon: any; color: string; note?: string }[];
 
 
   const statusMap: Record<string, { label: string; cls: string }> = {
-    pending: { label: "بانتظار", cls: "bg-amber-100 text-amber-800" },
-    confirmed: { label: "مؤكد", cls: "bg-sky-100 text-sky-800" },
-    completed: { label: "مكتمل", cls: "bg-emerald-100 text-emerald-800" },
-    cancelled: { label: "ملغي", cls: "bg-rose-100 text-rose-800" },
+    pending: { label: L("بانتظار", "Pending"), cls: "bg-amber-100 text-amber-800" },
+    confirmed: { label: L("مؤكد", "Confirmed"), cls: "bg-sky-100 text-sky-800" },
+    completed: { label: L("مكتمل", "Completed"), cls: "bg-emerald-100 text-emerald-800" },
+    cancelled: { label: L("ملغي", "Cancelled"), cls: "bg-rose-100 text-rose-800" },
   };
 
   return (
@@ -522,22 +543,22 @@ function OverviewTab({ partner, onNavigate }: { partner: Profile; onNavigate: (t
 
       <div className="rounded-3xl border border-border bg-gradient-to-br from-[#3F2A6B]/5 to-[#E0254D]/5 p-6">
         <div className="flex items-center gap-2 text-sm font-bold text-foreground">
-          <TrendingUp className="h-4 w-4 text-primary" /> نصيحة لزيادة الحجوزات
+          <TrendingUp className="h-4 w-4 text-primary" /> {L("نصيحة لزيادة الحجوزات", "Tip to grow your bookings")}
         </div>
         <p className="mt-2 text-sm text-muted-foreground">
-          أضف 3 عروض على الأقل بصور احترافية وأسعار جذابة، وفعّل ساعات العمل في ملف المركز لزيادة ظهورك في نتائج البحث.
+          {L("أضف 3 عروض على الأقل بصور احترافية وأسعار جذابة، وفعّل ساعات العمل في ملف المركز لزيادة ظهورك في نتائج البحث.", "Add at least 3 offers with professional images and attractive prices, and enable working hours in your center profile to boost your search visibility.")}
         </p>
       </div>
 
       {/* Quick actions */}
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {([
-          { label: "إضافة عرض جديد", icon: Plus, color: "from-violet-500 to-purple-600", target: "offers" as Tab },
-          { label: "مراجعة الحجوزات", icon: Calendar, color: "from-pink-500 to-rose-600", target: "bookings" as Tab },
-          { label: "نتائج المبيعات", icon: TrendingUp, color: "from-emerald-500 to-teal-600", target: "wallet" as Tab },
-          { label: "تعديل ملف المركز", icon: Store, color: "from-amber-500 to-orange-600", target: "profile" as Tab },
+          { label: L("إضافة عرض جديد", "Add new offer"), icon: Plus, color: "from-violet-500 to-purple-600", target: "offers" as Tab },
+          { label: L("مراجعة الحجوزات", "Review bookings"), icon: Calendar, color: "from-pink-500 to-rose-600", target: "bookings" as Tab },
+          { label: L("نتائج المبيعات", "Sales results"), icon: TrendingUp, color: "from-emerald-500 to-teal-600", target: "wallet" as Tab },
+          { label: L("تعديل ملف المركز", "Edit center profile"), icon: Store, color: "from-amber-500 to-orange-600", target: "profile" as Tab },
         ]).map((a) => (
-          <button key={a.label} onClick={() => onNavigate(a.target)} className="group flex items-center gap-3 rounded-2xl border border-border bg-card p-4 text-right hover:border-primary hover:shadow-sm transition">
+          <button key={a.label} onClick={() => onNavigate(a.target)} className="group flex items-center gap-3 rounded-2xl border border-border bg-card p-4 text-start hover:border-primary hover:shadow-sm transition">
             <div className={`flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br ${a.color} text-white`}>
               <a.icon className="h-4 w-4" />
             </div>
@@ -551,13 +572,13 @@ function OverviewTab({ partner, onNavigate }: { partner: Profile; onNavigate: (t
         <div className="rounded-3xl border border-border bg-card p-6 lg:col-span-2">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 text-sm font-extrabold">
-              <Calendar className="h-4 w-4 text-primary" /> آخر الحجوزات
+              <Calendar className="h-4 w-4 text-primary" /> {L("آخر الحجوزات", "Latest bookings")}
             </div>
-            <span className="text-[11px] text-muted-foreground">آخر {recentBookings.length} حجوزات</span>
+            <span className="text-[11px] text-muted-foreground">{L(`آخر ${recentBookings.length} حجوزات`, `Last ${recentBookings.length} bookings`)}</span>
           </div>
           <div className="mt-4 divide-y divide-border">
             {recentBookings.length === 0 ? (
-              <div className="py-6 text-center text-xs text-muted-foreground">لا توجد حجوزات بعد</div>
+              <div className="py-6 text-center text-xs text-muted-foreground">{L("لا توجد حجوزات بعد", "No bookings yet")}</div>
             ) : recentBookings.map((b) => {
               const s = statusMap[b.status] || statusMap.pending;
               return (
@@ -569,7 +590,7 @@ function OverviewTab({ partner, onNavigate }: { partner: Profile; onNavigate: (t
                     </div>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
-                    <span className="text-sm font-extrabold text-foreground">{Number(b.amount || 0).toFixed(0)} ر.س</span>
+                    <span className="text-sm font-extrabold text-foreground">{Number(b.amount || 0).toFixed(0)} {sar}</span>
                     <span className={`rounded-full px-2.5 py-1 text-[10px] font-bold ${s.cls}`}>{s.label}</span>
                   </div>
                 </div>
@@ -580,17 +601,17 @@ function OverviewTab({ partner, onNavigate }: { partner: Profile; onNavigate: (t
 
         <div className="rounded-3xl border border-border bg-card p-6">
           <div className="flex items-center gap-2 text-sm font-extrabold">
-            <Star className="h-4 w-4 text-amber-500" /> أبرز العروض
+            <Star className="h-4 w-4 text-amber-500" /> {L("أبرز العروض", "Top offers")}
           </div>
           <div className="mt-4 space-y-3">
             {topOffers.length === 0 ? (
-              <div className="py-6 text-center text-xs text-muted-foreground">لا توجد عروض نشطة بعد</div>
+              <div className="py-6 text-center text-xs text-muted-foreground">{L("لا توجد عروض نشطة بعد", "No active offers yet")}</div>
             ) : topOffers.map((o) => (
               <div key={o.id} className="flex items-center gap-3">
                 <img src={o.image_url || ""} alt="" className="h-12 w-12 rounded-xl object-cover" />
                 <div className="min-w-0 flex-1">
                   <div className="truncate text-xs font-bold text-foreground">{o.title}</div>
-                  <div className="text-[11px] font-bold text-primary">{o.price} ر.س</div>
+                  <div className="text-[11px] font-bold text-primary">{o.price} {sar}</div>
                 </div>
               </div>
             ))}

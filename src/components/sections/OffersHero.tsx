@@ -354,7 +354,7 @@ function SlideContent({
                 value={q}
                 onChange={(e) => { setQ(e.target.value); setOpen(true); }}
                 onFocus={() => { onSearchFocus(); setOpen(true); }}
-                placeholder="ابحث عن خدمة، متجر، أو مدينة…"
+                placeholder={L("ابحث عن خدمة، متجر، أو مدينة…", "Search for a service, store, or city…")}
                 suppressHydrationWarning
                 className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
               />
@@ -362,7 +362,7 @@ function SlideContent({
                 type="submit"
                 className={`shrink-0 rounded-full bg-gradient-to-r ${slide.gradient} px-6 py-2.5 text-sm font-bold text-white shadow-lg shadow-primary/25 transition hover:scale-[1.02]`}
               >
-                ابحث
+                {L("ابحث", "Search")}
               </button>
             </form>
             {open && q.trim() && (

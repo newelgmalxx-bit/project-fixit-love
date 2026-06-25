@@ -134,6 +134,7 @@ function mapBookingRowToResult(row: any, qr: string): Result {
 
 function TrackPage() {
   const { t, lang, dir } = useLang();
+  const L = (a: string, e: string) => (lang === "en" ? e : a);
   const navigate = useNavigate();
   const [qrCode, setQrCode] = useState("");
   const [verifyCode, setVerifyCode] = useState("");
@@ -143,23 +144,23 @@ function TrackPage() {
 
   const paymentStatusLabel = (s?: string) => {
     const v = (s || "").toLowerCase();
-    if (v === "paid") return "مدفوع بالكامل";
-    if (v === "deposit_paid") return "عربون مدفوع — الباقي في المركز";
-    if (v === "unpaid") return "غير مدفوع";
-    if (v === "refunded") return "مسترجع";
+    if (v === "paid") return L("مدفوع بالكامل", "Paid in full");
+    if (v === "deposit_paid") return L("عربون مدفوع — الباقي في المركز", "Deposit paid — remainder at center");
+    if (v === "unpaid") return L("غير مدفوع", "Unpaid");
+    if (v === "refunded") return L("مسترجع", "Refunded");
     return s || "—";
   };
   const paymentMethodLabel = (s?: string) => {
     const v = (s || "").toLowerCase();
-    if (v === "mada") return "مدى";
-    if (v === "visa") return "فيزا";
-    if (v === "mastercard") return "ماستر كارد";
+    if (v === "mada") return L("مدى", "Mada");
+    if (v === "visa") return L("فيزا", "Visa");
+    if (v === "mastercard") return L("ماستر كارد", "Mastercard");
     if (v === "applepay") return "Apple Pay";
     if (v === "stcpay") return "STC Pay";
-    if (v === "mayfatoorah") return "ماي فاتورة";
-    if (v === "cod") return "الدفع في المركز";
-    if (v === "card") return "بطاقة";
-    if (v === "bank") return "تحويل بنكي";
+    if (v === "mayfatoorah") return L("ماي فاتورة", "MyFatoorah");
+    if (v === "cod") return L("الدفع في المركز", "Pay at center");
+    if (v === "card") return L("بطاقة", "Card");
+    if (v === "bank") return L("تحويل بنكي", "Bank transfer");
     return s || "—";
   };
 
@@ -168,11 +169,11 @@ function TrackPage() {
     const qr = qrCode.trim().toUpperCase();
     const code = verifyCode.trim();
     if (!qr || !code) {
-      toast.error("ادخل رقم الحجز ورمز التأكيد");
+      toast.error(L("ادخل رقم الحجز ورمز التأكيد", "Enter booking number and verification code"));
       return;
     }
     if (!/^\d{4,8}$/.test(code)) {
-      toast.error("رمز التأكيد يجب أن يكون أرقاماً (4–8 خانات)");
+      toast.error(L("رمز التأكيد يجب أن يكون أرقاماً (4–8 خانات)", "Verification code must be 4–8 digits"));
       return;
     }
     setLoading(true);

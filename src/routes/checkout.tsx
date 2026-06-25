@@ -764,7 +764,7 @@ function CheckoutPage() {
                     <span>{t("checkout.summary.total")}</span>
                     <span className="text-primary" data-ltr-number>{formatCurrency(total)}</span>
                   </div>
-                  <p className="text-[11px] text-muted-foreground text-end">السعر شامل ضريبة القيمة المضافة</p>
+                  <p className="text-[11px] text-muted-foreground text-end">{L("السعر شامل ضريبة القيمة المضافة", "Price includes VAT")}</p>
                   {hasBookings && (
                     <div className="mt-3 space-y-1.5 rounded-xl bg-primary/5 p-3 text-xs">
                       <div className="flex justify-between font-bold text-primary">

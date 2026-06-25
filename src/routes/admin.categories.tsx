@@ -8,9 +8,10 @@ import {
 } from "@/components/ui/dialog";
 import { ImageUpload } from "@/components/ui/ImageUpload";
 import { adminCategoriesApi, type AdminCategory } from "@/lib/api/adminContent";
+import { useLang } from "@/i18n/LanguageProvider";
 
 export const Route = createFileRoute("/admin/categories")({
-  head: () => ({ meta: [{ title: "التصنيفات | الإدارة" }] }),
+  head: () => ({ meta: [{ title: "Categories | Admin" }] }),
   component: CategoriesPage,
 });
 
@@ -30,6 +31,8 @@ const empty: FormState = {
 };
 
 function CategoriesPage() {
+  const { lang, dir } = useLang();
+  const L = (a: string, e: string) => (lang === "en" ? e : a);
   const [items, setItems] = useState<AdminCategory[]>([]);
   const [loading, setLoading] = useState(true);
   const [includeInactive, setIncludeInactive] = useState(false);
@@ -47,7 +50,7 @@ function CategoriesPage() {
       });
       setItems(data.items || []);
     } catch (e: any) {
-      toast.error(e?.message || "تعذّر تحميل التصنيفات");
+      toast.error(e?.message || L("تعذّر تحميل التصنيفات", "Failed to load categories"));
       setItems([]);
     } finally {
       setLoading(false);
@@ -69,7 +72,7 @@ function CategoriesPage() {
 
   async function save() {
     if (!editing.nameAr?.trim() || !editing.nameEn?.trim() || !editing.slug?.trim()) {
-      toast.error("الاسم العربي والإنجليزي والمعرّف مطلوبون");
+      toast.error(L("الاسم العربي والإنجليزي والمعرّف مطلوبون", "Arabic name, English name and slug are required"));
       return;
     }
     setSaving(true);
@@ -88,11 +91,11 @@ function CategoriesPage() {
       };
       if (editing.id) await adminCategoriesApi.update(editing.id, payload);
       else await adminCategoriesApi.create(payload);
-      toast.success("تم الحفظ");
+      toast.success(L("تم الحفظ", "Saved"));
       setOpen(false);
       load();
     } catch (e: any) {
-      toast.error(e?.message || "فشل الحفظ");
+      toast.error(e?.message || L("فشل الحفظ", "Save failed"));
     } finally {
       setSaving(false);
     }
@@ -103,28 +106,29 @@ function CategoriesPage() {
       await adminCategoriesApi.toggle(c.id);
       load();
     } catch (e: any) {
-      toast.error(e?.message || "تعذّر التبديل");
+      toast.error(e?.message || L("تعذّر التبديل", "Toggle failed"));
     }
   }
 
   async function remove(c: AdminCategory) {
-    if (!confirm(`حذف "${c.nameAr}"؟`)) return;
+    const name = lang === "en" ? (c.nameEn || c.nameAr) : c.nameAr;
+    if (!confirm(L(`حذف "${name}"؟`, `Delete "${name}"?`))) return;
     try {
       await adminCategoriesApi.remove(c.id);
-      toast.success("تم الحذف");
+      toast.success(L("تم الحذف", "Deleted"));
       load();
     } catch (e: any) {
-      toast.error(e?.message || "فشل الحذف");
+      toast.error(e?.message || L("فشل الحذف", "Delete failed"));
     }
   }
 
   return (
     <AdminLayout
-      title="التصنيفات"
-      subtitle={`${items.length} تصنيف`}
+      title={L("التصنيفات", "Categories")}
+      subtitle={`${items.length} ${L("تصنيف", items.length === 1 ? "category" : "categories")}`}
       action={
         <PrimaryButton onClick={openNew}>
-          <Plus className="h-4 w-4" /> تصنيف جديد
+          <Plus className="h-4 w-4" /> {L("تصنيف جديد", "New category")}
         </PrimaryButton>
       }
     >
@@ -136,7 +140,7 @@ function CategoriesPage() {
               value={q}
               onChange={(e) => setQ(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && load()}
-              placeholder="بحث..."
+              placeholder={L("بحث...", "Search...")}
               className="w-full rounded-xl border border-border bg-background ps-9 pe-3 py-2 text-sm"
             />
           </div>
@@ -146,17 +150,17 @@ function CategoriesPage() {
               checked={includeInactive}
               onChange={(e) => setIncludeInactive(e.target.checked)}
             />
-            إظهار غير المفعّلة
+            {L("إظهار غير المفعّلة", "Show inactive")}
           </label>
           <button onClick={load} className="rounded-full border border-border px-4 py-1.5 text-xs font-bold">
-            تحديث
+            {L("تحديث", "Refresh")}
           </button>
         </div>
 
         {loading ? (
           <div className="flex justify-center py-16"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
         ) : items.length === 0 ? (
-          <div className="py-12 text-center text-sm text-muted-foreground">لا توجد تصنيفات.</div>
+          <div className="py-12 text-center text-sm text-muted-foreground">{L("لا توجد تصنيفات.", "No categories.")}</div>
         ) : (
           <div className="grid gap-2 sm:grid-cols-2">
             {items.map((c) => (
@@ -176,10 +180,11 @@ function CategoriesPage() {
                   </div>
                   <div className="min-w-0">
                     <div className="text-sm font-bold truncate">
-                      {c.nameAr} <span className="text-muted-foreground">· {c.nameEn}</span>
+                      {lang === "en" ? (c.nameEn || c.nameAr) : c.nameAr}{" "}
+                      <span className="text-muted-foreground">· {lang === "en" ? c.nameAr : c.nameEn}</span>
                     </div>
                     <div className="text-[11px] text-muted-foreground font-mono truncate" dir="ltr">
-                      {c.slug} {typeof c.offersCount === "number" && `· ${c.offersCount} عرض`}
+                      {c.slug} {typeof c.offersCount === "number" && `· ${c.offersCount} ${L("عرض", "offers")}`}
                     </div>
                   </div>
                 </div>
@@ -188,7 +193,7 @@ function CategoriesPage() {
                     onClick={() => toggle(c)}
                     className={`text-[11px] font-bold px-3 py-1.5 rounded-full border ${c.isActive ? "border-emerald-300 bg-emerald-50 text-emerald-700" : "border-border bg-muted text-muted-foreground"}`}
                   >
-                    {c.isActive ? "مفعّلة" : "موقوفة"}
+                    {c.isActive ? L("مفعّلة", "Active") : L("موقوفة", "Inactive")}
                   </button>
                   <button onClick={() => openEdit(c)} className="rounded-lg p-2 hover:bg-muted">
                     <Pencil className="h-4 w-4" />
@@ -204,10 +209,10 @@ function CategoriesPage() {
       </PanelCard>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto" dir="rtl">
-          <DialogHeader><DialogTitle>{editing.id ? "تعديل تصنيف" : "تصنيف جديد"}</DialogTitle></DialogHeader>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto" dir={dir}>
+          <DialogHeader><DialogTitle>{editing.id ? L("تعديل تصنيف", "Edit category") : L("تصنيف جديد", "New category")}</DialogTitle></DialogHeader>
           <div className="grid gap-3">
-            <Field label="المعرّف (slug)">
+            <Field label={L("المعرّف (slug)", "Slug")}>
               <input
                 dir="ltr"
                 value={editing.slug || ""}
@@ -216,54 +221,54 @@ function CategoriesPage() {
               />
             </Field>
             <div className="grid grid-cols-2 gap-3">
-              <Field label="الاسم (عربي)">
+              <Field label={L("الاسم (عربي)", "Name (Arabic)")}>
                 <input value={editing.nameAr || ""} onChange={(e) => setEditing({ ...editing, nameAr: e.target.value })}
                   className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm" />
               </Field>
-              <Field label="الاسم (إنجليزي)">
+              <Field label={L("الاسم (إنجليزي)", "Name (English)")}>
                 <input value={editing.nameEn || ""} onChange={(e) => setEditing({ ...editing, nameEn: e.target.value })}
                   className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm" />
               </Field>
             </div>
             <div className="grid grid-cols-2 gap-3">
-              <Field label="أيقونة (نص/إيموجي)">
+              <Field label={L("أيقونة (نص/إيموجي)", "Icon (text/emoji)")}>
                 <input value={editing.icon || ""} onChange={(e) => setEditing({ ...editing, icon: e.target.value })}
                   className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm" />
               </Field>
-              <Field label="اللون">
+              <Field label={L("اللون", "Color")}>
                 <input type="color" value={editing.color || "#0ea5e9"} onChange={(e) => setEditing({ ...editing, color: e.target.value })}
                   className="h-9 w-full rounded-xl border border-border bg-background px-1 py-1" />
               </Field>
             </div>
             <ImageUpload
-              label="صورة الغلاف"
+              label={L("صورة الغلاف", "Cover image")}
               value={editing.cover}
               onChange={(url) => setEditing({ ...editing, cover: url })}
               folder="general"
             />
-            <Field label="الوصف (عربي)">
+            <Field label={L("الوصف (عربي)", "Description (Arabic)")}>
               <textarea rows={2} value={editing.descriptionAr || ""} onChange={(e) => setEditing({ ...editing, descriptionAr: e.target.value })}
                 className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm" />
             </Field>
-            <Field label="الوصف (إنجليزي)">
+            <Field label={L("الوصف (إنجليزي)", "Description (English)")}>
               <textarea rows={2} value={editing.descriptionEn || ""} onChange={(e) => setEditing({ ...editing, descriptionEn: e.target.value })}
                 className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm" />
             </Field>
             <div className="grid grid-cols-2 gap-3">
-              <Field label="الترتيب">
+              <Field label={L("الترتيب", "Sort order")}>
                 <input type="number" value={editing.sortOrder ?? 0} onChange={(e) => setEditing({ ...editing, sortOrder: Number(e.target.value) })}
                   className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm" />
               </Field>
               <label className="flex items-end gap-2 pb-2">
                 <input type="checkbox" checked={editing.isActive ?? true} onChange={(e) => setEditing({ ...editing, isActive: e.target.checked })} />
-                <span className="text-sm font-bold">مفعّلة</span>
+                <span className="text-sm font-bold">{L("مفعّلة", "Active")}</span>
               </label>
             </div>
           </div>
           <DialogFooter>
-            <button onClick={() => setOpen(false)} className="rounded-xl border border-border px-4 py-2 text-sm font-bold">إلغاء</button>
+            <button onClick={() => setOpen(false)} className="rounded-xl border border-border px-4 py-2 text-sm font-bold">{L("إلغاء", "Cancel")}</button>
             <button onClick={save} disabled={saving} className="rounded-xl bg-primary px-5 py-2 text-sm font-bold text-primary-foreground disabled:opacity-60">
-              {saving ? "جارٍ الحفظ…" : "حفظ"}
+              {saving ? L("جارٍ الحفظ…", "Saving…") : L("حفظ", "Save")}
             </button>
           </DialogFooter>
         </DialogContent>

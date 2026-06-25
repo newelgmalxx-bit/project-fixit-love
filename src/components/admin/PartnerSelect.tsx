@@ -72,7 +72,7 @@ export function PartnerSelect({ value, onChange, placeholder, disabled }: Props)
         className="mt-1 flex w-full items-center justify-between gap-2 rounded-xl border border-border bg-background px-3 py-2 text-right text-sm"
       >
         <span className={selected ? "" : "text-muted-foreground"}>
-          {selected ? partnerLabel(selected) : "— اختر شريكًا —"}
+          {selected ? partnerLabel(selected) : L("— اختر شريكًا —", "— Select a partner —")}
         </span>
         {selected && (
           <X

@@ -548,7 +548,7 @@ function TrackPage() {
                           className="mt-2 inline-flex items-center gap-1 rounded-full bg-primary/10 px-3 py-1 text-xs font-bold text-primary transition hover:bg-primary/20"
                         >
                           <MapPin className="h-3 w-3" />
-                          فتح الموقع على الخريطة
+                          {L("فتح الموقع على الخريطة", "Open in maps")}
                         </a>
                       )}
                     </div>

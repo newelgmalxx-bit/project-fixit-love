@@ -606,11 +606,11 @@ function SlideVisual({ slide, slideIndex }: { slide: Slide; slideIndex: number }
                       <span className="text-[10px] text-slate-400 line-through">{priceBefore}</span>
                     )}
                   </span>
-                  <span className="text-[9px] font-semibold text-muted-foreground">السعر شامل الضريبة</span>
+                  <span className="text-[9px] font-semibold text-muted-foreground">{L("السعر شامل الضريبة", "VAT included")}</span>
                 </span>
               ) : <span />}
               <span className="shrink-0 rounded-full bg-foreground px-3 py-1.5 text-[11px] font-extrabold text-background transition group-hover:bg-gradient-to-r group-hover:from-[#3F2A6B] group-hover:to-[#E0254D]">
-                احجز الآن
+                {L("احجز الآن", "Book now")}
               </span>
             </div>
           </Link>

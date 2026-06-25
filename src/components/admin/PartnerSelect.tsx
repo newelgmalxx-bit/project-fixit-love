@@ -100,7 +100,7 @@ export function PartnerSelect({ value, onChange, placeholder, disabled }: Props)
                 <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
               </div>
             ) : items.length === 0 ? (
-              <div className="py-4 text-center text-xs text-muted-foreground">لا توجد نتائج</div>
+              <div className="py-4 text-center text-xs text-muted-foreground">{L("لا توجد نتائج", "No results")}</div>
             ) : (
               items.map((p) => (
                 <button

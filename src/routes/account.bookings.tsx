@@ -123,7 +123,7 @@ function MyBookings() {
       setEdit(null);
       refresh();
     } catch (e: any) {
-      toast.error(e?.message || "تعذر تعديل الحجز");
+      toast.error(e?.message || (lang === "ar" ? "تعذر تعديل الحجز" : "Failed to update booking"));
     }
   }
 

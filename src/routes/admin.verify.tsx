@@ -3,13 +3,14 @@ import { AdminLayout } from "@/components/admin/AdminLayout";
 import { useEffect, useState } from "react";
 import {
   ShieldCheck, Search, Loader2, CheckCircle2, XCircle,
-  User as UserIcon, Phone, Calendar, Clock, Tag, Hash, Wallet, Banknote, CreditCard, MapPin, Building2,
+  User as UserIcon, Phone, Calendar, Clock, Tag, Hash, CreditCard, MapPin, Building2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { adminBookingsApi, type AdminBooking } from "@/lib/api/adminBookings";
+import { useLang } from "@/i18n/LanguageProvider";
 
 export const Route = createFileRoute("/admin/verify")({
-  head: () => ({ meta: [{ title: "التحقق من الحجز | الإدارة" }] }),
+  head: () => ({ meta: [{ title: "Verify Booking | Admin" }] }),
   component: AdminVerifyPage,
 });
 
@@ -50,14 +51,16 @@ function pickDate(b: any): string {
   }
   return "";
 }
-function pickTime(b: any): string {
+function pickTime(b: any, lang: "ar" | "en"): string {
+  const am = lang === "en" ? "AM" : "ص";
+  const pm = lang === "en" ? "PM" : "م";
   const raw = String(b?.booking_time || b?.bookingTime || "");
   if (raw) {
     const m = raw.match(/^(\d{1,2}):(\d{2})/);
     if (m) {
       const hh = parseInt(m[1]);
       const mm = m[2];
-      const ampm = hh >= 12 ? "م" : "ص";
+      const ampm = hh >= 12 ? pm : am;
       const h12 = ((hh + 11) % 12) + 1;
       return `${h12}:${mm} ${ampm}`;
     }
@@ -68,7 +71,7 @@ function pickTime(b: any): string {
     if (!isNaN(d.getTime())) {
       const hh = d.getHours();
       const mm = String(d.getMinutes()).padStart(2, "0");
-      const ampm = hh >= 12 ? "م" : "ص";
+      const ampm = hh >= 12 ? pm : am;
       const h12 = ((hh + 11) % 12) + 1;
       return `${h12}:${mm} ${ampm}`;
     }
@@ -107,27 +110,27 @@ function pickPartnerName(b: any): string {
 function pickPartnerCity(b: any): string {
   return b?.partner_city || b?.partnerCity || b?.city || b?.partner?.city || "";
 }
-function statusBadge(st: string): { label: string; cls: string } {
-  if (st === "completed" || st === "redeemed") return { label: "مكتمل", cls: "bg-emerald-100 text-emerald-800 border-emerald-300" };
-  if (st === "cancelled" || st === "canceled") return { label: "ملغي", cls: "bg-rose-100 text-rose-800 border-rose-300" };
-  if (st === "confirmed") return { label: "مؤكد", cls: "bg-emerald-100 text-emerald-800 border-emerald-300" };
-  if (st === "pending") return { label: "قيد الانتظار", cls: "bg-amber-100 text-amber-800 border-amber-300" };
-  if (st === "no_show") return { label: "لم يحضر", cls: "bg-rose-100 text-rose-800 border-rose-300" };
+function statusBadge(st: string, L: (a: string, e: string) => string): { label: string; cls: string } {
+  if (st === "completed" || st === "redeemed") return { label: L("مكتمل", "Completed"), cls: "bg-emerald-100 text-emerald-800 border-emerald-300" };
+  if (st === "cancelled" || st === "canceled") return { label: L("ملغي", "Cancelled"), cls: "bg-rose-100 text-rose-800 border-rose-300" };
+  if (st === "confirmed") return { label: L("مؤكد", "Confirmed"), cls: "bg-emerald-100 text-emerald-800 border-emerald-300" };
+  if (st === "pending") return { label: L("قيد الانتظار", "Pending"), cls: "bg-amber-100 text-amber-800 border-amber-300" };
+  if (st === "no_show") return { label: L("لم يحضر", "No show"), cls: "bg-rose-100 text-rose-800 border-rose-300" };
   return { label: st || "—", cls: "bg-slate-100 text-slate-800 border-slate-300" };
 }
-function payBadge(ps: string, remaining: number | null): { label: string; cls: string } {
-  if (ps === "paid" || ps === "completed" || ps === "success") return { label: "مدفوع بالكامل", cls: "bg-emerald-100 text-emerald-800 border-emerald-300" };
-  if (ps === "deposit_paid" || (remaining != null && remaining > 0 && ps && ps !== "unpaid" && ps !== "pending")) return { label: "عربون مدفوع", cls: "bg-amber-100 text-amber-800 border-amber-300" };
-  if (ps === "pending") return { label: "قيد الدفع", cls: "bg-amber-100 text-amber-800 border-amber-300" };
-  if (ps === "failed") return { label: "فشل الدفع", cls: "bg-rose-100 text-rose-800 border-rose-300" };
-  if (ps === "refunded") return { label: "مُسترجَع", cls: "bg-slate-100 text-slate-800 border-slate-300" };
-  return { label: "غير مدفوع", cls: "bg-rose-100 text-rose-800 border-rose-300" };
+function payBadge(ps: string, remaining: number | null, L: (a: string, e: string) => string): { label: string; cls: string } {
+  if (ps === "paid" || ps === "completed" || ps === "success") return { label: L("مدفوع بالكامل", "Paid in full"), cls: "bg-emerald-100 text-emerald-800 border-emerald-300" };
+  if (ps === "deposit_paid" || (remaining != null && remaining > 0 && ps && ps !== "unpaid" && ps !== "pending")) return { label: L("عربون مدفوع", "Deposit paid"), cls: "bg-amber-100 text-amber-800 border-amber-300" };
+  if (ps === "pending") return { label: L("قيد الدفع", "Payment pending"), cls: "bg-amber-100 text-amber-800 border-amber-300" };
+  if (ps === "failed") return { label: L("فشل الدفع", "Payment failed"), cls: "bg-rose-100 text-rose-800 border-rose-300" };
+  if (ps === "refunded") return { label: L("مُسترجَع", "Refunded"), cls: "bg-slate-100 text-slate-800 border-slate-300" };
+  return { label: L("غير مدفوع", "Unpaid"), cls: "bg-rose-100 text-rose-800 border-rose-300" };
 }
-function methodLabel(m: string): string {
-  if (m === "tamara") return "تمارا";
-  if (m === "tabby") return "تابي";
-  if (m === "myfatoorah") return "ماي فاتورة";
-  if (m === "cod") return "الدفع عند الخدمة";
+function methodLabel(m: string, L: (a: string, e: string) => string): string {
+  if (m === "tamara") return L("تمارا", "Tamara");
+  if (m === "tabby") return L("تابي", "Tabby");
+  if (m === "myfatoorah") return L("ماي فاتورة", "MyFatoorah");
+  if (m === "cod") return L("الدفع عند الخدمة", "Pay at venue");
   if (!m) return "—";
   return m;
 }
@@ -148,6 +151,9 @@ function matchBooking(x: any, rawIdQ: string, idQ: string): boolean {
 }
 
 function AdminVerifyPage() {
+  const { lang } = useLang();
+  const L = (a: string, e: string) => (lang === "en" ? e : a);
+  const currency = L("ر.س", "SAR");
   const [bookingId, setBookingId] = useState("");
   const [code, setCode] = useState("");
   const [items, setItems] = useState<AdminBooking[]>([]);
@@ -178,7 +184,7 @@ function AdminVerifyPage() {
     const rawIdQ = bookingId.trim();
     const codeQ = code.trim();
     const idQ = rawIdQ.replace(/\s+/g, "").replace(/^#/, "").replace(/^bk[-_ ]?/i, "").toUpperCase();
-    if (!idQ || codeQ.length < 4) { toast.error("أدخل رقم الحجز ورمز التحقق"); return; }
+    if (!idQ || codeQ.length < 4) { toast.error(L("أدخل رقم الحجز ورمز التحقق", "Enter booking number and verification code")); return; }
     setSubmitting(true);
     let b: any = items.find((x) => matchBooking(x, rawIdQ, idQ));
     if (!b) {
@@ -203,11 +209,9 @@ function AdminVerifyPage() {
   async function confirmRedeem() {
     if (result.status !== "ok") return;
     const b = result.booking;
-    if (pickStatus(b) === "cancelled") { toast.error("هذا الحجز ملغي"); return; }
+    if (pickStatus(b) === "cancelled") { toast.error(L("هذا الحجز ملغي", "This booking is cancelled")); return; }
     setRedeeming(true);
     try {
-      // Backend has no dedicated /redeem endpoint for admin — use the status endpoint
-      // (same one used by the bookings list "تأكيد" button which is known to work).
       try {
         await adminBookingsApi.redeem(b.id, code.trim());
       } catch {
@@ -216,9 +220,9 @@ function AdminVerifyPage() {
       const stamped: any = { ...b, status: "completed", redeemed_at: new Date().toISOString() };
       setItems((prev) => prev.map((x) => x.id === b.id ? stamped : x));
       setResult({ status: "ok", booking: stamped, alreadyRedeemed: true });
-      toast.success(`تم تأكيد حضور: ${pickCustomerName(b)}`);
+      toast.success(L(`تم تأكيد حضور: ${pickCustomerName(b)}`, `Check-in confirmed: ${pickCustomerName(b)}`));
     } catch (e: any) {
-      toast.error(e?.message || "تعذّر تأكيد الحجز");
+      toast.error(e?.message || L("تعذّر تأكيد الحجز", "Failed to confirm booking"));
     } finally {
       setRedeeming(false);
     }
@@ -237,17 +241,16 @@ function AdminVerifyPage() {
 
   return (
     <AdminLayout
-      title="التحقق من الحجز"
-      subtitle="تحقق من رقم الحجز ورمز التأكيد واطّلع على كامل تفاصيل الحجز"
+      title={L("التحقق من الحجز", "Verify Booking")}
+      subtitle={L("تحقق من رقم الحجز ورمز التأكيد واطّلع على كامل تفاصيل الحجز", "Verify a booking by reference and code, and review full booking details")}
     >
       <div className="mx-auto max-w-2xl">
         <div className="overflow-hidden rounded-3xl border border-border bg-white shadow-xl">
-          {/* Purple header */}
           <div className="bg-gradient-to-r from-[#3F2A6B] to-[#5a3d8f] p-6 text-white">
             <div className="flex items-center justify-between gap-3">
               <div>
-                <h2 className="text-xl font-extrabold">التحقق من حجز العميل</h2>
-                <p className="text-xs text-white/85">للمراكز فقط — أدخل رقم الحجز ورمز التأكيد</p>
+                <h2 className="text-xl font-extrabold">{L("التحقق من حجز العميل", "Verify customer booking")}</h2>
+                <p className="text-xs text-white/85">{L("للمراكز فقط — أدخل رقم الحجز ورمز التأكيد", "Merchants only — enter the booking number and verification code")}</p>
               </div>
               <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/15">
                 <ShieldCheck className="h-6 w-6" />
@@ -255,10 +258,9 @@ function AdminVerifyPage() {
             </div>
           </div>
 
-          {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-4 p-6">
             <div>
-              <label className="mb-1.5 block text-xs font-bold text-muted-foreground text-right">رقم الحجز</label>
+              <label className="mb-1.5 block text-xs font-bold text-muted-foreground text-right">{L("رقم الحجز", "Booking number")}</label>
               <input
                 value={bookingId}
                 onChange={(e) => setBookingId(e.target.value)}
@@ -268,7 +270,7 @@ function AdminVerifyPage() {
               />
             </div>
             <div>
-              <label className="mb-1.5 block text-xs font-bold text-muted-foreground text-right">رمز التأكيد (6 أرقام)</label>
+              <label className="mb-1.5 block text-xs font-bold text-muted-foreground text-right">{L("رمز التأكيد (6 أرقام)", "Verification code (6 digits)")}</label>
               <input
                 value={code}
                 onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
@@ -283,20 +285,20 @@ function AdminVerifyPage() {
               disabled={submitting || loading}
               className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#3F2A6B] py-3 text-sm font-bold text-white hover:bg-[#3F2A6B]/90 disabled:opacity-60"
             >
-              {submitting || loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />} تحقّق
+              {submitting || loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />} {L("تحقّق", "Verify")}
             </button>
           </form>
 
           {result.status === "notfound" && (
             <div className="mx-6 mb-6 flex items-start gap-3 rounded-2xl border border-rose-200 bg-rose-50 p-4 text-rose-700">
               <XCircle className="h-5 w-5 shrink-0" />
-              <div className="text-sm font-bold">رقم الحجز غير موجود.</div>
+              <div className="text-sm font-bold">{L("رقم الحجز غير موجود.", "Booking number not found.")}</div>
             </div>
           )}
           {result.status === "wrong" && (
             <div className="mx-6 mb-6 flex items-start gap-3 rounded-2xl border border-rose-200 bg-rose-50 p-4 text-rose-700">
               <XCircle className="h-5 w-5 shrink-0" />
-              <div className="text-sm font-bold">رمز التأكيد غير صحيح.</div>
+              <div className="text-sm font-bold">{L("رمز التأكيد غير صحيح.", "Incorrect verification code.")}</div>
             </div>
           )}
 
@@ -305,61 +307,61 @@ function AdminVerifyPage() {
               <div className="flex items-center gap-3 bg-emerald-100/60 px-4 py-3 text-emerald-700">
                 <CheckCircle2 className="h-5 w-5" />
                 <div className="text-sm font-extrabold">
-                  {result.alreadyRedeemed ? "تم استخدام هذا الحجز مسبقاً" : "الحجز صحيح ومؤكد"}
+                  {result.alreadyRedeemed ? L("تم استخدام هذا الحجز مسبقاً", "This booking has already been redeemed") : L("الحجز صحيح ومؤكد", "Booking is valid and confirmed")}
                 </div>
               </div>
               <div className="space-y-2 p-4 text-sm">
                 {(() => {
                   const st = pickStatus(b);
                   const ps = pickPaymentStatus(b);
-                  const sb = statusBadge(st);
-                  const pb = payBadge(ps, remaining);
+                  const sb = statusBadge(st, L);
+                  const pb = payBadge(ps, remaining, L);
                   return (
                     <div className="mb-2 grid grid-cols-2 gap-2">
                       <div className={`flex items-center justify-between rounded-xl border px-3 py-2 ${sb.cls}`}>
-                        <span className="text-[11px] font-bold">حالة الحجز</span>
+                        <span className="text-[11px] font-bold">{L("حالة الحجز", "Booking status")}</span>
                         <span className="text-xs font-extrabold">{sb.label}</span>
                       </div>
                       <div className={`flex items-center justify-between rounded-xl border px-3 py-2 ${pb.cls}`}>
-                        <span className="text-[11px] font-bold">حالة الدفع</span>
+                        <span className="text-[11px] font-bold">{L("حالة الدفع", "Payment status")}</span>
                         <span className="text-xs font-extrabold">{pb.label}</span>
                       </div>
                     </div>
                   );
                 })()}
-                <VRow icon={Hash} label="رقم الحجز" value={pickRef(b) || String(b?.id || "—")} ltr />
-                <VRow icon={UserIcon} label="العميل" value={pickCustomerName(b) || "—"} />
-                <VRow icon={Tag} label="العرض" value={pickOfferTitle(b) || "—"} />
-                <VRow icon={Phone} label="الجوال" value={pickCustomerPhone(b) || "—"} ltr />
-                <VRow icon={Calendar} label="التاريخ" value={pickDate(b) || "—"} ltr />
-                <VRow icon={Clock} label="الوقت" value={pickTime(b) || "—"} ltr />
+                <VRow icon={Hash} label={L("رقم الحجز", "Booking #")} value={pickRef(b) || String(b?.id || "—")} ltr />
+                <VRow icon={UserIcon} label={L("العميل", "Customer")} value={pickCustomerName(b) || "—"} />
+                <VRow icon={Tag} label={L("العرض", "Offer")} value={pickOfferTitle(b) || "—"} />
+                <VRow icon={Phone} label={L("الجوال", "Phone")} value={pickCustomerPhone(b) || "—"} ltr />
+                <VRow icon={Calendar} label={L("التاريخ", "Date")} value={pickDate(b) || "—"} ltr />
+                <VRow icon={Clock} label={L("الوقت", "Time")} value={pickTime(b, lang as any) || "—"} ltr />
                 {pickPartnerName(b) && (
-                  <VRow icon={Building2} label="المركز" value={pickPartnerName(b)} />
+                  <VRow icon={Building2} label={L("المركز", "Merchant")} value={pickPartnerName(b)} />
                 )}
                 {pickPartnerCity(b) && (
-                  <VRow icon={MapPin} label="المدينة" value={pickPartnerCity(b)} />
+                  <VRow icon={MapPin} label={L("المدينة", "City")} value={pickPartnerCity(b)} />
                 )}
                 {pickPaymentMethod(b) && (
-                  <VRow icon={CreditCard} label="طريقة الدفع" value={methodLabel(pickPaymentMethod(b))} />
+                  <VRow icon={CreditCard} label={L("طريقة الدفع", "Payment method")} value={methodLabel(pickPaymentMethod(b), L)} />
                 )}
 
                 <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
                   <div className="rounded-xl border border-emerald-200 bg-white px-3 py-2">
-                    <div className="text-[11px] font-bold text-emerald-700">إجمالي الحجز</div>
+                    <div className="text-[11px] font-bold text-emerald-700">{L("إجمالي الحجز", "Booking total")}</div>
                     <div dir="ltr" className="mt-0.5 text-sm font-extrabold text-foreground">
-                      {totalWithVat != null ? `${totalWithVat} ر.س` : "—"}
+                      {totalWithVat != null ? `${totalWithVat} ${currency}` : "—"}
                     </div>
                   </div>
                   <div className="rounded-xl border border-emerald-200 bg-white px-3 py-2">
-                    <div className="text-[11px] font-bold text-emerald-700">العربون المدفوع</div>
+                    <div className="text-[11px] font-bold text-emerald-700">{L("العربون المدفوع", "Deposit paid")}</div>
                     <div dir="ltr" className="mt-0.5 text-sm font-extrabold text-foreground">
-                      {paidOnline > 0 ? `${paidOnline} ر.س` : "0 ر.س"}
+                      {paidOnline > 0 ? `${paidOnline} ${currency}` : `0 ${currency}`}
                     </div>
                   </div>
                   <div className={`rounded-xl border px-3 py-2 ${remaining != null && remaining > 0 ? "border-amber-300 bg-amber-50" : "border-emerald-200 bg-white"}`}>
-                    <div className={`text-[11px] font-bold ${remaining != null && remaining > 0 ? "text-amber-700" : "text-emerald-700"}`}>المتبقي عند المركز</div>
+                    <div className={`text-[11px] font-bold ${remaining != null && remaining > 0 ? "text-amber-700" : "text-emerald-700"}`}>{L("المتبقي عند المركز", "Remaining at merchant")}</div>
                     <div dir="ltr" className={`mt-0.5 text-sm font-extrabold ${remaining != null && remaining > 0 ? "text-amber-800" : "text-foreground"}`}>
-                      {remaining != null ? `${remaining} ر.س` : "—"}
+                      {remaining != null ? `${remaining} ${currency}` : "—"}
                     </div>
                   </div>
                 </div>
@@ -371,7 +373,7 @@ function AdminVerifyPage() {
                       disabled={redeeming}
                       className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 py-2.5 text-sm font-bold text-white hover:bg-emerald-700 disabled:opacity-60"
                     >
-                      {redeeming && <Loader2 className="h-4 w-4 animate-spin" />} تأكيد استخدام الحجز
+                      {redeeming && <Loader2 className="h-4 w-4 animate-spin" />} {L("تأكيد استخدام الحجز", "Confirm redemption")}
                     </button>
                   )}
                   <button
@@ -379,7 +381,7 @@ function AdminVerifyPage() {
                     onClick={reset}
                     className="flex-1 rounded-xl border border-border bg-white py-2.5 text-sm font-bold text-foreground hover:border-primary"
                   >
-                    تحقّق من حجز آخر
+                    {L("تحقّق من حجز آخر", "Verify another booking")}
                   </button>
                 </div>
               </div>

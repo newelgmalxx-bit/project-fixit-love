@@ -7,13 +7,17 @@ import {
   adminFeaturedOffersApi, adminOffersApi,
   type FeaturedOffer, type AdminOffer,
 } from "@/lib/api/adminContent";
+import { useLang } from "@/i18n/LanguageProvider";
 
 export const Route = createFileRoute("/admin/featured-offers")({
-  head: () => ({ meta: [{ title: "العروض المميزة | الإدارة" }] }),
+  head: () => ({ meta: [{ title: "Featured Offers | Admin" }] }),
   component: FeaturedOffersPage,
 });
 
 function FeaturedOffersPage() {
+  const { lang } = useLang();
+  const L = (a: string, e: string) => (lang === "en" ? e : a);
+  const currency = L("ر.س", "SAR");
   const [items, setItems] = useState<FeaturedOffer[]>([]);
   const [loading, setLoading] = useState(true);
   const [offers, setOffers] = useState<AdminOffer[]>([]);
@@ -27,7 +31,7 @@ function FeaturedOffersPage() {
       const data = await adminFeaturedOffersApi.list();
       setItems(data);
     } catch (e: any) {
-      toast.error(e?.message || "تعذّر تحميل العروض المميزة");
+      toast.error(e?.message || L("تعذّر تحميل العروض المميزة", "Failed to load featured offers"));
     } finally {
       setLoading(false);
     }
@@ -39,7 +43,7 @@ function FeaturedOffersPage() {
       const res = await adminOffersApi.list({ status: "active", q: q.trim() || undefined, limit: 50 });
       setOffers(res.items || []);
     } catch (e: any) {
-      toast.error(e?.message || "تعذّر تحميل العروض");
+      toast.error(e?.message || L("تعذّر تحميل العروض", "Failed to load offers"));
     } finally {
       setLoadingOffers(false);
     }
@@ -54,23 +58,23 @@ function FeaturedOffersPage() {
     try {
       const sortOrder = (items[items.length - 1]?.sortOrder ?? 0) + 1;
       await adminFeaturedOffersApi.create({ offerId, sortOrder, isActive: true });
-      toast.success("تمت الإضافة");
+      toast.success(L("تمت الإضافة", "Added"));
       load();
     } catch (e: any) {
-      toast.error(e?.message || "فشل الإضافة");
+      toast.error(e?.message || L("فشل الإضافة", "Add failed"));
     } finally {
       setAdding(null);
     }
   }
 
   async function remove(id: number | string) {
-    if (!confirm("إزالة هذا العرض من المميزين؟")) return;
+    if (!confirm(L("إزالة هذا العرض من المميزين؟", "Remove this offer from featured?"))) return;
     try {
       await adminFeaturedOffersApi.remove(id);
-      toast.success("تمت الإزالة");
+      toast.success(L("تمت الإزالة", "Removed"));
       load();
     } catch (e: any) {
-      toast.error(e?.message || "فشل الإزالة");
+      toast.error(e?.message || L("فشل الإزالة", "Remove failed"));
     }
   }
 
@@ -79,21 +83,21 @@ function FeaturedOffersPage() {
       await adminFeaturedOffersApi.update(f.id, { sortOrder });
       load();
     } catch (e: any) {
-      toast.error(e?.message || "تعذّر تحديث الترتيب");
+      toast.error(e?.message || L("تعذّر تحديث الترتيب", "Failed to update order"));
     }
   }
 
   return (
     <AdminLayout
-      title="العروض المميزة"
-      subtitle={`${items.length} عرض مميز حاليًا`}
-      action={<PrimaryButton onClick={() => { load(); loadOffers(); }}>تحديث</PrimaryButton>}
+      title={L("العروض المميزة", "Featured Offers")}
+      subtitle={L(`${items.length} عرض مميز حاليًا`, `${items.length} featured offers currently`)}
+      action={<PrimaryButton onClick={() => { load(); loadOffers(); }}>{L("تحديث", "Refresh")}</PrimaryButton>}
     >
-      <PanelCard title="العروض المميزة الحالية" className="mb-6">
+      <PanelCard title={L("العروض المميزة الحالية", "Current featured offers")} className="mb-6">
         {loading ? (
           <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
         ) : items.length === 0 ? (
-          <div className="py-12 text-center text-sm text-muted-foreground">لا توجد عروض مميزة بعد.</div>
+          <div className="py-12 text-center text-sm text-muted-foreground">{L("لا توجد عروض مميزة بعد.", "No featured offers yet.")}</div>
         ) : (
           <div className="grid gap-3">
             {items.map((f) => {
@@ -114,9 +118,9 @@ function FeaturedOffersPage() {
                     </div>
                     {o && (
                       <div className="mt-1 text-xs text-muted-foreground">
-                        {o.priceAfter} ر.س
+                        {o.priceAfter} {currency}
                         {o.priceBefore && o.priceBefore > o.priceAfter ? (
-                          <span className="ms-2 line-through">{o.priceBefore} ر.س</span>
+                          <span className="ms-2 line-through">{o.priceBefore} {currency}</span>
                         ) : null}
                       </div>
                     )}
@@ -140,7 +144,7 @@ function FeaturedOffersPage() {
         )}
       </PanelCard>
 
-      <PanelCard title="أضف عروضًا من القائمة النشطة">
+      <PanelCard title={L("أضف عروضًا من القائمة النشطة", "Add offers from the active list")}>
         <div className="mb-4 flex gap-2">
           <div className="relative flex-1">
             <Search className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -148,16 +152,16 @@ function FeaturedOffersPage() {
               value={q}
               onChange={(e) => setQ(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && loadOffers()}
-              placeholder="بحث بالاسم..."
+              placeholder={L("بحث بالاسم...", "Search by name...")}
               className="w-full rounded-xl border border-border bg-background ps-9 pe-3 py-2 text-sm"
             />
           </div>
-          <button onClick={loadOffers} className="rounded-xl border border-border px-4 py-2 text-sm font-bold">بحث</button>
+          <button onClick={loadOffers} className="rounded-xl border border-border px-4 py-2 text-sm font-bold">{L("بحث", "Search")}</button>
         </div>
         {loadingOffers ? (
           <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
         ) : offers.length === 0 ? (
-          <div className="py-12 text-center text-sm text-muted-foreground">لا توجد عروض نشطة.</div>
+          <div className="py-12 text-center text-sm text-muted-foreground">{L("لا توجد عروض نشطة.", "No active offers.")}</div>
         ) : (
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {offers.map((o) => {
@@ -184,9 +188,9 @@ function FeaturedOffersPage() {
                       {o.category?.nameAr || o.partner?.vendorName || o.titleEn || "—"}
                     </div>
                     <div className="mt-2 flex items-baseline gap-2">
-                      <span className="text-sm font-extrabold text-primary">{o.priceAfter} ر.س</span>
+                      <span className="text-sm font-extrabold text-primary">{o.priceAfter} {currency}</span>
                       {o.priceBefore && o.priceBefore > o.priceAfter ? (
-                        <span className="text-xs text-muted-foreground line-through">{o.priceBefore} ر.س</span>
+                        <span className="text-xs text-muted-foreground line-through">{o.priceBefore} {currency}</span>
                       ) : null}
                     </div>
                     <button
@@ -194,7 +198,7 @@ function FeaturedOffersPage() {
                       onClick={() => add(o.id)}
                       className="mt-3 inline-flex w-full items-center justify-center gap-1 rounded-lg bg-primary px-3 py-2 text-xs font-bold text-primary-foreground disabled:opacity-50"
                     >
-                      <Plus className="h-3.5 w-3.5" /> {isFeatured ? "مضاف بالفعل" : adding === o.id ? "..." : "أضف للمميزين"}
+                      <Plus className="h-3.5 w-3.5" /> {isFeatured ? L("مضاف بالفعل", "Already added") : adding === o.id ? "..." : L("أضف للمميزين", "Add to featured")}
                     </button>
                   </div>
                 </div>

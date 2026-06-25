@@ -117,7 +117,7 @@ function mapBookingRowToResult(row: any, qr: string): Result {
       updatedAt,
       confirmedAt: row.confirmedAt ?? row.confirmed_at ?? undefined,
     },
-    items: title ? [{ title, planName: date || time ? `موعد: ${date}${time ? ` · ${time}` : ""}` : null, qty: 1, price: total }] : [],
+    items: title ? [{ title, planName: date || time ? `${date}${time ? ` · ${time}` : ""}` : null, qty: 1, price: total }] : [],
     timeline: [
       { status: "pending", label: "تم استلام طلب الحجز", at: createdAt },
       ...(paymentStatus === "paid" || paymentStatus === "deposit_paid" ? [{ status: paymentStatus, label: paymentStatus === "paid" ? "تم سداد المبلغ كاملاً" : "دفع العربون أونلاين", at: updatedAt }] : []),
@@ -298,7 +298,7 @@ function TrackPage() {
       bookingId: o.number,
       verifyCode: o.verificationCode ?? "",
       offerId: "",
-      offerTitle: result.items[0]?.title ?? "خدمة",
+      offerTitle: result.items[0]?.title ?? (lang === "en" ? "Service" : "خدمة"),
       vendorName: result.partner?.name ?? "",
       vendorCity: "",
       vendorAddress: result.partner?.address ?? "",

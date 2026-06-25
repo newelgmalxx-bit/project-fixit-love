@@ -19,8 +19,10 @@ const GOOGLE_CLIENT_ID =
   "35325770661-6il1fjomm9jg8i1j45b9hr6pig14ml54.apps.googleusercontent.com";
 
 function NotFoundComponent() {
+  const lang = (typeof document !== "undefined" && document.documentElement.lang === "en") ? "en" : "ar";
+  const L = (a: string, e: string) => (lang === "en" ? e : a);
   return (
-    <div dir="rtl" className="relative flex min-h-screen items-center justify-center overflow-hidden bg-gradient-to-br from-primary/10 via-background to-primary/5 px-4">
+    <div dir={lang === "en" ? "ltr" : "rtl"} className="relative flex min-h-screen items-center justify-center overflow-hidden bg-gradient-to-br from-primary/10 via-background to-primary/5 px-4">
       <div className="pointer-events-none absolute -top-40 -left-40 h-[28rem] w-[28rem] rounded-full bg-primary/20 blur-3xl" />
       <div className="pointer-events-none absolute -bottom-40 -right-40 h-[28rem] w-[28rem] rounded-full bg-primary/10 blur-3xl" />
       <div className="relative z-10 w-full max-w-2xl text-center">
@@ -28,29 +30,29 @@ function NotFoundComponent() {
           404
         </div>
         <h2 className="mt-2 text-2xl sm:text-3xl font-bold text-foreground">
-          الصفحة غير موجودة
+          {L("الصفحة غير موجودة", "Page not found")}
         </h2>
         <p className="mt-3 text-sm sm:text-base text-muted-foreground max-w-md mx-auto">
-          عذراً، الصفحة التي تبحث عنها غير متوفرة أو تم نقلها إلى مكان آخر.
+          {L("عذراً، الصفحة التي تبحث عنها غير متوفرة أو تم نقلها إلى مكان آخر.", "Sorry, the page you are looking for is unavailable or has been moved.")}
         </p>
         <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
           <Link
             to="/"
             className="inline-flex h-11 items-center gap-2 rounded-full bg-primary px-6 text-sm font-bold text-primary-foreground shadow-lg shadow-primary/30 transition hover:bg-primary/90"
           >
-            <Home className="h-4 w-4" /> العودة للرئيسية
+            <Home className="h-4 w-4" /> {L("العودة للرئيسية", "Back to home")}
           </Link>
           <Link
             to="/contact"
             className="inline-flex h-11 items-center gap-2 rounded-full border border-border bg-card px-6 text-sm font-bold text-foreground transition hover:border-primary hover:text-primary"
           >
-            <Search className="h-4 w-4" /> تواصل معنا
+            <Search className="h-4 w-4" /> {L("تواصل معنا", "Contact us")}
           </Link>
           <button
             onClick={() => window.history.back()}
             className="inline-flex h-11 items-center gap-2 rounded-full px-4 text-sm font-medium text-muted-foreground transition hover:text-foreground"
           >
-            <ArrowLeft className="h-4 w-4" /> الرجوع للخلف
+            <ArrowLeft className="h-4 w-4" /> {L("الرجوع للخلف", "Go back")}
           </button>
         </div>
       </div>

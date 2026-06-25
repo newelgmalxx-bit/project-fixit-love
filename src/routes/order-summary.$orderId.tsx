@@ -298,7 +298,7 @@ function OrderSummaryPage() {
                     <span>{t("account.order.total")}</span>
                     <span className="text-primary" data-ltr-number>{formatCurrency(order.total, lang)}</span>
                   </div>
-                  <p className="text-[11px] text-muted-foreground text-end">السعر شامل ضريبة القيمة المضافة</p>
+                  <p className="text-[11px] text-muted-foreground text-end">{lang === "ar" ? "السعر شامل ضريبة القيمة المضافة" : "Price includes VAT"}</p>
                 </div>
               </section>
 

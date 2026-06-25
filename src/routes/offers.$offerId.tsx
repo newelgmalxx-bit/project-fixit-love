@@ -270,7 +270,7 @@ function OfferDetailPage() {
         return s === "published" || s === "approved" || s === "active" || s === "";
       });
       const mapped: UserReview[] = items.map((r) => ({
-        name: r.userName || r.user_name || r.name || "مستخدم",
+        name: r.userName || r.user_name || r.name || L("مستخدم", "User"),
         date: String(r.created_at || r.createdAt || "").slice(0, 10),
         rating: Number(r.rating) || 0,
         text: r.comment || r.text || "",
@@ -293,17 +293,17 @@ function OfferDetailPage() {
   async function submitReview(e: React.FormEvent) {
     e.preventDefault();
     if (reviewText.trim().length < 5 || reviewRating < 1) {
-      toast.error("اكتب تقييم لا يقل عن 5 أحرف وحدد عدد النجوم");
+      toast.error(L("اكتب تقييم لا يقل عن 5 أحرف وحدد عدد النجوم", "Write a review of at least 5 characters and pick a star rating"));
       return;
     }
     if (!isAuthenticated) {
-      toast.error("لازم تسجل دخول الأول عشان تضيف تقييم");
+      toast.error(L("لازم تسجل دخول الأول عشان تضيف تقييم", "You must sign in first to add a review"));
       navigate({ to: "/login" });
       return;
     }
     const offerIdVal = (offer as any)?.id;
     if (!offerIdVal) {
-      toast.error("تعذّر تحديد العرض");
+      toast.error(L("تعذّر تحديد العرض", "Could not identify the offer"));
       return;
     }
     setReviewSubmitting(true);
@@ -312,7 +312,7 @@ function OfferDetailPage() {
         { offerId: String(offerIdVal) },
         { rating: reviewRating, comment: reviewText.trim() },
       );
-      toast.success("شكرًا لتقييمك! هيظهر بعد مراجعة الإدارة");
+      toast.success(L("شكرًا لتقييمك! هيظهر بعد مراجعة الإدارة", "Thanks for your review! It will appear after admin approval"));
       setReviewName("");
       setReviewText("");
       setReviewRating(0);
@@ -321,7 +321,7 @@ function OfferDetailPage() {
       // Refresh list — newly approved reviews will appear after admin moderation
       loadReviews();
     } catch (err: any) {
-      const msg = err?.message || "تعذّر إرسال التقييم";
+      const msg = err?.message || L("تعذّر إرسال التقييم", "Could not submit the review");
       toast.error(msg);
     } finally {
       setReviewSubmitting(false);
@@ -348,7 +348,7 @@ function OfferDetailPage() {
   // Do not fall back to a fixed 10% because every center has its own rate.
   const rawDepositPct = offer.vendor.depositPct ?? offer.vendor.commissionPct;
   const depositPct = typeof rawDepositPct === "number" && rawDepositPct > 0 ? rawDepositPct : null;
-  const depositPctLabel = depositPct != null ? `${depositPct}%` : "غير محددة";
+  const depositPctLabel = depositPct != null ? `${depositPct}%` : L("غير محددة", "Not set");
   const depositAmount = depositPct != null ? +((total * depositPct) / 100).toFixed(2) : 0;
   const remainingAmount = depositPct != null ? +(total - depositAmount).toFixed(2) : total;
   const { add: addToCartHook } = useCart();

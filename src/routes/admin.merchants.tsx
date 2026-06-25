@@ -268,29 +268,35 @@ function MerchantsPage() {
       await adminPartnersApi.setStatus(id, status);
       setItems((arr) => arr.map((m) => (m.id === id ? { ...m, status } : m)));
       setViewing((v) => (v && v.id === id ? { ...v, status } : v));
-      toast.success("تم تحديث حالة المركز");
+      toast.success(L("تم تحديث حالة المركز", "Partner status updated"));
     } catch (e: any) {
-      toast.error(e?.message || "تعذّر تحديث الحالة");
+      toast.error(e?.message || L("تعذّر تحديث الحالة", "Failed to update status"));
     }
   }
 
   async function deleteCenter(m: Merchant, force = false) {
     const msg = force
-      ? `حذف نهائي للمركز "${m.name}" وكل البيانات المرتبطة به (العروض، الحجوزات، المدفوعات، التصنيفات، الاتفاقيات). لا يمكن التراجع. هل أنت متأكد؟`
-      : `تعليق المركز "${m.name}" (Suspend)؟ يمكنك إعادة تفعيله لاحقًا.`;
+      ? L(
+          `حذف نهائي للمركز "${m.name}" وكل البيانات المرتبطة به (العروض، الحجوزات، المدفوعات، التصنيفات، الاتفاقيات). لا يمكن التراجع. هل أنت متأكد؟`,
+          `Permanently delete partner "${m.name}" and all related data (offers, bookings, payments, categories, agreements). This cannot be undone. Are you sure?`,
+        )
+      : L(
+          `تعليق المركز "${m.name}" (Suspend)؟ يمكنك إعادة تفعيله لاحقًا.`,
+          `Suspend partner "${m.name}"? You can reactivate later.`,
+        );
     if (!confirm(msg)) return;
     try {
       await adminPartnersApi.remove(m.id, { force });
       if (force) {
         setItems((arr) => arr.filter((x) => x.id !== m.id));
         setViewing((v) => (v && v.id === m.id ? null : v));
-        toast.success("تم حذف المركز نهائيًا");
+        toast.success(L("تم حذف المركز نهائيًا", "Partner permanently deleted"));
       } else {
         setItems((arr) => arr.map((x) => (x.id === m.id ? { ...x, status: "suspended" } : x)));
-        toast.success("تم تعليق المركز");
+        toast.success(L("تم تعليق المركز", "Partner suspended"));
       }
     } catch (e: any) {
-      toast.error(e?.message || (force ? "تعذّر حذف المركز" : "تعذّر تعليق المركز"));
+      toast.error(e?.message || (force ? L("تعذّر حذف المركز", "Failed to delete partner") : L("تعذّر تعليق المركز", "Failed to suspend partner")));
     }
   }
 

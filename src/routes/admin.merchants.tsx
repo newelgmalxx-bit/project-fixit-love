@@ -235,7 +235,7 @@ function MerchantsPage() {
       );
       setItems(enriched);
     } catch (e: any) {
-      toast.error(e?.message || "تعذّر تحميل المراكز");
+      toast.error(e?.message || L("تعذّر تحميل المراكز", "Failed to load partners"));
       setItems([]);
     } finally {
       setLoading(false);

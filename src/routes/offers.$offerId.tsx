@@ -1371,7 +1371,7 @@ function OfferDetailPage() {
                     <section className="rounded-2xl border border-border bg-muted/20 p-4">
                       <div className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">شروط الإلغاء</div>
                       <ul className="space-y-1.5 text-xs text-muted-foreground leading-6">
-                        {cancellationTerms.map((t, i) => (
+                        {(lang === "en" ? cancellationTermsEn : cancellationTermsAr).map((t: string, i: number) => (
                           <li key={i}>• {t}</li>
                         ))}
                       </ul>

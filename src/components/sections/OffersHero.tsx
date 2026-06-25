@@ -165,9 +165,12 @@ function buildSlides(L: (a: string, e: string) => string): Slide[] {
 
 export function OffersHero() {
   const navigate = useNavigate();
+  const { lang, dir } = useLang();
+  const L = (a: string, e: string) => (lang === "en" ? e : a);
+  const slides = useMemo(() => buildSlides(L), [lang]);
   const [q, setQ] = useState("");
   const [emblaRef, emblaApi] = useEmblaCarousel(
-    { loop: true, direction: "rtl", align: "start" },
+    { loop: true, direction: dir, align: "start" },
     [Autoplay({ delay: 6000, stopOnInteraction: false, stopOnMouseEnter: true, stopOnFocusIn: true })]
   );
   const [selected, setSelected] = useState(0);

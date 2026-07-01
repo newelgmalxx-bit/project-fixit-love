@@ -25,7 +25,7 @@ import heroHairwash from "@/assets/hero-hairwash.jpg";
 import heroBlowdry from "@/assets/hero-blowdry.jpg";
 import heroMedical from "@/assets/hero-medical-1.jpg";
 import heroFitness from "@/assets/hero-fitness-1.jpg";
-import heroCarwash from "@/assets/hero-carwash.jpg";
+import heroCoffee from "@/assets/hero-coffee.jpg";
 import heroTinting from "@/assets/hero-tinting.webp";
 
 type Slide = {

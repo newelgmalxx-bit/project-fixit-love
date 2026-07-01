@@ -25,7 +25,7 @@ import heroHairwash from "@/assets/hero-hairwash.jpg";
 import heroBlowdry from "@/assets/hero-blowdry.jpg";
 import heroMedical from "@/assets/hero-medical-1.jpg";
 import heroFitness from "@/assets/hero-fitness-1.jpg";
-import heroCarwash from "@/assets/hero-carwash.jpg";
+import heroCoffee from "@/assets/hero-coffee.jpg";
 import heroTinting from "@/assets/hero-tinting.webp";
 
 type Slide = {
@@ -146,17 +146,17 @@ function buildSlides(L: (a: string, e: string) => string): Slide[] {
       ambient: "bg-[#334155]/25",
     },
     {
-      kicker: L("مراكز غسيل السيارات", "Car wash centers"),
-      titleLine1: L("سيارتك تلمع كالجديدة،", "Your car shining like new,"),
-      titleLine2: L("بأفضل مراكز الغسيل", "at the top car wash centers"),
+      kicker: L("كوفي شوب ومقاهي", "Coffee shops & cafés"),
+      titleLine1: L("اطلب ترويقة قهوة وحلا،", "Order a coffee & sweet treat,"),
+      titleLine2: L("من خصومات تروق فيها مزاجك", "from deals that lift your mood"),
       description: L(
-        "غسيل خارجي وداخلي، بوليش، تلميع، وتنظيف بالبخار من مراكز معتمدة بخصومات حصرية تصل حتى 50%.",
-        "Exterior & interior wash, polish, detailing and steam cleaning from certified centers — up to 50% off."
+        "قهوة مختصة، مشروبات باردة وساخنة، وحلويات فاخرة من أفضل الكوفي شوب بخصومات حصرية تروّق يومك.",
+        "Specialty coffee, hot & cold drinks and premium desserts from top coffee shops — with exclusive mood-lifting discounts."
       ),
-      image: heroCarwash,
-      badge: { value: "50%", label: L("خصم الغسيل", "Wash discount") },
-      gradient: "from-[#1e293b] via-[#1d4ed8] to-[#0ea5e9]",
-      ambient: "bg-[#1d4ed8]/25",
+      image: heroCoffee,
+      badge: { value: "50%", label: L("خصم الكوفي", "Café discount") },
+      gradient: "from-[#3f2417] via-[#8b5a2b] to-[#d4a373]",
+      ambient: "bg-[#8b5a2b]/25",
     },
   ];
 }

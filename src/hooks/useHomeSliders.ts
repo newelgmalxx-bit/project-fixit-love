@@ -55,9 +55,8 @@ export function useHomeSliders() {
   return useQuery({
     queryKey: ["home-offer-sliders"],
     queryFn: async () => {
-      // Try public first (route name kept generic so backend can expose it later).
-      let raw = await fetchSliders("/home-offer-sliders");
-      if (!raw) raw = await fetchSliders("/admin/home-offer-sliders");
+      // Public-only: never fall back to /admin (would 401 for guests).
+      const raw = await fetchSliders("/home-offer-sliders");
       if (!raw) return { slider_1: [], slider_2: [] };
       return {
         slider_1: flatten(sortEntries(raw.slider_1)),

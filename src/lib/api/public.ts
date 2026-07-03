@@ -278,6 +278,8 @@ export const publicApi = {
   getHomeData: async (limit: number = 20): Promise<{
     sponsoredAds: any[];
     featuredOffers: any[];
+    homeSlider1: any[];
+    homeSlider2: any[];
     reviews: Record<string, any[]>;
     partners: Record<string, any>;
     categories: any[];
@@ -288,6 +290,8 @@ export const publicApi = {
     return {
       sponsoredAds:   Array.isArray(d.sponsoredAds)   ? d.sponsoredAds   : [],
       featuredOffers: Array.isArray(d.featuredOffers) ? d.featuredOffers : [],
+      homeSlider1:    Array.isArray(d.homeSlider1)    ? d.homeSlider1    : [],
+      homeSlider2:    Array.isArray(d.homeSlider2)    ? d.homeSlider2    : [],
       reviews:        (d.reviews && typeof d.reviews === 'object')   ? d.reviews   : {},
       partners:       (d.partners && typeof d.partners === 'object') ? d.partners  : {},
       categories:     Array.isArray(d.categories)     ? d.categories     : [],

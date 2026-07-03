@@ -80,28 +80,35 @@ export function OfferCard({ offer }: { offer: Offer }) {
             <Heart className={`h-4 w-4 transition ${saved ? "fill-[#E0254D] text-[#E0254D]" : ""}`} />
           </button>
 
-          <span />
+          <span className="inline-flex items-center rounded-full bg-white px-3 py-1.5 text-[11px] font-extrabold text-[#E0254D] shadow" dir={dir}>
+            {L(`توفير ${Math.max(0, offer.priceBefore - offer.priceAfter)} ر.س`, `Save ${Math.max(0, offer.priceBefore - offer.priceAfter)} SAR`)}
+          </span>
 
         </div>
       </div>
 
       {/* Price + discount strip */}
-      <div className="flex items-center justify-between gap-2 px-5 pt-4">
+      <div className="flex items-start justify-between gap-2 px-5 pt-4">
         <span className="inline-flex items-center rounded-full bg-gradient-to-r from-[#3F2A6B] to-[#E0254D] px-3 py-1 text-[11px] font-extrabold text-white shadow">
           -{offer.discountPercent}%
         </span>
-        <div className="flex items-baseline gap-1.5" dir="ltr">
-          <span className="text-[13px] font-semibold text-slate-400 line-through">
-            {offer.priceBefore}
+        <div className="flex flex-col items-end">
+          <div className="flex items-baseline gap-1.5" dir="ltr">
+            <span className="text-[13px] font-semibold text-slate-400 line-through">
+              {offer.priceBefore}
+            </span>
+            <span className="text-xl font-black bg-gradient-to-r from-[#3F2A6B] to-[#E0254D] bg-clip-text text-transparent">
+              {offer.priceAfter}
+            </span>
+            {lang === "en" ? (
+              <span className="text-xs font-bold text-[#E0254D]">{currency}</span>
+            ) : (
+              <SarIcon className="h-[0.8em] text-[#E0254D]" />
+            )}
+          </div>
+          <span className="mt-0.5 text-[10px] font-semibold text-muted-foreground">
+            {L("شامل الضريبة", "VAT included")}
           </span>
-          <span className="text-xl font-black bg-gradient-to-r from-[#3F2A6B] to-[#E0254D] bg-clip-text text-transparent">
-            {offer.priceAfter}
-          </span>
-          {lang === "en" ? (
-            <span className="text-xs font-bold text-[#E0254D]">{currency}</span>
-          ) : (
-            <SarIcon className="h-[0.8em] text-[#E0254D]" />
-          )}
         </div>
       </div>
 
@@ -117,19 +124,19 @@ export function OfferCard({ offer }: { offer: Offer }) {
           <p className="mt-2 text-sm font-bold text-foreground/85">{vendorName}</p>
         )}
 
-        <div className="mt-2 flex items-center gap-3 text-xs" dir={dir}>
-          {vendorCity && (
-            <div className="flex items-center gap-1 text-muted-foreground">
-              <MapPin className="h-4 w-4 text-[#E0254D]" />
-              <span className="font-semibold">{vendorCity}</span>
-            </div>
-          )}
-          <div className="flex items-center gap-1">
-            <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
-            <span className="font-extrabold text-foreground">{vendorRating > 0 ? vendorRating.toFixed(1) : "0.0"}</span>
-            <span className="text-muted-foreground">({vendorReviews} {L("تعليق", "reviews")})</span>
+        {vendorCity && (
+          <div className="mt-1.5 flex items-center gap-1 text-xs text-muted-foreground" dir={dir}>
+            <MapPin className="h-4 w-4 text-[#E0254D]" />
+            <span className="font-semibold">{vendorCity}</span>
           </div>
+        )}
+
+        <div className="mt-2 flex items-center gap-1 text-xs" dir={dir}>
+          <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
+          <span className="font-extrabold text-foreground">{vendorRating > 0 ? vendorRating.toFixed(1) : "0.0"}</span>
+          <span className="text-muted-foreground">({vendorReviews} {L("تعليق", "reviews")})</span>
         </div>
+
 
         <button
           type="button"

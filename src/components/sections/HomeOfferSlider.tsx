@@ -2,11 +2,13 @@ import { useMemo } from "react";
 import useEmblaCarousel from "embla-carousel-react";
 import { ArrowLeft, ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
 import { useHomeData } from "@/hooks/useHomeData";
+import { useHomeSliders } from "@/hooks/useHomeSliders";
 import { useCategories } from "@/hooks/useCatalog";
 import { normalizeOffer } from "@/lib/api/catalog";
 import { OfferCard } from "./OfferCard";
 import { useLang } from "@/i18n/LanguageProvider";
 import type { Offer } from "@/data/offers";
+
 
 type Props = {
   sliderKey: "slider_1" | "slider_2";
@@ -31,16 +33,21 @@ export function HomeOfferSlider({ sliderKey, titleAr, titleEn, kickerAr, kickerE
   const { lang, dir } = useLang();
   const L = (a: string, e: string) => (lang === "en" ? e : a);
   const { data } = useHomeData();
+  const { data: slidersData } = useHomeSliders();
   const { categoryIdToSlug } = useCategories();
 
-  const rawSlider: any[] = (data as any)?.[sliderKey === "slider_1" ? "homeSlider1" : "homeSlider2"] ?? [];
-  // Fallback: if the admin hasn't configured this slider yet, use featured offers so
-  // the section always renders in its designated position on the home page.
+  // Priority: batched /home-data → dedicated /home-offer-sliders fetch → featured fallback.
+  const fromHomeData: any[] = (data as any)?.[sliderKey === "slider_1" ? "homeSlider1" : "homeSlider2"] ?? [];
+  const fromSlidersFetch: any[] = (slidersData as any)?.[sliderKey] ?? [];
   const featured: any[] = (data as any)?.featuredOffers ?? [];
   const fallback = sliderKey === "slider_1"
     ? featured.slice(0, 8)
     : featured.slice(8, 16).length > 0 ? featured.slice(8, 16) : featured.slice(0, 8);
-  const raw = rawSlider.length > 0 ? rawSlider : fallback;
+  const raw =
+    fromHomeData.length > 0 ? fromHomeData
+    : fromSlidersFetch.length > 0 ? fromSlidersFetch
+    : fallback;
+
   const offers = useMemo<Offer[]>(() => {
     return raw
       .map((r) => {

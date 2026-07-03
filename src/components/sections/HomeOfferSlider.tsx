@@ -80,7 +80,7 @@ export function HomeOfferSlider({ sliderKey, titleAr, titleEn, kickerAr, kickerE
     : "text-rose-500";
 
   return (
-    <section className={`bg-background ${sliderKey === "slider_2" ? "pt-2 pb-6 sm:pt-4 sm:pb-10" : "py-6 sm:py-10"}`}>
+    <section className={`bg-background ${sliderKey === "slider_2" ? "pt-0 pb-6 sm:pt-0 sm:pb-10" : "pt-6 pb-2 sm:pt-10 sm:pb-3"}`}>
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="mb-6 flex items-end justify-between gap-4">
           <div>

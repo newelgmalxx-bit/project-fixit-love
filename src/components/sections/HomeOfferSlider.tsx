@@ -2,11 +2,13 @@ import { useMemo } from "react";
 import useEmblaCarousel from "embla-carousel-react";
 import { ArrowLeft, ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
 import { useHomeData } from "@/hooks/useHomeData";
+import { useHomeSliders } from "@/hooks/useHomeSliders";
 import { useCategories } from "@/hooks/useCatalog";
 import { normalizeOffer } from "@/lib/api/catalog";
 import { OfferCard } from "./OfferCard";
 import { useLang } from "@/i18n/LanguageProvider";
 import type { Offer } from "@/data/offers";
+
 
 type Props = {
   sliderKey: "slider_1" | "slider_2";

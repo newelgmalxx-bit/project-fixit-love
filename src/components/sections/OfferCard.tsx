@@ -5,26 +5,32 @@ import { usePartner } from "@/hooks/useCatalog";
 import { useFavorite } from "@/hooks/useFavorite";
 import { useQuery } from "@tanstack/react-query";
 import { reviews as reviewsApi } from "@/lib/api/services";
+import { publicApi } from "@/lib/api/public";
 import { useLang } from "@/i18n/LanguageProvider";
 import { SarIcon } from "@/components/ui/SarIcon";
-
-// Derive a short numeric offer number from any id (UUIDs or ints).
-function shortOfferNumber(id: string): string {
-  const digits = String(id).replace(/\D/g, "");
-  if (digits.length >= 5) return digits.slice(-5);
-  let h = 0;
-  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) >>> 0;
-  return String(10000 + (h % 90000));
-}
 
 export function OfferCard({ offer }: { offer: Offer }) {
   const { lang, dir } = useLang();
   const L = (a: string, e: string) => (lang === "en" ? e : a);
   const { fav: saved, toggle } = useFavorite(String(offer.id));
 
-  // Fetch full partner when name OR city is missing (slider endpoints don't include city).
-  const needsPartner = (!offer.vendor?.name || !offer.vendor?.city) && Boolean(offer.vendor?.id) && offer.vendor.id !== "—";
-  const { data: partner } = usePartner(needsPartner ? offer.vendor.id : undefined);
+  const hasVendorId = Boolean(offer.vendor?.id) && offer.vendor.id !== "—";
+  const cityMissing = !offer.vendor?.city;
+
+  // The slider endpoint returns partnerName* but no partnerId/partnerCity.
+  // When city is missing and we don't have a partnerId, fetch full offer details to get them.
+  const needsOfferDetail = cityMissing && !hasVendorId && Boolean(offer.id);
+  const { data: offerDetail } = useQuery({
+    queryKey: ["offer-detail-for-card", String(offer.id)],
+    queryFn: () => publicApi.getOffer(String(offer.id)),
+    enabled: needsOfferDetail,
+    staleTime: 5 * 60 * 1000,
+  });
+  const detailPartnerId = (offerDetail as any)?.partnerId as string | undefined;
+
+  const partnerIdToFetch = hasVendorId ? offer.vendor.id : detailPartnerId;
+  const needsPartner = cityMissing && Boolean(partnerIdToFetch);
+  const { data: partner } = usePartner(needsPartner ? partnerIdToFetch : undefined);
 
   const vendorName = offer.vendor?.name
     || (lang === "en" ? ((partner as any)?.vendorNameEn || (partner as any)?.vendorNameAr) : ((partner as any)?.vendorNameAr || (partner as any)?.vendorNameEn))
@@ -54,7 +60,7 @@ export function OfferCard({ offer }: { offer: Offer }) {
 
   const offerTitle = lang === "en" ? ((offer as any).titleEn || offer.title) : (offer.title || (offer as any).titleEn || "");
   const currency = L("ر.س", "SAR");
-  const offerNo = shortOfferNumber(String(offer.id));
+  
 
   return (
     <Link

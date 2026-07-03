@@ -66,7 +66,7 @@ export function OfferCard({ offer }: { offer: Offer }) {
     <Link
       to="/offers/$offerId"
       params={{ offerId: offer.id }}
-      className="group relative flex flex-col overflow-hidden rounded-3xl border border-border bg-card shadow-sm transition-all duration-500 hover:-translate-y-1.5 hover:border-primary/30 hover:shadow-2xl hover:shadow-primary/15"
+      className="group relative flex h-full flex-col overflow-hidden rounded-3xl border border-border bg-card shadow-sm transition-all duration-500 hover:-translate-y-1.5 hover:border-primary/30 hover:shadow-2xl hover:shadow-primary/15"
     >
       {/* Image */}
       <div className="relative aspect-[16/11] overflow-hidden bg-muted">

@@ -80,9 +80,8 @@ export function OfferCard({ offer }: { offer: Offer }) {
             <Heart className={`h-4 w-4 transition ${saved ? "fill-[#E0254D] text-[#E0254D]" : ""}`} />
           </button>
 
-          <span className="inline-flex items-center rounded-full bg-white px-3 py-1.5 text-[11px] font-bold text-foreground shadow" dir="ltr">
-            {L(`رقم العرض:${offerNo}`, `Offer #${offerNo}`)}
-          </span>
+          <span />
+
         </div>
       </div>
 

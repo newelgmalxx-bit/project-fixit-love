@@ -4,6 +4,7 @@ import { SiteFooter } from "@/components/layout/SiteFooter";
 import { OffersHero } from "@/components/sections/OffersHero";
 import { CategoriesGrid } from "@/components/sections/CategoriesGrid";
 import { FeaturedOffers } from "@/components/sections/FeaturedOffers";
+import { HomeOfferSlider1, HomeOfferSlider2, useHasHomeSliders } from "@/components/sections/HomeOfferSlider";
 import { AboutIntroSection } from "@/components/sections/AboutIntroSection";
 import { WhyUsSection } from "@/components/sections/WhyUsSection";
 import { TestimonialsSection } from "@/components/sections/TestimonialsSection";

@@ -6,12 +6,12 @@ import { useFavorite } from "@/hooks/useFavorite";
 import { useQuery } from "@tanstack/react-query";
 import { reviews as reviewsApi } from "@/lib/api/services";
 import { useLang } from "@/i18n/LanguageProvider";
+import { SarIcon } from "@/components/ui/SarIcon";
 
 // Derive a short numeric offer number from any id (UUIDs or ints).
 function shortOfferNumber(id: string): string {
   const digits = String(id).replace(/\D/g, "");
   if (digits.length >= 5) return digits.slice(-5);
-  // fall back to a stable 5-digit hash of the raw id
   let h = 0;
   for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) >>> 0;
   return String(10000 + (h % 90000));
@@ -51,16 +51,16 @@ export function OfferCard({ offer }: { offer: Offer }) {
   const vendorReviews = liveStats?.count ?? baseReviews;
 
   const offerTitle = lang === "en" ? ((offer as any).titleEn || offer.title) : (offer.title || (offer as any).titleEn || "");
-  const currency = L("ريال", "SAR");
+  const currency = L("ر.س", "SAR");
   const offerNo = shortOfferNumber(String(offer.id));
 
   return (
     <Link
       to="/offers/$offerId"
       params={{ offerId: offer.id }}
-      className="group relative flex flex-col overflow-hidden rounded-3xl border border-border bg-card shadow-sm transition-all duration-500 hover:-translate-y-1.5 hover:shadow-2xl hover:shadow-[#6D5BFF]/20"
+      className="group relative flex flex-col overflow-hidden rounded-3xl border border-border bg-card shadow-sm transition-all duration-500 hover:-translate-y-1.5 hover:border-primary/30 hover:shadow-2xl hover:shadow-primary/15"
     >
-      {/* Image with purple gradient overlay */}
+      {/* Image */}
       <div className="relative aspect-[16/11] overflow-hidden bg-muted">
         <img
           src={offer.image}
@@ -68,18 +68,16 @@ export function OfferCard({ offer }: { offer: Offer }) {
           loading="lazy"
           className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
         />
-        {/* Signature purple tint — matches reference */}
-        <div className="absolute inset-0 bg-gradient-to-b from-[#6D5BFF]/0 via-[#6D5BFF]/15 to-[#6D5BFF]/55" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
 
-        {/* Offer number pill (top-right in RTL, top-left in LTR) */}
         <div className="absolute inset-x-3 top-3 flex items-start justify-between">
           <button
             type="button"
             onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggle(); }}
             aria-label={L("حفظ العرض", "Save offer")}
-            className="flex h-9 w-9 items-center justify-center rounded-full bg-white/95 text-foreground shadow-md backdrop-blur transition hover:scale-110 hover:text-[#6D5BFF]"
+            className="flex h-9 w-9 items-center justify-center rounded-full bg-white/95 text-foreground shadow-md backdrop-blur transition hover:scale-110 hover:text-[#E0254D]"
           >
-            <Heart className={`h-4 w-4 transition ${saved ? "fill-[#6D5BFF] text-[#6D5BFF]" : ""}`} />
+            <Heart className={`h-4 w-4 transition ${saved ? "fill-[#E0254D] text-[#E0254D]" : ""}`} />
           </button>
 
           <span className="inline-flex items-center rounded-full bg-white px-3 py-1.5 text-[11px] font-bold text-foreground shadow" dir="ltr">
@@ -88,26 +86,31 @@ export function OfferCard({ offer }: { offer: Offer }) {
         </div>
       </div>
 
-      {/* Price + discount strip below image */}
+      {/* Price + discount strip */}
       <div className="flex items-center justify-between gap-2 px-5 pt-4">
-        <span className="inline-flex items-center rounded-full bg-[#F2E9FF] px-3 py-1 text-[11px] font-extrabold text-[#6D5BFF]">
+        <span className="inline-flex items-center rounded-full bg-gradient-to-r from-[#3F2A6B] to-[#E0254D] px-3 py-1 text-[11px] font-extrabold text-white shadow">
           -{offer.discountPercent}%
         </span>
-        <div className="flex items-baseline gap-1.5 text-[#6D5BFF]" dir="rtl">
+        <div className="flex items-baseline gap-1.5" dir="ltr">
           <span className="text-[13px] font-semibold text-slate-400 line-through">
-            {offer.priceBefore} {currency}
+            {offer.priceBefore}
           </span>
-          <span className="text-xl font-black">
-            {offer.priceAfter} {currency}
+          <span className="text-xl font-black bg-gradient-to-r from-[#3F2A6B] to-[#E0254D] bg-clip-text text-transparent">
+            {offer.priceAfter}
           </span>
+          {lang === "en" ? (
+            <span className="text-xs font-bold text-[#E0254D]">{currency}</span>
+          ) : (
+            <SarIcon className="h-[0.8em] text-[#E0254D]" />
+          )}
         </div>
       </div>
 
-      <div className="mx-5 my-3 h-px bg-border" />
+      <div className="mx-5 my-3 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
 
       {/* Body */}
       <div className="flex flex-1 flex-col px-5 pb-5">
-        <h3 className="line-clamp-2 min-h-[2.75rem] text-base font-extrabold leading-snug text-foreground">
+        <h3 className="line-clamp-2 min-h-[2.75rem] text-base font-extrabold leading-snug text-foreground transition-colors group-hover:text-primary">
           {offerTitle}
         </h3>
 
@@ -118,7 +121,7 @@ export function OfferCard({ offer }: { offer: Offer }) {
         <div className="mt-2 flex items-center gap-3 text-xs" dir={dir}>
           {vendorCity && (
             <div className="flex items-center gap-1 text-muted-foreground">
-              <MapPin className="h-4 w-4 text-[#6D5BFF]" />
+              <MapPin className="h-4 w-4 text-[#E0254D]" />
               <span className="font-semibold">{vendorCity}</span>
             </div>
           )}
@@ -132,7 +135,7 @@ export function OfferCard({ offer }: { offer: Offer }) {
         <button
           type="button"
           onClick={(e) => { e.preventDefault(); }}
-          className="mt-5 w-full rounded-2xl bg-[#6D5BFF] px-5 py-3.5 text-sm font-extrabold text-white shadow-[0_10px_24px_-10px_rgba(109,91,255,0.7)] transition hover:bg-[#5A48F0]"
+          className="mt-5 w-full rounded-2xl bg-foreground px-5 py-3.5 text-sm font-extrabold text-background transition-all duration-300 hover:bg-gradient-to-r hover:from-[#3F2A6B] hover:to-[#E0254D]"
         >
           {L("احجز الآن", "Book now")}
         </button>

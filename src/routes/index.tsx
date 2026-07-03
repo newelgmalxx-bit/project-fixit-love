@@ -49,6 +49,17 @@ function Index() {
         <Reveal variant="up"><CategoriesGrid /></Reveal>
         <Reveal variant="up" delay={80}><HomeOfferSlider1 /></Reveal>
         <Reveal variant="up" delay={80}><HomeOfferSlider2 /></Reveal>
+        <Reveal variant="up" delay={120}>
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pb-8 sm:pb-12 flex justify-center">
+            <Link
+              to="/offers"
+              className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-[#3F2A6B] to-[#E0254D] px-8 py-3.5 text-sm font-extrabold text-white shadow-lg shadow-primary/20 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl"
+            >
+              {lang === "en" ? "View all offers" : "عرض كل العروض"}
+              <ArrowLeftIcon className="h-4 w-4" />
+            </Link>
+          </div>
+        </Reveal>
 
         <Reveal variant="up"><WhyUsSection /></Reveal>
         {/* Legacy / secondary content kept below */}

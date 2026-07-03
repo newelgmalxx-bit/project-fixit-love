@@ -124,12 +124,12 @@ export function OfferCard({ offer }: { offer: Offer }) {
 
       {/* Body */}
       <div className="flex flex-1 flex-col px-5 pb-5">
-        <h3 className="line-clamp-2 min-h-[2.75rem] text-base font-extrabold leading-snug text-foreground transition-colors group-hover:text-primary">
+        <h3 className="line-clamp-2 text-base font-extrabold leading-snug text-foreground transition-colors group-hover:text-primary">
           {offerTitle}
         </h3>
 
         {vendorName && (
-          <p className="mt-2 text-sm font-bold text-foreground/85">{vendorName}</p>
+          <p className="mt-1 text-sm font-bold text-foreground/85">{vendorName}</p>
         )}
 
         {vendorCity && (

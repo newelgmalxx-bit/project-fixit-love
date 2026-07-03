@@ -61,6 +61,7 @@ import { Route as AdminMessagesRouteImport } from './routes/admin.messages'
 import { Route as AdminMerchantsRouteImport } from './routes/admin.merchants'
 import { Route as AdminLegalRouteImport } from './routes/admin.legal'
 import { Route as AdminInvoicesRouteImport } from './routes/admin.invoices'
+import { Route as AdminHomeSlidersRouteImport } from './routes/admin.home-sliders'
 import { Route as AdminFeaturedOffersRouteImport } from './routes/admin.featured-offers'
 import { Route as AdminFavoritesRouteImport } from './routes/admin.favorites'
 import { Route as AdminContactMessagesRouteImport } from './routes/admin.contact-messages'
@@ -353,6 +354,11 @@ const AdminInvoicesRoute = AdminInvoicesRouteImport.update({
   path: '/invoices',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminHomeSlidersRoute = AdminHomeSlidersRouteImport.update({
+  id: '/home-sliders',
+  path: '/home-sliders',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminFeaturedOffersRoute = AdminFeaturedOffersRouteImport.update({
   id: '/featured-offers',
   path: '/featured-offers',
@@ -546,6 +552,7 @@ export interface FileRoutesByFullPath {
   '/admin/contact-messages': typeof AdminContactMessagesRoute
   '/admin/favorites': typeof AdminFavoritesRoute
   '/admin/featured-offers': typeof AdminFeaturedOffersRoute
+  '/admin/home-sliders': typeof AdminHomeSlidersRoute
   '/admin/invoices': typeof AdminInvoicesRoute
   '/admin/legal': typeof AdminLegalRoute
   '/admin/merchants': typeof AdminMerchantsRoute
@@ -630,6 +637,7 @@ export interface FileRoutesByTo {
   '/admin/contact-messages': typeof AdminContactMessagesRoute
   '/admin/favorites': typeof AdminFavoritesRoute
   '/admin/featured-offers': typeof AdminFeaturedOffersRoute
+  '/admin/home-sliders': typeof AdminHomeSlidersRoute
   '/admin/invoices': typeof AdminInvoicesRoute
   '/admin/legal': typeof AdminLegalRoute
   '/admin/merchants': typeof AdminMerchantsRoute
@@ -716,6 +724,7 @@ export interface FileRoutesById {
   '/admin/contact-messages': typeof AdminContactMessagesRoute
   '/admin/favorites': typeof AdminFavoritesRoute
   '/admin/featured-offers': typeof AdminFeaturedOffersRoute
+  '/admin/home-sliders': typeof AdminHomeSlidersRoute
   '/admin/invoices': typeof AdminInvoicesRoute
   '/admin/legal': typeof AdminLegalRoute
   '/admin/merchants': typeof AdminMerchantsRoute
@@ -803,6 +812,7 @@ export interface FileRouteTypes {
     | '/admin/contact-messages'
     | '/admin/favorites'
     | '/admin/featured-offers'
+    | '/admin/home-sliders'
     | '/admin/invoices'
     | '/admin/legal'
     | '/admin/merchants'
@@ -887,6 +897,7 @@ export interface FileRouteTypes {
     | '/admin/contact-messages'
     | '/admin/favorites'
     | '/admin/featured-offers'
+    | '/admin/home-sliders'
     | '/admin/invoices'
     | '/admin/legal'
     | '/admin/merchants'
@@ -972,6 +983,7 @@ export interface FileRouteTypes {
     | '/admin/contact-messages'
     | '/admin/favorites'
     | '/admin/featured-offers'
+    | '/admin/home-sliders'
     | '/admin/invoices'
     | '/admin/legal'
     | '/admin/merchants'
@@ -1433,6 +1445,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminInvoicesRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/home-sliders': {
+      id: '/admin/home-sliders'
+      path: '/home-sliders'
+      fullPath: '/admin/home-sliders'
+      preLoaderRoute: typeof AdminHomeSlidersRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/featured-offers': {
       id: '/admin/featured-offers'
       path: '/featured-offers'
@@ -1685,6 +1704,7 @@ interface AdminRouteChildren {
   AdminContactMessagesRoute: typeof AdminContactMessagesRoute
   AdminFavoritesRoute: typeof AdminFavoritesRoute
   AdminFeaturedOffersRoute: typeof AdminFeaturedOffersRoute
+  AdminHomeSlidersRoute: typeof AdminHomeSlidersRoute
   AdminInvoicesRoute: typeof AdminInvoicesRoute
   AdminLegalRoute: typeof AdminLegalRoute
   AdminMerchantsRoute: typeof AdminMerchantsRoute
@@ -1722,6 +1742,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminContactMessagesRoute: AdminContactMessagesRoute,
   AdminFavoritesRoute: AdminFavoritesRoute,
   AdminFeaturedOffersRoute: AdminFeaturedOffersRoute,
+  AdminHomeSlidersRoute: AdminHomeSlidersRoute,
   AdminInvoicesRoute: AdminInvoicesRoute,
   AdminLegalRoute: AdminLegalRoute,
   AdminMerchantsRoute: AdminMerchantsRoute,

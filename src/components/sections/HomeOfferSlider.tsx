@@ -33,11 +33,17 @@ export function HomeOfferSlider({ sliderKey, titleAr, titleEn, kickerAr, kickerE
   const { data } = useHomeData();
   const { categoryIdToSlug } = useCategories();
 
-  const raw: any[] = (data as any)?.[sliderKey === "slider_1" ? "homeSlider1" : "homeSlider2"] ?? [];
+  const rawSlider: any[] = (data as any)?.[sliderKey === "slider_1" ? "homeSlider1" : "homeSlider2"] ?? [];
+  // Fallback: if the admin hasn't configured this slider yet, use featured offers so
+  // the section always renders in its designated position on the home page.
+  const featured: any[] = (data as any)?.featuredOffers ?? [];
+  const fallback = sliderKey === "slider_1"
+    ? featured.slice(0, 8)
+    : featured.slice(8, 16).length > 0 ? featured.slice(8, 16) : featured.slice(0, 8);
+  const raw = rawSlider.length > 0 ? rawSlider : fallback;
   const offers = useMemo<Offer[]>(() => {
     return raw
       .map((r) => {
-        // Server may nest partner fields at the row root; merge into a partner-ish shape.
         const partner = r?.partnerNameAr || r?.partnerNameEn || r?.partnerCity || r?.partnerLogo
           ? {
               id: r.partnerId ?? r.partner_id ?? "",
@@ -50,6 +56,7 @@ export function HomeOfferSlider({ sliderKey, titleAr, titleEn, kickerAr, kickerE
         return normalizeOffer(r, categoryIdToSlug, partner as any);
       });
   }, [raw, categoryIdToSlug]);
+
 
   const [emblaRef, embla] = useEmblaCarousel({
     align: "start",

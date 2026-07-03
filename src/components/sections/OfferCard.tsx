@@ -22,8 +22,10 @@ export function OfferCard({ offer }: { offer: Offer }) {
   const L = (a: string, e: string) => (lang === "en" ? e : a);
   const { fav: saved, toggle } = useFavorite(String(offer.id));
 
-  const needsPartner = !offer.vendor?.name && Boolean(offer.vendor?.id) && offer.vendor.id !== "—";
+  // Fetch full partner when name OR city is missing (slider endpoints don't include city).
+  const needsPartner = (!offer.vendor?.name || !offer.vendor?.city) && Boolean(offer.vendor?.id) && offer.vendor.id !== "—";
   const { data: partner } = usePartner(needsPartner ? offer.vendor.id : undefined);
+
   const vendorName = offer.vendor?.name
     || (lang === "en" ? ((partner as any)?.vendorNameEn || (partner as any)?.vendorNameAr) : ((partner as any)?.vendorNameAr || (partner as any)?.vendorNameEn))
     || "";

@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { MapPin, Star, Heart } from "lucide-react";
+import { MapPin, Star, Heart, Store } from "lucide-react";
 import type { Offer } from "@/data/offers";
 import { usePartner } from "@/hooks/useCatalog";
 import { useFavorite } from "@/hooks/useFavorite";
@@ -129,7 +129,10 @@ export function OfferCard({ offer }: { offer: Offer }) {
         </h3>
 
         {vendorName && (
-          <p className="mt-1 text-sm font-bold text-foreground/85">{vendorName}</p>
+          <div className="mt-1 flex items-center gap-1.5 text-sm font-bold text-foreground/85" dir={dir}>
+            <Store className="h-4 w-4 shrink-0 text-[#3F2A6B]" />
+            <span className="truncate">{vendorName}</span>
+          </div>
         )}
 
         {vendorCity && (

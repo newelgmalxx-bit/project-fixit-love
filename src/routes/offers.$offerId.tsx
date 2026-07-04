@@ -762,7 +762,7 @@ function OfferDetailPage() {
               </div>
 
               {/* Title + highlights */}
-              <div className="rounded-3xl border border-border bg-card p-4 sm:p-6 shadow-sm">
+              <div className="col-span-2 rounded-3xl border border-border bg-card p-4 sm:p-6 shadow-sm lg:col-span-1">
                 <h1 className="text-2xl font-extrabold leading-tight text-foreground sm:text-3xl">
                   {offerTitle}
                 </h1>

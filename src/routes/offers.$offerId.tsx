@@ -789,7 +789,7 @@ function OfferDetailPage() {
               </div>
 
               {/* Tabs */}
-              <div className="rounded-3xl border border-border bg-card shadow-sm">
+              <div className="col-span-2 rounded-3xl border border-border bg-card shadow-sm lg:col-span-1">
                 <div className="flex gap-1 overflow-x-auto border-b border-border p-2">
                   {[
                     { id: "overview", label: L("نظرة عامة", "Overview") },

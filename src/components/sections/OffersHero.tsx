@@ -316,7 +316,7 @@ function SlideContent({
       <div className="pointer-events-none absolute -bottom-40 -left-32 hidden h-[28rem] w-[28rem] rounded-full bg-primary/20 blur-[120px] sm:block" />
       <div className="pointer-events-none absolute inset-0 hidden bg-[radial-gradient(ellipse_at_top,theme(colors.primary/8),transparent_60%)] sm:block" />
 
-      <div className="relative mx-auto grid max-w-7xl grid-cols-1 items-center gap-4 px-4 py-5 sm:gap-12 sm:px-6 sm:py-14 lg:grid-cols-12 lg:gap-8 lg:px-8 lg:py-20">
+      <div className="relative mx-auto grid max-w-7xl grid-cols-1 items-center gap-4 px-4 pb-5 pt-3 sm:gap-12 sm:px-6 sm:pb-10 sm:pt-6 lg:grid-cols-12 lg:gap-8 lg:px-8 lg:pb-12 lg:pt-6">
         {/* Content */}
         <div
           className={`order-2 lg:order-1 lg:col-span-7 transition-all duration-700 ${

@@ -685,11 +685,15 @@ function OfferDetailPage() {
             <span className="truncate text-foreground">{offerTitle}</span>
           </div>
 
-          <div className="grid gap-5 sm:gap-8 lg:grid-cols-3">
-            {/* ===== Left ===== */}
-            <div className="order-2 lg:order-1 lg:col-span-2 space-y-4 sm:space-y-6 min-w-0">
+          <div className="grid grid-cols-2 gap-x-3 gap-y-5 sm:gap-x-4 sm:gap-y-6 lg:grid-cols-3 lg:gap-8">
+            {/* ===== Left =====
+               On mobile, `contents` promotes the children of this wrapper (gallery,
+               title, tabs, FAQ) into direct grid items of the outer 2-col grid so
+               the booking aside can sit next to the gallery on row 1. On lg it
+               reverts to a normal 2-col block containing the same children. */}
+            <div className="contents lg:block lg:col-span-2 lg:space-y-6 min-w-0">
               {/* Gallery */}
-              <div>
+              <div className="col-start-1 row-start-1 self-start min-w-0">
                 <div className="relative overflow-hidden rounded-3xl border border-border bg-card shadow-lg">
                   <img
                     src={gallery[activeImg]}

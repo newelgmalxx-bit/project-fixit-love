@@ -1027,7 +1027,7 @@ function OfferDetailPage() {
               </div>
 
               {/* FAQ */}
-              <div className="rounded-3xl border border-border bg-card p-6 shadow-sm">
+              <div className="col-span-2 rounded-3xl border border-border bg-card p-6 shadow-sm lg:col-span-1">
                 <h3 className="mb-4 text-lg font-extrabold text-foreground">{L("أسئلة شائعة", "FAQ")}</h3>
                 <div className="space-y-2">
                   {((Array.isArray((site as any)?.faqs) && (site as any).faqs.length) ? (site as any).faqs : FAQ).map((f: { q: string; a: string }, i: number) => (

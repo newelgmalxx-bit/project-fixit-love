@@ -685,11 +685,15 @@ function OfferDetailPage() {
             <span className="truncate text-foreground">{offerTitle}</span>
           </div>
 
-          <div className="grid gap-5 sm:gap-8 lg:grid-cols-3">
-            {/* ===== Left ===== */}
-            <div className="order-2 lg:order-1 lg:col-span-2 space-y-4 sm:space-y-6 min-w-0">
+          <div className="grid grid-cols-2 gap-x-3 gap-y-5 sm:gap-x-4 sm:gap-y-6 lg:grid-cols-3 lg:gap-8">
+            {/* ===== Left =====
+               On mobile, `contents` promotes the children of this wrapper (gallery,
+               title, tabs, FAQ) into direct grid items of the outer 2-col grid so
+               the booking aside can sit next to the gallery on row 1. On lg it
+               reverts to a normal 2-col block containing the same children. */}
+            <div className="contents lg:block lg:col-span-2 lg:space-y-6 min-w-0">
               {/* Gallery */}
-              <div>
+              <div className="col-start-1 row-start-1 self-start min-w-0">
                 <div className="relative overflow-hidden rounded-3xl border border-border bg-card shadow-lg">
                   <img
                     src={gallery[activeImg]}
@@ -758,7 +762,7 @@ function OfferDetailPage() {
               </div>
 
               {/* Title + highlights */}
-              <div className="rounded-3xl border border-border bg-card p-4 sm:p-6 shadow-sm">
+              <div className="col-span-2 rounded-3xl border border-border bg-card p-4 sm:p-6 shadow-sm lg:col-span-1">
                 <h1 className="text-2xl font-extrabold leading-tight text-foreground sm:text-3xl">
                   {offerTitle}
                 </h1>
@@ -785,7 +789,7 @@ function OfferDetailPage() {
               </div>
 
               {/* Tabs */}
-              <div className="rounded-3xl border border-border bg-card shadow-sm">
+              <div className="col-span-2 rounded-3xl border border-border bg-card shadow-sm lg:col-span-1">
                 <div className="flex gap-1 overflow-x-auto border-b border-border p-2">
                   {[
                     { id: "overview", label: L("نظرة عامة", "Overview") },
@@ -1023,7 +1027,7 @@ function OfferDetailPage() {
               </div>
 
               {/* FAQ */}
-              <div className="rounded-3xl border border-border bg-card p-6 shadow-sm">
+              <div className="col-span-2 rounded-3xl border border-border bg-card p-6 shadow-sm lg:col-span-1">
                 <h3 className="mb-4 text-lg font-extrabold text-foreground">{L("أسئلة شائعة", "FAQ")}</h3>
                 <div className="space-y-2">
                   {((Array.isArray((site as any)?.faqs) && (site as any).faqs.length) ? (site as any).faqs : FAQ).map((f: { q: string; a: string }, i: number) => (
@@ -1048,7 +1052,7 @@ function OfferDetailPage() {
             </div>
 
             {/* ===== Right: Booking card ===== */}
-            <aside className="order-1 lg:order-2 lg:sticky lg:top-24 h-fit min-w-0">
+            <aside className="col-start-2 row-start-1 self-start min-w-0 h-fit lg:col-auto lg:row-auto lg:sticky lg:top-24">
               <div className="overflow-hidden rounded-3xl border border-border bg-card shadow-xl">
                 {/* Price header */}
                 <div className="relative overflow-hidden bg-gradient-to-br from-[#3F2A6B] via-[#6B3FA8] to-[#E0254D] p-5 sm:p-6 text-white">

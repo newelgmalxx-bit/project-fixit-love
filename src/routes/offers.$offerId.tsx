@@ -763,12 +763,28 @@ function OfferDetailPage() {
                 <h1 className="text-2xl font-extrabold leading-tight text-foreground sm:text-3xl">
                   {offerTitle}
                 </h1>
-                <div className="mt-3 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-                  <div className="flex items-center gap-1">
-                    <MapPin className="h-4 w-4 text-primary" />
-                    <span>{vendorName} · {vendorCity}</span>
-                  </div>
+                <div className="mt-3 flex flex-wrap items-center gap-2 text-sm">
+                  {vendorName && (
+                    <div className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/5 px-3 py-1.5 font-bold text-foreground">
+                      <Store className="h-4 w-4 text-[#3F2A6B]" />
+                      <span className="truncate max-w-[220px] sm:max-w-none">{vendorName}</span>
+                    </div>
+                  )}
+                  {(vendorCity || vendorAddress) && (
+                    <a
+                      href={mapsUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center gap-1.5 rounded-full border border-rose-200 bg-rose-50 px-3 py-1.5 font-semibold text-rose-700 transition hover:bg-rose-100"
+                    >
+                      <MapPin className="h-4 w-4 text-[#E0254D]" />
+                      <span className="truncate max-w-[240px] sm:max-w-none">
+                        {[vendorAddress, vendorCity].filter(Boolean).join(L("، ", ", "))}
+                      </span>
+                    </a>
+                  )}
                 </div>
+
 
                 <div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-4">
                   {highlights.map((h, i) => (

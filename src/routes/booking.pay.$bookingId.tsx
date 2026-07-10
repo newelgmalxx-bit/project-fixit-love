@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { ShieldCheck, Lock, ChevronLeft, Loader2 } from "lucide-react";
+import { ShieldCheck, Lock, ChevronLeft, Loader2, MapPin } from "lucide-react";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { SarIcon } from "@/components/ui/SarIcon";

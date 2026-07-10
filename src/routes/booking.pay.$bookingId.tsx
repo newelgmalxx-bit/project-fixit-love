@@ -335,6 +335,11 @@ function BookingPayPage() {
                 <div className="mt-1 text-xs text-muted-foreground">
                   {booking.date} • {booking.time}
                 </div>
+                {booking.branchName && (
+                  <div className="mt-1 inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-bold text-primary">
+                    <MapPin className="h-3 w-3" /> {booking.branchName}
+                  </div>
+                )}
               </div>
               <div className="text-end">
                 <div className="text-xs text-muted-foreground">{L("المطلوب الآن (عربون)", "Due now (deposit)")}</div>

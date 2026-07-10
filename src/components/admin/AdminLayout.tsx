@@ -35,6 +35,7 @@ const navGroups: (NavItem | "sep")[] = [
   
 
   { to: "/admin/merchants", ar: "إدارة المراكز", en: "Merchants", icon: Store },
+  { to: "/admin/branches", ar: "الفروع", en: "Branches", icon: MapPin },
   { to: "/admin/offers", ar: "إدارة العروض", en: "Offers management", icon: ClipboardCheck },
   { to: "/admin/agreements", ar: "اتفاقيات الشركاء", en: "Partner agreements", icon: ScrollText },
   { to: "/admin/partner-packages", ar: "باقات الشركاء", en: "Partner packages", icon: Tag },

@@ -69,6 +69,7 @@ import { Route as AdminCommissionRequestsRouteImport } from './routes/admin.comm
 import { Route as AdminClientsRouteImport } from './routes/admin.clients'
 import { Route as AdminCitiesRouteImport } from './routes/admin.cities'
 import { Route as AdminCategoriesRouteImport } from './routes/admin.categories'
+import { Route as AdminBranchesRouteImport } from './routes/admin.branches'
 import { Route as AdminBookingsRouteImport } from './routes/admin.bookings'
 import { Route as AdminAnalyticsRouteImport } from './routes/admin.analytics'
 import { Route as AdminAgreementsRouteImport } from './routes/admin.agreements'
@@ -394,6 +395,11 @@ const AdminCategoriesRoute = AdminCategoriesRouteImport.update({
   path: '/categories',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminBranchesRoute = AdminBranchesRouteImport.update({
+  id: '/branches',
+  path: '/branches',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminBookingsRoute = AdminBookingsRouteImport.update({
   id: '/bookings',
   path: '/bookings',
@@ -545,6 +551,7 @@ export interface FileRoutesByFullPath {
   '/admin/agreements': typeof AdminAgreementsRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/bookings': typeof AdminBookingsRoute
+  '/admin/branches': typeof AdminBranchesRoute
   '/admin/categories': typeof AdminCategoriesRoute
   '/admin/cities': typeof AdminCitiesRoute
   '/admin/clients': typeof AdminClientsRoute
@@ -630,6 +637,7 @@ export interface FileRoutesByTo {
   '/admin/agreements': typeof AdminAgreementsRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/bookings': typeof AdminBookingsRoute
+  '/admin/branches': typeof AdminBranchesRoute
   '/admin/categories': typeof AdminCategoriesRoute
   '/admin/cities': typeof AdminCitiesRoute
   '/admin/clients': typeof AdminClientsRoute
@@ -717,6 +725,7 @@ export interface FileRoutesById {
   '/admin/agreements': typeof AdminAgreementsRoute
   '/admin/analytics': typeof AdminAnalyticsRoute
   '/admin/bookings': typeof AdminBookingsRoute
+  '/admin/branches': typeof AdminBranchesRoute
   '/admin/categories': typeof AdminCategoriesRoute
   '/admin/cities': typeof AdminCitiesRoute
   '/admin/clients': typeof AdminClientsRoute
@@ -805,6 +814,7 @@ export interface FileRouteTypes {
     | '/admin/agreements'
     | '/admin/analytics'
     | '/admin/bookings'
+    | '/admin/branches'
     | '/admin/categories'
     | '/admin/cities'
     | '/admin/clients'
@@ -890,6 +900,7 @@ export interface FileRouteTypes {
     | '/admin/agreements'
     | '/admin/analytics'
     | '/admin/bookings'
+    | '/admin/branches'
     | '/admin/categories'
     | '/admin/cities'
     | '/admin/clients'
@@ -976,6 +987,7 @@ export interface FileRouteTypes {
     | '/admin/agreements'
     | '/admin/analytics'
     | '/admin/bookings'
+    | '/admin/branches'
     | '/admin/categories'
     | '/admin/cities'
     | '/admin/clients'
@@ -1501,6 +1513,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminCategoriesRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/branches': {
+      id: '/admin/branches'
+      path: '/branches'
+      fullPath: '/admin/branches'
+      preLoaderRoute: typeof AdminBranchesRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/bookings': {
       id: '/admin/bookings'
       path: '/bookings'
@@ -1697,6 +1716,7 @@ interface AdminRouteChildren {
   AdminAgreementsRoute: typeof AdminAgreementsRoute
   AdminAnalyticsRoute: typeof AdminAnalyticsRoute
   AdminBookingsRoute: typeof AdminBookingsRoute
+  AdminBranchesRoute: typeof AdminBranchesRoute
   AdminCategoriesRoute: typeof AdminCategoriesRoute
   AdminCitiesRoute: typeof AdminCitiesRoute
   AdminClientsRoute: typeof AdminClientsRoute
@@ -1735,6 +1755,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminAgreementsRoute: AdminAgreementsRoute,
   AdminAnalyticsRoute: AdminAnalyticsRoute,
   AdminBookingsRoute: AdminBookingsRoute,
+  AdminBranchesRoute: AdminBranchesRoute,
   AdminCategoriesRoute: AdminCategoriesRoute,
   AdminCitiesRoute: AdminCitiesRoute,
   AdminClientsRoute: AdminClientsRoute,

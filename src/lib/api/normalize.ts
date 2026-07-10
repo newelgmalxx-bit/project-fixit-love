@@ -23,6 +23,14 @@ export function normalizeOrder(o: ApiOrder): UiOrder {
       ? "refunded"
       : "unpaid";
   const inv = (o as any).invoice ?? null;
+  const anyO = o as any;
+  const br = anyO.branch ?? null;
+  const branchName =
+    anyO.branch_name ?? anyO.branchName ?? br?.nameAr ?? br?.name_ar ?? br?.nameEn ?? br?.name_en ?? undefined;
+  const branchAddress = anyO.branch_address ?? anyO.branchAddress ?? br?.address ?? undefined;
+  const branchPhone = anyO.branch_phone ?? anyO.branchPhone ?? br?.phone ?? undefined;
+  const branchMapsUrl =
+    anyO.branch_maps_url ?? anyO.branchMapsUrl ?? br?.mapsUrl ?? br?.maps_url ?? undefined;
   return {
     id: o.id,
     number: o.number,
@@ -44,6 +52,10 @@ export function normalizeOrder(o: ApiOrder): UiOrder {
     vat: Number(o.vat) || 0,
     total: Number(o.total) || 0,
     notes: o.notes ?? undefined,
+    branchName,
+    branchAddress,
+    branchPhone,
+    branchMapsUrl,
     timeline: (o.timeline || []).map((t) => ({
       status: (t.status as OrderStatus),
       at: t.at,

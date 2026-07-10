@@ -85,6 +85,10 @@ export type Order = {
   redeemed?: boolean; // whether service was claimed at the center
   redeemedAt?: string;
   vendorName?: string;
+  branchName?: string;
+  branchAddress?: string;
+  branchPhone?: string;
+  branchMapsUrl?: string;
   timeline: { status: OrderStatus; at: string; note?: string }[];
 };
 

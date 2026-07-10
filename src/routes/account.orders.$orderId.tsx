@@ -259,6 +259,43 @@ function OrderDetail() {
               <p className="text-[11px] text-muted-foreground text-end">{t("account.order.priceVat")}</p>
             </div>
           </div>
+          {(order.branchName || order.branchAddress || order.branchPhone) && (
+            <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+              <h3 className="text-base font-bold">{lang === "en" ? "Branch" : "الفرع"}</h3>
+              <div className="mt-3 space-y-2 text-sm">
+                {order.branchName && (
+                  <div className="flex items-start gap-2">
+                    <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                    <div>
+                      <div className="font-bold">{order.branchName}</div>
+                      {order.branchAddress && (
+                        <div className="text-xs text-muted-foreground">{order.branchAddress}</div>
+                      )}
+                    </div>
+                  </div>
+                )}
+                {order.branchPhone && (
+                  <div className="flex items-center gap-2 text-xs">
+                    <Phone className="h-3.5 w-3.5 text-primary" />
+                    <a href={`tel:${order.branchPhone}`} className="font-bold text-primary hover:underline" dir="ltr">
+                      {order.branchPhone}
+                    </a>
+                  </div>
+                )}
+                {order.branchMapsUrl && (
+                  <a
+                    href={order.branchMapsUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-1 text-xs font-bold text-primary hover:underline"
+                  >
+                    <MapPin className="h-3.5 w-3.5" />
+                    {lang === "en" ? "Open in Maps" : "افتح على الخرائط"}
+                  </a>
+                )}
+              </div>
+            </div>
+          )}
           <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
             <h3 className="text-base font-bold">{t("account.order.paymentInfo")}</h3>
             <div className="mt-3 flex items-center gap-3 rounded-xl border border-border bg-background p-3">

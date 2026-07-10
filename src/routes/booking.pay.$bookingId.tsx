@@ -128,6 +128,8 @@ function BookingPayPage() {
           customerName: String(row.customer_name ?? row.customerName ?? ""),
           customerPhone: String(row.customer_phone ?? row.customerPhone ?? ""),
           customerEmail: row.customer_email ?? row.customerEmail ?? undefined,
+          branchId: row.branch_id ?? row.branchId ?? row.branch?.id ?? null,
+          branchName: row.branch_name ?? row.branchName ?? row.branch?.nameAr ?? row.branch?.name_ar ?? row.branch?.nameEn ?? null,
           createdAt: String(row.created_at ?? row.createdAt ?? ""),
         };
         setBooking(mapped);

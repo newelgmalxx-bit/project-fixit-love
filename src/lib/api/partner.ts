@@ -755,4 +755,33 @@ export const partnerApi = {
         body: JSON.stringify({ workingHours }),
       }),
     ),
+
+  // =========================================
+  // Branches (partner-scoped CRUD)
+  // =========================================
+  listBranches: () =>
+    unwrap<{ items: any[] }>(request(`/partner/branches`)).then((d: any) => ({
+      items: (d?.items || d?.branches || d || []) as any[],
+    })),
+  createBranch: (body: {
+    nameAr: string;
+    nameEn?: string | null;
+    phone?: string | null;
+    address?: string | null;
+    mapsUrl?: string | null;
+    isDefault?: boolean;
+    status?: string;
+  }) =>
+    unwrap<{ branch: any }>(
+      request(`/partner/branches`, { method: "POST", body: JSON.stringify(body) }),
+    ),
+  updateBranch: (id: string, body: any) =>
+    unwrap<{ branch: any }>(
+      request(`/partner/branches/${id}`, { method: "PUT", body: JSON.stringify(body) }),
+    ),
+  setDefaultBranch: (id: string) =>
+    unwrap<any>(request(`/partner/branches/${id}/default`, { method: "PUT" })),
+  deleteBranch: (id: string) =>
+    request<ApiResponse<any>>(`/partner/branches/${id}`, { method: "DELETE" }),
 };
+

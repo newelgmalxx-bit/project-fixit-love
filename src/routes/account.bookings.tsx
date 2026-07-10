@@ -148,7 +148,7 @@ function MyBookings() {
         <div className="grid gap-3">
           {items.map((b) => {
             const offerTitle = b.offerTitle || t("account.home.serviceFallback");
-            const venue = b.vendorName ? `${b.vendorName}${b.vendorCity ? ` — ${b.vendorCity}` : ""}` : "";
+            const venue = b.vendorName ? `${b.vendorName}${b.branchName ? ` — ${b.branchName}` : (b.vendorCity ? ` — ${b.vendorCity}` : "")}` : (b.branchName || "");
             const isPast = b.date && new Date(b.date) < new Date(new Date().toDateString());
             const isUnpaid = !!b.paymentStatus && b.paymentStatus !== "paid" && b.paymentStatus !== "completed" && b.paymentStatus !== "success";
             const canModify = !b.redeemedAt && !b.cancelledAt && !isPast;

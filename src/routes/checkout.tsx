@@ -240,6 +240,7 @@ function CheckoutPage() {
                 // Online amount = deposit (commission). Remainder is paid in person.
                 price: +(it.price * (it.commissionPct ?? 0) / 100).toFixed(2),
                 qty: it.qty,
+                branchId: it.branchId ?? undefined,
               })),
             });
             const d = res?.data ?? res ?? {};
@@ -384,6 +385,7 @@ function CheckoutPage() {
             offerSlug: it.serviceSlug,
             price: it.price,
             qty: it.qty,
+            branchId: it.branchId ?? undefined,
           };
         }),
       });

@@ -296,3 +296,93 @@ function EmptyCart({ t }: { t: (k: any) => string }) {
     </div>
   );
 }
+function BranchPickerModal({
+  offerId,
+  currentBranchId,
+  onPick,
+  onClose,
+  lang,
+}: {
+  offerId: string;
+  currentBranchId: string | null;
+  onPick: (b: Branch) => void;
+  onClose: () => void;
+  lang: "ar" | "en";
+}) {
+  const [branches, setBranches] = useState<Branch[] | null>(null);
+  const [err, setErr] = useState<string | null>(null);
+  const L = (a: string, e: string) => (lang === "en" ? e : a);
+
+  useState(() => {
+    publicApi
+      .getOfferBranches(offerId)
+      .then((list) => setBranches(list || []))
+      .catch((e: any) => setErr(e?.message || "Failed to load branches"));
+    return undefined;
+  });
+
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+      onClick={onClose}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="w-full max-w-lg rounded-2xl bg-card p-5 shadow-xl"
+      >
+        <div className="mb-4 flex items-center justify-between">
+          <h3 className="text-lg font-bold">{L("اختر الفرع", "Choose branch")}</h3>
+          <button onClick={onClose} className="rounded-full p-1 hover:bg-muted" aria-label="close">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+        {err && <div className="rounded-lg bg-rose-50 p-3 text-sm text-rose-700">{err}</div>}
+        {!branches && !err && (
+          <div className="flex items-center justify-center py-8">
+            <Loader2 className="h-6 w-6 animate-spin text-primary" />
+          </div>
+        )}
+        {branches && branches.length === 0 && (
+          <div className="py-8 text-center text-sm text-muted-foreground">
+            {L("لا توجد فروع متاحة.", "No branches available.")}
+          </div>
+        )}
+        {branches && branches.length > 0 && (
+          <ul className="max-h-[60vh] space-y-2 overflow-y-auto">
+            {branches.map((b) => {
+              const active = b.id === currentBranchId;
+              return (
+                <li key={b.id}>
+                  <button
+                    type="button"
+                    onClick={() => onPick(b)}
+                    className={`w-full rounded-xl border p-3 text-start transition ${
+                      active
+                        ? "border-primary bg-primary/5"
+                        : "border-border hover:border-primary/60 hover:bg-muted/40"
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <MapPin className="h-4 w-4 text-primary" />
+                      <span className="font-bold">{b.nameAr}</span>
+                      {b.isDefault && (
+                        <span className="rounded-md bg-primary/10 px-1.5 py-0.5 text-[10px] font-bold text-primary">
+                          {L("افتراضي", "Default")}
+                        </span>
+                      )}
+                    </div>
+                    {b.address && (
+                      <div className="mt-1 text-xs text-muted-foreground">{b.address}</div>
+                    )}
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </div>
+    </div>
+  );
+}

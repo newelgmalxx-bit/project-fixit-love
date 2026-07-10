@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { ShieldCheck, Lock, ChevronLeft, Loader2 } from "lucide-react";
+import { ShieldCheck, Lock, ChevronLeft, Loader2, MapPin } from "lucide-react";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { SarIcon } from "@/components/ui/SarIcon";
@@ -37,6 +37,8 @@ type Booking = {
   customerName: string;
   customerPhone: string;
   customerEmail?: string;
+  branchId?: string | null;
+  branchName?: string | null;
   createdAt: string;
 };
 
@@ -126,6 +128,8 @@ function BookingPayPage() {
           customerName: String(row.customer_name ?? row.customerName ?? ""),
           customerPhone: String(row.customer_phone ?? row.customerPhone ?? ""),
           customerEmail: row.customer_email ?? row.customerEmail ?? undefined,
+          branchId: row.branch_id ?? row.branchId ?? row.branch?.id ?? null,
+          branchName: row.branch_name ?? row.branchName ?? row.branch?.nameAr ?? row.branch?.name_ar ?? row.branch?.nameEn ?? null,
           createdAt: String(row.created_at ?? row.createdAt ?? ""),
         };
         setBooking(mapped);
@@ -331,6 +335,11 @@ function BookingPayPage() {
                 <div className="mt-1 text-xs text-muted-foreground">
                   {booking.date} • {booking.time}
                 </div>
+                {booking.branchName && (
+                  <div className="mt-1 inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-bold text-primary">
+                    <MapPin className="h-3 w-3" /> {booking.branchName}
+                  </div>
+                )}
               </div>
               <div className="text-end">
                 <div className="text-xs text-muted-foreground">{L("المطلوب الآن (عربون)", "Due now (deposit)")}</div>

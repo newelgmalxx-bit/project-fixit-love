@@ -277,6 +277,30 @@ export function buildAgreementHtmlForPartner(
 }
 
 export function printAgreementPdf(html: string) {
+  // Inject a print trigger so the new window auto-opens the print dialog
+  // (which is where "Save as PDF" lives) after images/fonts load.
+  const injected = html.replace(
+    "</body>",
+    `<script>
+      (function(){
+        function go(){ try { window.focus(); window.print(); } catch(e){} }
+        if (document.readyState === 'complete') { setTimeout(go, 300); }
+        else { window.addEventListener('load', function(){ setTimeout(go, 300); }); }
+      })();
+    </script></body>`
+  );
+
+  // Prefer a new tab — reliable across browsers and gives the user the
+  // native print → "Save as PDF" flow.
+  const win = window.open("", "_blank");
+  if (win) {
+    win.document.open();
+    win.document.write(injected);
+    win.document.close();
+    return;
+  }
+
+  // Popup blocked → fallback to a hidden iframe.
   const iframe = document.createElement("iframe");
   iframe.style.position = "fixed";
   iframe.style.right = "0";
@@ -290,9 +314,15 @@ export function printAgreementPdf(html: string) {
   doc.open();
   doc.write(html);
   doc.close();
-  setTimeout(() => {
-    iframe.contentWindow?.focus();
-    iframe.contentWindow?.print();
-    setTimeout(() => document.body.removeChild(iframe), 1500);
-  }, 400);
+  const trigger = () => {
+    try {
+      iframe.contentWindow?.focus();
+      iframe.contentWindow?.print();
+    } catch {}
+    setTimeout(() => { try { document.body.removeChild(iframe); } catch {} }, 2000);
+  };
+  if (iframe.contentWindow) {
+    iframe.contentWindow.addEventListener("load", () => setTimeout(trigger, 300));
+  }
+  setTimeout(trigger, 800);
 }

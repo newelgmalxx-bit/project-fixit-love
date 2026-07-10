@@ -3861,3 +3861,210 @@ function SupportTab() {
     </div>
   );
 }
+// =========================================
+// BranchesTab — manage partner branches
+// =========================================
+function BranchesTab() {
+  const { lang, dir } = useLang();
+  const L = (a: string, e: string) => (lang === "en" ? e : a);
+  const [items, setItems] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [open, setOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const emptyForm = { nameAr: "", nameEn: "", phone: "", address: "", mapsUrl: "", isDefault: false, status: "active" };
+  const [form, setForm] = useState<any>(emptyForm);
+
+  async function load() {
+    setLoading(true);
+    try {
+      const d = await partnerApi.listBranches();
+      setItems(d.items || []);
+    } catch (e: any) {
+      toast.error(e?.message || L("تعذّر تحميل الفروع", "Failed to load branches"));
+      setItems([]);
+    } finally {
+      setLoading(false);
+    }
+  }
+  useEffect(() => { load(); }, []);
+
+  function openNew() { setEditingId(null); setForm(emptyForm); setOpen(true); }
+  function openEdit(b: any) {
+    setEditingId(b.id);
+    setForm({
+      nameAr: b.nameAr || "",
+      nameEn: b.nameEn || "",
+      phone: b.phone || "",
+      address: b.address || "",
+      mapsUrl: b.mapsUrl || "",
+      isDefault: !!b.isDefault,
+      status: b.status || "active",
+    });
+    setOpen(true);
+  }
+
+  async function save() {
+    if (!form.nameAr?.trim()) {
+      toast.error(L("اسم الفرع بالعربي مطلوب", "Arabic branch name is required"));
+      return;
+    }
+    setSaving(true);
+    try {
+      const payload = {
+        nameAr: form.nameAr.trim(),
+        nameEn: (form.nameEn || "").trim() || null,
+        phone: (form.phone || "").trim() || null,
+        address: (form.address || "").trim() || null,
+        mapsUrl: (form.mapsUrl || "").trim() || null,
+        isDefault: !!form.isDefault,
+        status: form.status || "active",
+      };
+      if (editingId) await partnerApi.updateBranch(editingId, payload);
+      else await partnerApi.createBranch(payload);
+      toast.success(L("تم الحفظ", "Saved"));
+      setOpen(false);
+      load();
+    } catch (e: any) {
+      toast.error(e?.message || L("فشل الحفظ", "Save failed"));
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function setDefault(b: any) {
+    try { await partnerApi.setDefaultBranch(b.id); toast.success(L("تم التعيين", "Default set")); load(); }
+    catch (e: any) { toast.error(e?.message || L("فشل التحديث", "Failed")); }
+  }
+  async function remove(b: any) {
+    const name = lang === "en" ? (b.nameEn || b.nameAr) : b.nameAr;
+    if (!confirm(L(`حذف الفرع "${name}"؟`, `Delete branch "${name}"?`))) return;
+    try { await partnerApi.deleteBranch(b.id); toast.success(L("تم الحذف", "Deleted")); load(); }
+    catch (e: any) { toast.error(e?.message || L("فشل الحذف", "Delete failed")); }
+  }
+
+  return (
+    <div className="space-y-4" dir={dir}>
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <h2 className="text-xl font-extrabold">{L("الفروع", "Branches")}</h2>
+          <p className="text-sm text-muted-foreground">{L("أضف فروع مركزك ليتمكن العميل من اختيار الفرع الأقرب.", "Add your branches so customers can pick the nearest one.")}</p>
+        </div>
+        <button onClick={openNew} className="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-sm font-bold text-primary-foreground">
+          <Plus className="h-4 w-4" /> {L("فرع جديد", "New branch")}
+        </button>
+      </div>
+
+      {loading ? (
+        <div className="flex justify-center py-16"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
+      ) : items.length === 0 ? (
+        <div className="rounded-2xl border border-dashed border-border py-12 text-center text-sm text-muted-foreground">
+          {L("لا توجد فروع بعد. أضف أول فرع.", "No branches yet. Add your first one.")}
+        </div>
+      ) : (
+        <div className="grid gap-3 sm:grid-cols-2">
+          {items.map((b) => (
+            <div key={b.id} className="rounded-2xl border border-border bg-card p-4">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-start gap-3 min-w-0">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                    <MapPin className="h-4 w-4" />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-sm font-bold truncate flex items-center gap-2">
+                      {lang === "en" ? (b.nameEn || b.nameAr) : b.nameAr}
+                      {b.isDefault && (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-800">
+                          <Star className="h-3 w-3" /> {L("افتراضي", "Default")}
+                        </span>
+                      )}
+                    </div>
+                    {b.address && <div className="text-xs text-muted-foreground truncate">{b.address}</div>}
+                    {b.phone && (
+                      <div className="mt-1 text-xs text-muted-foreground inline-flex items-center gap-1">
+                        <Phone className="h-3 w-3" /> {b.phone}
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <div className="flex items-center gap-1">
+                  {b.mapsUrl && (
+                    <a href={b.mapsUrl} target="_blank" rel="noreferrer" className="rounded-lg p-2 hover:bg-muted" title={L("الخريطة", "Map")}>
+                      <ExternalLink className="h-4 w-4" />
+                    </a>
+                  )}
+                  {!b.isDefault && (
+                    <button onClick={() => setDefault(b)} className="rounded-lg p-2 hover:bg-muted" title={L("تعيين افتراضي", "Set default")}>
+                      <Star className="h-4 w-4" />
+                    </button>
+                  )}
+                  <button onClick={() => openEdit(b)} className="rounded-lg p-2 hover:bg-muted"><Edit3 className="h-4 w-4" /></button>
+                  <button onClick={() => remove(b)} className="text-rose-600 hover:bg-rose-50 rounded-lg p-2"><Trash2 className="h-4 w-4" /></button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {open && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => setOpen(false)}>
+          <div className="w-full max-w-lg rounded-2xl bg-background p-6 shadow-2xl" dir={dir} onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-lg font-extrabold mb-4">{editingId ? L("تعديل فرع", "Edit branch") : L("فرع جديد", "New branch")}</h3>
+            <div className="grid gap-3">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-bold text-muted-foreground">{L("الاسم (عربي)", "Name (Arabic)")}</label>
+                  <input value={form.nameAr} onChange={(e) => setForm({ ...form, nameAr: e.target.value })}
+                    className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm" />
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-muted-foreground">{L("الاسم (إنجليزي)", "Name (English)")}</label>
+                  <input value={form.nameEn} onChange={(e) => setForm({ ...form, nameEn: e.target.value })}
+                    className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm" />
+                </div>
+              </div>
+              <div>
+                <label className="text-xs font-bold text-muted-foreground">{L("العنوان", "Address")}</label>
+                <input value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })}
+                  className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm" />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-bold text-muted-foreground">{L("الهاتف", "Phone")}</label>
+                  <input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                    className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm" />
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-muted-foreground">{L("رابط الخريطة", "Maps URL")}</label>
+                  <input value={form.mapsUrl} onChange={(e) => setForm({ ...form, mapsUrl: e.target.value })}
+                    className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm" />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <label className="flex items-center gap-2 pt-2">
+                  <input type="checkbox" checked={!!form.isDefault} onChange={(e) => setForm({ ...form, isDefault: e.target.checked })} />
+                  <span className="text-sm font-bold">{L("الفرع الافتراضي", "Default branch")}</span>
+                </label>
+                <div>
+                  <label className="text-xs font-bold text-muted-foreground">{L("الحالة", "Status")}</label>
+                  <select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}
+                    className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm">
+                    <option value="active">{L("نشط", "Active")}</option>
+                    <option value="inactive">{L("موقوف", "Inactive")}</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+            <div className="mt-5 flex justify-end gap-2">
+              <button onClick={() => setOpen(false)} className="rounded-xl border border-border px-4 py-2 text-sm font-bold">{L("إلغاء", "Cancel")}</button>
+              <button onClick={save} disabled={saving} className="rounded-xl bg-primary px-5 py-2 text-sm font-bold text-primary-foreground disabled:opacity-60">
+                {saving ? L("جارٍ الحفظ…", "Saving…") : L("حفظ", "Save")}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

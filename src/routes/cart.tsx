@@ -126,8 +126,32 @@ function CartPage() {
                                         </span>
                                       ) : (
                                         <span className="text-[11px] font-bold text-rose-600">{L("نسبة عربون هذا المركز غير محددة", "This center's deposit percentage is not set")}</span>
+                                  )}
+                                  {(it.branchName || it.branchId) && (
+                                    <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
+                                      <span className="inline-flex items-center gap-1 rounded-md bg-muted px-2 py-1 font-bold text-foreground">
+                                        <MapPin className="h-3 w-3 text-primary" />
+                                        {it.branchName || L("فرع محدد", "Selected branch")}
+                                      </span>
+                                      {it.offerId && !isOfferBooking(it) && (
+                                        <button
+                                          type="button"
+                                          onClick={() =>
+                                            setBranchModal({
+                                              lineId: it.id,
+                                              offerId: it.offerId!,
+                                              currentBranchId: it.branchId,
+                                            })
+                                          }
+                                          className="text-[11px] font-bold text-primary hover:underline"
+                                        >
+                                          {L("تغيير الفرع", "Change branch")}
+                                        </button>
                                       )}
                                     </div>
+                                  )}
+                                </div>
+
                                   )}
                                 </div>
                                 <div className="flex items-center justify-between gap-4 sm:gap-6">

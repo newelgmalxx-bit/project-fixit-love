@@ -757,6 +757,9 @@ function CheckoutPage() {
                       <div className="flex-1 min-w-0">
                         <div className="font-bold line-clamp-1">{it.serviceTitle}</div>
                         <div className="text-xs text-muted-foreground">{it.planName} • {lang === "en" ? "Meters" : "عدد الأمتار"}: <span data-ltr-number>{it.qty}</span></div>
+                        {it.branchName && (
+                          <div className="mt-0.5 text-[11px] font-bold text-primary line-clamp-1">📍 {it.branchName}</div>
+                        )}
                       </div>
                       <div className="text-xs font-bold text-primary whitespace-nowrap" data-ltr-number>{formatCurrency(it.price * it.qty)}</div>
                     </div>

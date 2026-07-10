@@ -33,7 +33,7 @@ export const Route = createFileRoute("/partner-dashboard")({
   ),
 });
 
-type Tab = "overview" | "profile" | "offers" | "bookings" | "verify" | "schedule" | "wallet" | "reviews" | "messages" | "analytics" | "agreement" | "commission-request" | "notifications" | "support";
+type Tab = "overview" | "profile" | "offers" | "bookings" | "verify" | "schedule" | "wallet" | "reviews" | "messages" | "analytics" | "agreement" | "commission-request" | "notifications" | "support" | "branches";
 
 type WorkingHour = { day: string; open: string; close: string; closed?: boolean };
 const WEEK_DAYS: { key: string; ar: string; en: string }[] = [

@@ -71,6 +71,9 @@ export function orderToInvoiceData(order: Order, clientName: string): InvoiceDat
     subtotal: order.subtotal,
     vat: order.vat,
     total: order.total,
+    branchName: order.branchName,
+    branchAddress: order.branchAddress,
+    branchPhone: order.branchPhone,
   };
 }
 

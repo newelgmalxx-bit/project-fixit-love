@@ -76,6 +76,10 @@ export type InvoiceData = {
   vat: number;
   total: number;
   notes?: string;
+  /** Branch (center location) info shown on the invoice */
+  branchName?: string;
+  branchAddress?: string;
+  branchPhone?: string;
   /** Optional language for company labels (defaults to 'ar') */
   lang?: "ar" | "en";
   /** Site-wide logo (used as fallback for invoice logo) */
@@ -265,6 +269,16 @@ export const InvoiceDocument = React.forwardRef<HTMLDivElement, { data: InvoiceD
             ))}
           </tbody>
         </table>
+
+        {(data.branchName || data.branchAddress || data.branchPhone) && (
+          <div style={{ marginTop: 18, padding: "12px 16px", background: "#f0fdfa", border: "1px solid #99f6e4", borderRadius: 10, fontSize: 12, color: "#134e4a", textAlign: startAlign }}>
+            <div style={{ fontWeight: 700, marginBottom: 4, color: "#00AEC6" }}>{L("فرع الاستلام / تنفيذ الخدمة", "Service branch")}</div>
+            {data.branchName && <div style={{ fontWeight: 700 }}>{data.branchName}</div>}
+            {data.branchAddress && <div style={{ marginTop: 3 }}>{data.branchAddress}</div>}
+            {data.branchPhone && <div dir="ltr" style={{ marginTop: 3, textAlign: startAlign }}>{data.branchPhone}</div>}
+          </div>
+        )}
+
 
         {/* Totals */}
         <div style={{ display: "flex", justifyContent: endAlign === "left" ? "flex-start" : "flex-end", marginTop: 24 }}>

@@ -20,6 +20,8 @@ type StoredBooking = {
   offerTitle?: string;
   vendorName?: string;
   vendorCity?: string;
+  branchName?: string;
+
   date: string;
   time: string;
   customerName: string;

@@ -292,6 +292,7 @@ function PartnerDashboard() {
     { id: "agreement", label: L("الاتفاقية والعمولة", "Agreement & commission"), icon: Percent },
     { id: "commission-request", label: L("طلب تعديل العمولة", "Commission change request"), icon: Send },
     { id: "support", label: L("الدعم", "Support"), icon: LifeBuoy },
+    { id: "branches", label: L("الفروع", "Branches"), icon: MapPin },
     { id: "profile", label: L("ملف المركز", "Center profile"), icon: Store },
   ];
 

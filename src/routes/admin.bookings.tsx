@@ -476,6 +476,17 @@ function BookingsPage() {
                   )}
                 </Info>
                 <Info label={L("المركز", "Center")}>{pickPartnerName(viewing) || "—"}</Info>
+                <Info label={L("الفرع", "Branch")}>
+                  {(() => {
+                    const v: any = viewing;
+                    const name = v.branchName ?? v.branch_name ?? v.branch?.nameAr ?? v.branch?.name_ar ?? v.branch?.nameEn ?? null;
+                    const maps = v.branchMapsUrl ?? v.branch_maps_url ?? v.branch?.mapsUrl ?? v.branch?.maps_url ?? null;
+                    if (!name) return "—";
+                    return maps
+                      ? <a href={maps} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-primary hover:underline">{name}</a>
+                      : name;
+                  })()}
+                </Info>
                 <Info label={L("العرض", "Offer")}>{pickOfferTitle(viewing) || "—"}</Info>
                 <Info label={L("الموعد", "Schedule")}>
                   <span dir="ltr">{formatAdminDateTime(pickScheduleAt(viewing), lang)}</span>

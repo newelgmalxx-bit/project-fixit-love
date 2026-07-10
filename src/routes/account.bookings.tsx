@@ -20,6 +20,8 @@ type StoredBooking = {
   offerTitle?: string;
   vendorName?: string;
   vendorCity?: string;
+  branchName?: string;
+
   date: string;
   time: string;
   customerName: string;
@@ -45,6 +47,8 @@ function normalizeRow(r: any): StoredBooking {
     offerTitle: r.offer_title ?? r.offerTitle ?? undefined,
     vendorName: r.partner_name ?? r.vendorName ?? undefined,
     vendorCity: r.partner_city ?? r.vendorCity ?? undefined,
+    branchName: r.branch_name ?? r.branchName ?? r.branch?.name_ar ?? r.branch?.nameAr ?? r.branch?.name_en ?? r.branch?.nameEn ?? undefined,
+
     date: String(r.booking_date ?? r.bookingDate ?? r.date ?? ""),
     time: String(r.booking_time ?? r.bookingTime ?? r.time ?? ""),
     customerName: String(r.customer_name ?? r.customerName ?? ""),
@@ -144,7 +148,7 @@ function MyBookings() {
         <div className="grid gap-3">
           {items.map((b) => {
             const offerTitle = b.offerTitle || t("account.home.serviceFallback");
-            const venue = b.vendorName ? `${b.vendorName}${b.vendorCity ? ` — ${b.vendorCity}` : ""}` : "";
+            const venue = b.vendorName ? `${b.vendorName}${b.branchName ? ` — ${b.branchName}` : (b.vendorCity ? ` — ${b.vendorCity}` : "")}` : (b.branchName || "");
             const isPast = b.date && new Date(b.date) < new Date(new Date().toDateString());
             const isUnpaid = !!b.paymentStatus && b.paymentStatus !== "paid" && b.paymentStatus !== "completed" && b.paymentStatus !== "success";
             const canModify = !b.redeemedAt && !b.cancelledAt && !isPast;

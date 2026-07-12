@@ -44,7 +44,7 @@ export const adminBranchesApi = {
     return unwrapList(r.data);
   },
   listForPartner: async (partnerId: string) => {
-    const r = await request<ApiResponse<any>>(`/admin/partners/${partnerId}/branches`);
+    const r = await request<ApiResponse<any>>(`/admin/branches${qs({ partnerId })}`);
     return unwrapList(r.data);
   },
   get: async (id: string): Promise<Branch> => {
@@ -62,7 +62,7 @@ export const adminBranchesApi = {
       body: JSON.stringify(body),
     }),
   setDefault: (id: string) =>
-    request<ApiResponse<any>>(`/admin/branches/${id}/default`, { method: "PUT" }),
+    request<ApiResponse<any>>(`/admin/branches/${id}/set-default`, { method: "PUT" }),
   remove: (id: string) =>
     request<ApiResponse<any>>(`/admin/branches/${id}`, { method: "DELETE" }),
 };

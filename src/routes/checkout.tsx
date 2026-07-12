@@ -92,7 +92,44 @@ function CheckoutPage() {
     (s, it) => s + it.price * it.qty * (1 - (it.commissionPct ?? 0) / 100),
     0,
   );
+
+  // Multi-branch guard: block submit if any offer item has more than one
+  // branch and no branchId picked. Backend enforces this with a 422; we
+  // catch it earlier for a friendlier UX and route the user back to /cart.
+  const [offerBranchCount, setOfferBranchCount] = useState<Record<string, number>>({});
+  useEffect(() => {
+    const ids = Array.from(new Set(items.map((it) => it.offerId).filter(Boolean))) as string[];
+    const missing = ids.filter((id) => !(id in offerBranchCount));
+    if (missing.length === 0) return;
+    let cancelled = false;
+    (async () => {
+      const entries = await Promise.all(
+        missing.map(async (id) => {
+          try {
+            const list = await (await import("@/lib/api/public")).publicApi.getOfferBranches(id);
+            return [id, Array.isArray(list) ? list.length : 0] as const;
+          } catch {
+            return [id, 0] as const;
+          }
+        }),
+      );
+      if (cancelled) return;
+      setOfferBranchCount((prev) => {
+        const next = { ...prev };
+        for (const [id, n] of entries) next[id] = n;
+        return next;
+      });
+    })();
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [items.map((i) => i.offerId).join(",")]);
+  const missingBranchItems = items.filter(
+    (it) => it.offerId && !it.branchId && (offerBranchCount[it.offerId] ?? 0) > 1,
+  );
+  const hasMissingBranch = missingBranchItems.length > 0;
+
   const [step, setStep] = useState(0);
+
   const { t, lang } = useLang();
   const L = (a: string, e: string) => (lang === "en" ? e : a);
   const { user } = useAuth();

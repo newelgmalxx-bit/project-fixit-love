@@ -530,8 +530,34 @@ function OfferDialog({
             <label className="text-xs font-bold">{L("الشريك", "Partner")}</label>
             <PartnerSelect
               value={form.partnerId}
-              onChange={(id) => setForm({ ...form, partnerId: id })}
+              onChange={(id) => setForm({ ...form, partnerId: id, branchId: null })}
             />
+          </div>
+          <div>
+            <label className="text-xs font-bold">
+              {L("الفرع", "Branch")}
+              {branchesLoading && <span className="ms-2 text-muted-foreground">{L("جارٍ التحميل…", "Loading…")}</span>}
+            </label>
+            <select
+              value={form.branchId ?? ""}
+              onChange={(e) => setForm({ ...form, branchId: e.target.value || null })}
+              disabled={!form.partnerId || branchesLoading}
+              className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm disabled:opacity-60"
+            >
+              <option value="">
+                {!form.partnerId
+                  ? L("— اختر الشريك أولاً —", "— Select a partner first —")
+                  : branches.length === 0
+                  ? L("— لا توجد فروع —", "— No branches —")
+                  : L("— كل الفروع —", "— All branches —")}
+              </option>
+              {branches.map((b) => (
+                <option key={b.id} value={b.id}>
+                  {(lang === "en" ? (b.nameEn || b.nameAr) : b.nameAr) || b.address || b.id}
+                  {b.isDefault ? ` · ${L("افتراضي", "Default")}` : ""}
+                </option>
+              ))}
+            </select>
           </div>
           <div>
             <label className="text-xs font-bold">{L("التصنيف", "Category")}</label>
@@ -541,6 +567,7 @@ function OfferDialog({
               {categories.map((c) => <option key={c.id} value={c.id}>{lang === "en" ? ((c as any).nameEn || c.nameAr) : c.nameAr}</option>)}
             </select>
           </div>
+
           <div>
             <label className="text-xs font-bold">{L("السعر بعد الخصم", "Price after discount")}</label>
             <input type="number" value={form.priceAfter ?? ""} onChange={(e) => setForm({ ...form, priceAfter: e.target.value === "" ? 0 : Number(e.target.value) })}

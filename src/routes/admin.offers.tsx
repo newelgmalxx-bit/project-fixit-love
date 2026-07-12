@@ -448,6 +448,30 @@ function OfferDialog({
   const [termsTextEn, setTermsTextEn] = useState((offer?.termsEn || []).join("\n"));
   const [bulletsText, setBulletsText] = useState((offer?.overviewBullets || []).join("\n"));
   const [bulletsTextEn, setBulletsTextEn] = useState((offer?.overviewBulletsEn || []).join("\n"));
+  const [branches, setBranches] = useState<Branch[]>([]);
+  const [branchesLoading, setBranchesLoading] = useState(false);
+
+  useEffect(() => {
+    const pid = form.partnerId;
+    if (!pid) { setBranches([]); return; }
+    let cancel = false;
+    setBranchesLoading(true);
+    adminBranchesApi.listForPartner(pid)
+      .then((d) => { if (!cancel) setBranches(d.items || []); })
+      .catch(() => { if (!cancel) setBranches([]); })
+      .finally(() => { if (!cancel) setBranchesLoading(false); });
+    return () => { cancel = true; };
+  }, [form.partnerId]);
+
+  // When partner changes, clear branch selection if it doesn't belong to loaded branches
+  useEffect(() => {
+    if (!form.branchId) return;
+    if (branches.length && !branches.some((b) => b.id === form.branchId)) {
+      setForm((f) => ({ ...f, branchId: null }));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [branches]);
+
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();

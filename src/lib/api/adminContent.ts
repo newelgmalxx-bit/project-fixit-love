@@ -322,6 +322,8 @@ function normalizeOffer(raw: any): AdminOffer {
       ownerName: raw.partner.ownerName ?? raw.partner.owner_name ?? raw.partner.contactName,
       city: raw.partner.city ?? raw.partner.cityName ?? raw.partner.city_name,
     } : undefined,
+    branchId: raw?.branchId ?? raw?.branch_id ?? raw?.branch?.id ?? null,
+    branch: raw?.branch ?? null,
     categoryId: raw?.categoryId ?? raw?.category_id ?? null,
     category: raw?.category ? normalizeCategory(raw.category) : null,
     title: raw?.title ?? raw?.titleAr ?? raw?.title_ar ?? "",

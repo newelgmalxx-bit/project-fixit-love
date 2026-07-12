@@ -9,6 +9,7 @@ import {
 import { PartnerSelect } from "@/components/admin/PartnerSelect";
 import { adminBranchesApi, type BranchInput } from "@/lib/api/adminBranches";
 import type { Branch } from "@/lib/api/types";
+import { BranchHoursEditor, defaultWorkingHours, parseWorkingHours, type WorkingHour } from "@/components/branches/BranchHoursEditor";
 import { useLang } from "@/i18n/LanguageProvider";
 
 export const Route = createFileRoute("/admin/branches")({

@@ -276,16 +276,20 @@ function OfferDetailPage() {
   }, [offer.id, selectedBranchId]);
 
 
-  // Weekday keys (Sun..Sat) marked closed in the partner's workingHours.
+  // Weekday keys (Sun..Sat) marked closed. Prefer the selected branch's
+  // workingHours when available; fall back to the partner's HQ workingHours.
   const closedWeekdays = useMemo(() => {
-    const wh: any[] = (offer.vendor as any)?.workingHours;
+    const branchWh: any[] | undefined = (selectedBranch as any)?.workingHours;
+    const partnerWh: any[] | undefined = (offer.vendor as any)?.workingHours;
+    const wh = Array.isArray(branchWh) && branchWh.length ? branchWh : partnerWh;
     if (!Array.isArray(wh)) return new Set<string>();
     return new Set(
       wh
         .filter((d) => d && (d.closed === true || d.closed === 1 || d.closed === "1"))
         .map((d) => String(d.day || "").toLowerCase()),
     );
-  }, [offer.vendor]);
+  }, [offer.vendor, selectedBranch]);
+
 
   const WEEKDAY_KEYS = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
 

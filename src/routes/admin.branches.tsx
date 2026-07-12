@@ -26,6 +26,7 @@ const empty: BranchInput = {
   mapsUrl: "",
   isDefault: false,
   status: "active",
+  workingHours: defaultWorkingHours(),
 };
 
 function BranchesPage() {

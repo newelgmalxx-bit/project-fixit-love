@@ -273,6 +273,10 @@ function BranchesPage() {
                 </select>
               </div>
             </div>
+            <BranchHoursEditor
+              value={(editing.workingHours as WorkingHour[]) || defaultWorkingHours()}
+              onChange={(next) => setEditing({ ...editing, workingHours: next })}
+            />
           </div>
           <DialogFooter>
             <button onClick={() => setOpen(false)} className="rounded-xl border border-border px-4 py-2 text-sm font-bold">{L("إلغاء", "Cancel")}</button>

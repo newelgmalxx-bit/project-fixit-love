@@ -433,8 +433,15 @@ export const adminOffersApi = {
     return { ...r.data, items };
   },
   get: async (id: string) => {
-    const r = await request<ApiResponse<{ offer: any }>>(`/admin/offers/${id}`);
-    return normalizeOffer(r.data.offer);
+    const r = await request<ApiResponse<{ offer: any; branches?: any[] }>>(`/admin/offers/${id}`);
+    // Backend returns `branches` as a sibling of `offer` (not nested inside).
+    // Merge them so normalizeOffer can derive branchIds from the branches array.
+    const raw = r.data?.offer ? { ...r.data.offer } : {};
+    const siblingBranches = Array.isArray((r.data as any)?.branches) ? (r.data as any).branches : null;
+    if (siblingBranches && (!Array.isArray(raw.branches) || raw.branches.length === 0)) {
+      raw.branches = siblingBranches;
+    }
+    return normalizeOffer(raw);
   },
   create: (body: AdminOfferInput) =>
     request<ApiResponse<{ offer: AdminOffer }>>("/admin/offers", {

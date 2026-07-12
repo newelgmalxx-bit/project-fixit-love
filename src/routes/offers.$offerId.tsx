@@ -174,14 +174,22 @@ function OfferDetailPage() {
         const list = await publicApi.getOfferBranches(offer.id);
         if (cancelled) return;
         setBranches(list);
-        const def = list.find((b) => b.isDefault) ?? list[0];
-        setSelectedBranchId(def?.id ?? null);
+        // Auto-select ONLY when there's a single branch. For multi-branch
+        // offers the user MUST pick one — backend enforces this on
+        // /cart/items and /checkout (422 otherwise).
+        if (list.length <= 1) {
+          const def = list.find((b) => b.isDefault) ?? list[0];
+          setSelectedBranchId(def?.id ?? null);
+        } else {
+          setSelectedBranchId(null);
+        }
       } catch {
         if (!cancelled) { setBranches([]); setSelectedBranchId(null); }
       }
     })();
     return () => { cancelled = true; };
   }, [offer.id]);
+
   const selectedBranch = useMemo(
     () => branches.find((b) => b.id === selectedBranchId) ?? null,
     [branches, selectedBranchId],
@@ -509,6 +517,13 @@ function OfferDetailPage() {
       });
       return;
     }
+    if (branches.length > 1 && !selectedBranchId) {
+      toast.error(L("اختر الفرع", "Choose branch"), {
+        description: L("هذا العرض متاح في أكثر من فرع — يرجى اختيار الفرع أولاً.", "This offer is available at multiple branches — please select one first."),
+      });
+      return;
+    }
+
     const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customerEmail.trim());
     if (!emailOk) {
       toast.error(L("البريد الإلكتروني غير صحيح", "Invalid email"), {
@@ -576,6 +591,14 @@ function OfferDetailPage() {
       });
       return;
     }
+
+    if (branches.length > 1 && !selectedBranchId) {
+      toast.error(L("اختر الفرع", "Choose branch"), {
+        description: L("هذا العرض متاح في أكثر من فرع — يرجى اختيار الفرع أولاً.", "This offer is available at multiple branches — please select one first."),
+      });
+      return;
+    }
+
 
     if (date && dayOff) {
       toast.error(L("هذا اليوم غير متاح", "This day is unavailable"), { description: L("المركز غير متاح في هذا اليوم — يرجى اختيار تاريخ آخر.", "The center is closed on this day — please pick another date.") });
@@ -1411,20 +1434,28 @@ function OfferDetailPage() {
 
 
                     <div className="space-y-2">
+                      {branches.length > 1 && !selectedBranchId && (
+                        <div className="rounded-xl border border-amber-300 bg-amber-50 p-3 text-xs font-bold text-amber-800">
+                          {L("اختر الفرع أولاً لإتمام الحجز.", "Select a branch first to continue.")}
+                        </div>
+                      )}
                       <button
                         type="submit"
-                        className="w-full rounded-xl bg-gradient-to-r from-[#3F2A6B] to-[#E0254D] py-4 text-base font-extrabold text-white shadow-lg shadow-primary/30 transition hover:scale-[1.01]"
+                        disabled={branches.length > 1 && !selectedBranchId}
+                        className="w-full rounded-xl bg-gradient-to-r from-[#3F2A6B] to-[#E0254D] py-4 text-base font-extrabold text-white shadow-lg shadow-primary/30 transition hover:scale-[1.01] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
                       >
                         {L("احجز الآن — دفع العربون ←", "Book now — pay deposit →")}
                       </button>
                       <button
                         type="button"
                         onClick={handleAddToCart}
-                        className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-primary bg-primary/5 py-3 text-sm font-extrabold text-primary transition hover:bg-primary/10"
+                        disabled={branches.length > 1 && !selectedBranchId}
+                        className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-primary bg-primary/5 py-3 text-sm font-extrabold text-primary transition hover:bg-primary/10 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         <ShoppingCart className="h-4 w-4" />
                         {L("أضف للسلة (طلب جماعي)", "Add to cart (group order)")}
                       </button>
+
                       <p className="text-center text-[11px] text-muted-foreground">
                         {L("أضف عدة عروض من مراكز مختلفة وادفع عربون موحّد مرة واحدة.", "Add multiple offers from different centers and pay a single deposit once.")}
                       </p>

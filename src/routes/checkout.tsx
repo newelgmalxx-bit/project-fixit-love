@@ -1,5 +1,5 @@
 import { createFileRoute, Link, Outlet, useLocation, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Check, ChevronLeft, Lock, ShieldCheck, FileText, Loader2, AlertCircle } from "lucide-react";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
@@ -92,7 +92,44 @@ function CheckoutPage() {
     (s, it) => s + it.price * it.qty * (1 - (it.commissionPct ?? 0) / 100),
     0,
   );
+
+  // Multi-branch guard: block submit if any offer item has more than one
+  // branch and no branchId picked. Backend enforces this with a 422; we
+  // catch it earlier for a friendlier UX and route the user back to /cart.
+  const [offerBranchCount, setOfferBranchCount] = useState<Record<string, number>>({});
+  useEffect(() => {
+    const ids = Array.from(new Set(items.map((it) => it.offerId).filter(Boolean))) as string[];
+    const missing = ids.filter((id) => !(id in offerBranchCount));
+    if (missing.length === 0) return;
+    let cancelled = false;
+    (async () => {
+      const entries = await Promise.all(
+        missing.map(async (id) => {
+          try {
+            const list = await (await import("@/lib/api/public")).publicApi.getOfferBranches(id);
+            return [id, Array.isArray(list) ? list.length : 0] as const;
+          } catch {
+            return [id, 0] as const;
+          }
+        }),
+      );
+      if (cancelled) return;
+      setOfferBranchCount((prev) => {
+        const next = { ...prev };
+        for (const [id, n] of entries) next[id] = n;
+        return next;
+      });
+    })();
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [items.map((i) => i.offerId).join(",")]);
+  const missingBranchItems = items.filter(
+    (it) => it.offerId && !it.branchId && (offerBranchCount[it.offerId] ?? 0) > 1,
+  );
+  const hasMissingBranch = missingBranchItems.length > 0;
+
   const [step, setStep] = useState(0);
+
   const { t, lang } = useLang();
   const L = (a: string, e: string) => (lang === "en" ? e : a);
   const { user } = useAuth();
@@ -214,6 +251,18 @@ function CheckoutPage() {
       setStep(2);
       return;
     }
+    if (hasMissingBranch) {
+      const titles = missingBranchItems.map((it) => it.serviceTitle).join("، ");
+      setError(
+        lang === "ar"
+          ? `يجب اختيار الفرع أولاً للعروض التالية: ${titles}. ارجع إلى السلة لاختيار الفرع.`
+          : `Please choose a branch for these items before continuing: ${titles}. Return to the cart to pick a branch.`,
+      );
+      toast.error(lang === "ar" ? "الفرع مطلوب" : "Branch required");
+      navigate({ to: "/cart" as any });
+      return;
+    }
+
     setSubmitting(true);
     let keepRedirectScreen = false;
     try {
@@ -451,10 +500,24 @@ function CheckoutPage() {
         if (err.status === 401) {
           setError(lang === "ar" ? "يجب تسجيل الدخول لإتمام الطلب." : "Please sign in to place an order.");
         } else {
+          // Detect branchId validation error from backend (multi-branch offer).
+          const errs: any = (err as any).errors || {};
+          const branchIssue = errs.branchId || errs.branch_id || (typeof err.message === "string" && /branch/i.test(err.message));
+          if (branchIssue) {
+            setError(
+              lang === "ar"
+                ? "يجب اختيار الفرع لأحد العروض قبل المتابعة. سيتم إرجاعك إلى السلة."
+                : "A branch must be selected for one of your items. Returning you to the cart.",
+            );
+            toast.error(lang === "ar" ? "الفرع مطلوب" : "Branch required");
+            navigate({ to: "/cart" as any });
+            return;
+          }
           setError(err.message || (lang === "ar" ? "تحقق من البيانات أدناه." : "Please review the highlighted fields."));
         }
         if (err.errors) setFieldErrors(err.errors as any);
         toast.error(error || (lang === "ar" ? "فشل إتمام الطلب" : "Checkout failed"));
+
       } else if (payment === "tamara") {
         // Tamara: never invent a local order id. Surface the real API error.
         const msg = (err as any)?.message || (lang === "ar" ? "فشل إنشاء جلسة الدفع" : "Failed to create payment session");

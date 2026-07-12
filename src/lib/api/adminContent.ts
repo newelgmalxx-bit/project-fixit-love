@@ -330,9 +330,11 @@ function normalizeOffer(raw: any): AdminOffer {
     branch: raw?.branch ?? null,
     branches: Array.isArray(raw?.branches) ? raw.branches : [],
     branchIds: Array.isArray(raw?.branchIds)
-      ? raw.branchIds
+      ? raw.branchIds.map((v: any) => (typeof v === "object" ? v?.id : v)).filter(Boolean)
+      : Array.isArray(raw?.branch_ids)
+      ? raw.branch_ids.map((v: any) => (typeof v === "object" ? v?.id : v)).filter(Boolean)
       : Array.isArray(raw?.branches)
-      ? raw.branches.map((b: any) => b?.id).filter(Boolean)
+      ? raw.branches.map((b: any) => (typeof b === "object" ? (b?.id ?? b?.branch_id ?? b?.branchId) : b)).filter(Boolean)
       : [],
     branchesCount: raw?.branchesCount ?? (Array.isArray(raw?.branches) ? raw.branches.length : 0),
     categoryId: raw?.categoryId ?? raw?.category_id ?? null,

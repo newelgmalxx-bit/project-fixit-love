@@ -500,10 +500,24 @@ function CheckoutPage() {
         if (err.status === 401) {
           setError(lang === "ar" ? "يجب تسجيل الدخول لإتمام الطلب." : "Please sign in to place an order.");
         } else {
+          // Detect branchId validation error from backend (multi-branch offer).
+          const errs: any = (err as any).errors || {};
+          const branchIssue = errs.branchId || errs.branch_id || (typeof err.message === "string" && /branch/i.test(err.message));
+          if (branchIssue) {
+            setError(
+              lang === "ar"
+                ? "يجب اختيار الفرع لأحد العروض قبل المتابعة. سيتم إرجاعك إلى السلة."
+                : "A branch must be selected for one of your items. Returning you to the cart.",
+            );
+            toast.error(lang === "ar" ? "الفرع مطلوب" : "Branch required");
+            navigate({ to: "/cart" as any });
+            return;
+          }
           setError(err.message || (lang === "ar" ? "تحقق من البيانات أدناه." : "Please review the highlighted fields."));
         }
         if (err.errors) setFieldErrors(err.errors as any);
         toast.error(error || (lang === "ar" ? "فشل إتمام الطلب" : "Checkout failed"));
+
       } else if (payment === "tamara") {
         // Tamara: never invent a local order id. Surface the real API error.
         const msg = (err as any)?.message || (lang === "ar" ? "فشل إنشاء جلسة الدفع" : "Failed to create payment session");

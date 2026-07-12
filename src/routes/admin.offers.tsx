@@ -465,6 +465,23 @@ function OfferDialog({
     return () => { cancel = true; };
   }, [form.partnerId]);
 
+  // On edit, fetch the full offer detail to hydrate branchIds (list endpoint
+  // may not include the branches[] array).
+  useEffect(() => {
+    if (!offer?.id) return;
+    let cancel = false;
+    adminOffersApi.get(offer.id)
+      .then((fresh) => {
+        if (cancel) return;
+        const ids = fresh?.branchIds ?? [];
+        if (ids.length) {
+          setForm((f) => ({ ...f, branchIds: ids }));
+        }
+      })
+      .catch(() => { /* ignore — keep list-provided data */ });
+    return () => { cancel = true; };
+  }, [offer?.id]);
+
   // When partner changes, drop selected branches that no longer belong to that partner
   useEffect(() => {
     if (!form.branchIds || form.branchIds.length === 0) return;

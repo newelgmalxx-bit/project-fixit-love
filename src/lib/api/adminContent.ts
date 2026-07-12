@@ -99,6 +99,7 @@ export type AdminOffer = {
 
 export type AdminOfferInput = {
   partnerId: string;
+  branchId?: string | null;
   categoryId: string | number | null;
   title: string;
   titleEn?: string | null;

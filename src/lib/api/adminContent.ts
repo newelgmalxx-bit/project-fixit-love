@@ -62,6 +62,8 @@ export type AdminOffer = {
   id: string;
   partnerId: string;
   partner?: AdminOfferPartner;
+  branchId?: string | null;
+  branch?: { id: string; nameAr?: string; nameEn?: string | null; name_ar?: string; name_en?: string | null; address?: string | null; phone?: string | null } | null;
   categoryId: string | number | null;
   category?: AdminOfferCategory | null;
   /** Arabic title (primary, required). */

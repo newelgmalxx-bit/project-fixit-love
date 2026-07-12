@@ -187,6 +187,17 @@ function OfferDetailPage() {
     [branches, selectedBranchId],
   );
 
+  // Prefer the selected branch's address/city/maps link over the partner's HQ.
+  const branchNameLoc = selectedBranch ? pickLang(selectedBranch.nameAr, (selectedBranch as any).nameEn) : "";
+  const branchAddress = selectedBranch ? pickLang((selectedBranch as any).address, (selectedBranch as any).addressEn) : "";
+  const branchCity = selectedBranch ? pickLang((selectedBranch as any).city, (selectedBranch as any).cityEn) : "";
+  const vendorAddress = branchAddress || vendorAddressBase;
+  const vendorCity = branchCity || vendorCityBase;
+  const mapsUrl = (selectedBranch as any)?.mapsUrl
+    || (selectedBranch
+      ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${branchNameLoc || vendorName} ${vendorAddress} ${vendorCity}`)}`
+      : vendorMapsBase);
+
   const TIME_SLOTS = availableSlots;
 
   // Fetch availability for the selected date

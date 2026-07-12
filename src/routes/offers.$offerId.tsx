@@ -215,6 +215,14 @@ function OfferDetailPage() {
       setAvailableSlots(FALLBACK_SLOTS);
       return;
     }
+    // Multi-branch offer: backend requires branchId (422 otherwise). Wait
+    // until the user picks a branch before hitting availability.
+    if (branches.length > 1 && !selectedBranchId) {
+      setBlockedSlots([]); setDayOff(false);
+      setAvailableSlots(FALLBACK_SLOTS);
+      return;
+    }
+
     let cancelled = false;
     (async () => {
       try {
@@ -249,7 +257,9 @@ function OfferDetailPage() {
     const from = iso(today);
     const end = new Date(today); end.setDate(today.getDate() + 13);
     const to = iso(end);
+    if (branches.length > 1 && !selectedBranchId) { setBlockedDaysList([]); return; }
     let cancelled = false;
+
     (async () => {
       try {
         const arr: any[] = await publicApi.getOfferAvailabilityRange(offer.id, from, to, selectedBranchId);

@@ -344,7 +344,16 @@ function MerchantsPage() {
       setAddOpen(false);
       load();
     } catch (e: any) {
-      toast.error(e?.message || L("تعذّر إضافة المركز", "Failed to add partner"));
+      const fieldMsgs: string[] = [];
+      const errs = e?.errors;
+      if (errs && typeof errs === "object") {
+        for (const v of Object.values(errs)) {
+          if (Array.isArray(v)) fieldMsgs.push(...v.map(String));
+          else if (v) fieldMsgs.push(String(v));
+        }
+      }
+      const base = e?.message || L("تعذّر إضافة المركز", "Failed to add partner");
+      toast.error(fieldMsgs.length ? `${base}\n${fieldMsgs.join("\n")}` : base);
     }
   }
 

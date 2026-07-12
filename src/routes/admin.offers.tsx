@@ -421,7 +421,9 @@ function OfferDialog({
 
   const [form, setForm] = useState<AdminOfferInput>(() => ({
     partnerId: offer?.partnerId || "",
-    branchId: offer?.branchId ?? null,
+    branchIds: offer?.branchIds && offer.branchIds.length
+      ? offer.branchIds
+      : (offer?.branchId ? [offer.branchId] : []),
     categoryId: offer?.categoryId ?? null,
     title: offer?.title || "",
     titleEn: offer?.titleEn || "",

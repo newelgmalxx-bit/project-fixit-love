@@ -690,9 +690,26 @@ function OffersTab({ partner }: { partner: Profile }) {
     return () => { cancel = true; };
   }, [partner.id]);
 
-  // When opening the form: if partner has exactly one branch and none selected, preselect it
+  // When opening the form:
+  //  • Edit: fetch the full offer detail so `branch_ids` is hydrated from the
+  //    backend `branches[]` (list endpoint only returns `branchesCount`).
+  //  • New: preselect the default/only branch if the partner has just one.
   useEffect(() => {
     if (!editing) return;
+    if (editing.id) {
+      let cancel = false;
+      partnerApi.getOffer(editing.id)
+        .then(({ offer: fresh }) => {
+          if (cancel || !fresh) return;
+          const ids = Array.isArray((fresh as any).branch_ids) ? (fresh as any).branch_ids : [];
+          if (ids.length) {
+            setEditing((prev) => (prev && prev.id === fresh.id ? ({ ...prev, branch_ids: ids } as any) : prev));
+          }
+        })
+        .catch(() => { /* ignore — keep list-provided data */ });
+      return () => { cancel = true; };
+    }
+    // New offer — preselect if only one branch or a default exists
     const cur = ((editing as any).branch_ids as string[] | undefined) ?? [];
     if (cur.length) return;
     if (branches.length === 1) {

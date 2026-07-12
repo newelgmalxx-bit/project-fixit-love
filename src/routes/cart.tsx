@@ -282,11 +282,19 @@ function CartPage() {
                         <span>{L("يوجد حجز بنسبة عربون غير محددة. احذفه وأعد إضافته بعد ضبط نسبة المركز.", "A booking has no deposit percentage set. Remove it and re-add after the center's percentage is configured.")}</span>
                       </div>
                     )}
+                    {hasMissingBranch && (
+                      <div className="mt-3 flex items-start gap-2 rounded-xl border border-amber-300 bg-amber-50 p-3 text-xs font-bold text-amber-800">
+                        <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+                        <span>{L("يوجد عرض لم يتم اختيار الفرع له. اختره من قائمة المنتجات قبل المتابعة.", "One or more items need a branch selection before checkout.")}</span>
+                      </div>
+                    )}
                   </div>
 
-                  {hasInvalidBookingPct ? (
+                  {hasInvalidBookingPct || hasMissingBranch ? (
                     <button disabled className="mt-6 inline-flex h-12 w-full items-center justify-center rounded-xl bg-muted text-base font-bold text-muted-foreground">
-                      {L("لا يمكن الدفع قبل ضبط النسبة", "Cannot pay before percentage is set")}
+                      {hasInvalidBookingPct
+                        ? L("لا يمكن الدفع قبل ضبط النسبة", "Cannot pay before percentage is set")
+                        : L("اختر الفرع أولاً", "Choose branch first")}
                     </button>
                   ) : (
                     <Link
@@ -296,6 +304,7 @@ function CartPage() {
                       {hasBookings ? `${L("إتمام الدفع — عربون", "Pay deposit")} ${formatCurrency(depositTotal)}` : t("cart.checkout")}
                     </Link>
                   )}
+
                   <p className="mt-3 text-center text-[11px] text-muted-foreground">
                     {hasBookings ? L("العربون يساوي عمولة المنصة، والمركز يستلم الباقي عند زيارتك.", "The deposit equals the platform fee, and the center collects the remainder at your visit.") : t("cart.summarySubtitle")}
                   </p>

@@ -204,6 +204,11 @@ function MyBookings() {
                         <MapPin className="h-3.5 w-3.5" /> {venue}
                       </div>
                     )}
+                    {(b.branchAddress || (!b.branchId && b.vendorAddress)) && (
+                      <div className="text-xs text-muted-foreground ps-5">
+                        {b.branchAddress || b.vendorAddress}
+                      </div>
+                    )}
                     <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
                       <span className="inline-flex items-center gap-1"><Calendar className="h-3.5 w-3.5" /> {b.date}</span>
                       <span className="inline-flex items-center gap-1"><Clock className="h-3.5 w-3.5" /> {b.time}</span>

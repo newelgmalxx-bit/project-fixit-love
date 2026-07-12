@@ -76,6 +76,7 @@ function BranchesPage() {
       mapsUrl: b.mapsUrl || "",
       isDefault: !!b.isDefault,
       status: b.status || "active",
+      workingHours: parseWorkingHours((b as any).workingHours ?? (b as any).working_hours),
     });
     setOpen(true);
   }

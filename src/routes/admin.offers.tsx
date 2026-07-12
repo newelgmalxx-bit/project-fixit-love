@@ -465,11 +465,14 @@ function OfferDialog({
     return () => { cancel = true; };
   }, [form.partnerId]);
 
-  // When partner changes, clear branch selection if it doesn't belong to loaded branches
+  // When partner changes, drop selected branches that no longer belong to that partner
   useEffect(() => {
-    if (!form.branchId) return;
-    if (branches.length && !branches.some((b) => b.id === form.branchId)) {
-      setForm((f) => ({ ...f, branchId: null }));
+    if (!form.branchIds || form.branchIds.length === 0) return;
+    if (!branches.length) return;
+    const valid = new Set(branches.map((b) => b.id));
+    const filtered = form.branchIds.filter((id) => valid.has(id));
+    if (filtered.length !== form.branchIds.length) {
+      setForm((f) => ({ ...f, branchIds: filtered }));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [branches]);

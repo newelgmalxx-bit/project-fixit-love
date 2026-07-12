@@ -978,22 +978,41 @@ function OffersTab({ partner }: { partner: Profile }) {
                 </div>
                 {branches.length > 0 && (
                   <div>
-                    <label className="mb-1.5 block text-xs font-bold">{L("الفرع", "Branch")}</label>
-                    <select
-                      value={(editing as any).branch_id || ""}
-                      onChange={(e) => setEditing({ ...editing, branch_id: e.target.value || null } as any)}
-                      className="h-10 w-full rounded-xl border border-border bg-background px-3 text-sm"
-                    >
-                      <option value="">{L("— كل الفروع —", "— All branches —")}</option>
-                      {branches.map((b: any) => (
-                        <option key={b.id} value={b.id}>
-                          {(lang === "en" ? (b.nameEn || b.name_en || b.nameAr || b.name_ar) : (b.nameAr || b.name_ar || b.nameEn || b.name_en)) || b.address || b.id}
-                          {(b.isDefault || b.is_default) ? ` · ${L("افتراضي", "Default")}` : ""}
-                        </option>
-                      ))}
-                    </select>
+                    <label className="mb-1.5 block text-xs font-bold">{L("الفروع", "Branches")}</label>
+                    <div className="max-h-40 space-y-1 overflow-y-auto rounded-xl border border-border bg-background p-2">
+                      {branches.map((b: any) => {
+                        const ids: string[] = (editing as any).branch_ids || [];
+                        const checked = ids.includes(b.id);
+                        return (
+                          <label key={b.id} className="flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1 text-xs hover:bg-muted/50">
+                            <input
+                              type="checkbox"
+                              checked={checked}
+                              onChange={(e) => {
+                                const cur = new Set(ids);
+                                if (e.target.checked) cur.add(b.id); else cur.delete(b.id);
+                                setEditing({ ...editing, branch_ids: Array.from(cur) } as any);
+                              }}
+                            />
+                            <span className="font-bold">
+                              {(lang === "en" ? (b.nameEn || b.name_en || b.nameAr || b.name_ar) : (b.nameAr || b.name_ar || b.nameEn || b.name_en)) || b.address || b.id}
+                            </span>
+                            {(b.isDefault || b.is_default) && <span className="text-[10px] text-amber-600">· {L("افتراضي", "Default")}</span>}
+                          </label>
+                        );
+                      })}
+                      <div className="flex gap-2 pt-1 text-[11px]">
+                        <button type="button" onClick={() => setEditing({ ...editing, branch_ids: branches.map((b: any) => b.id) } as any)} className="font-bold text-primary hover:underline">
+                          {L("اختيار الكل", "Select all")}
+                        </button>
+                        <span className="text-muted-foreground">·</span>
+                        <button type="button" onClick={() => setEditing({ ...editing, branch_ids: [] } as any)} className="font-bold text-muted-foreground hover:underline">
+                          {L("مسح", "Clear")}
+                        </button>
+                      </div>
+                    </div>
                     <p className="mt-1 text-[11px] text-muted-foreground">
-                      {L("اربط العرض بفرع محدد، أو اتركه للكل.", "Link the offer to a specific branch, or leave for all.")}
+                      {L("حدد الفروع التي يظهر بها العرض، أو اترك فارغًا للربط مع الفرع الافتراضي.", "Pick branches where the offer appears, or leave empty to link to the default branch.")}
                     </p>
                   </div>
                 )}

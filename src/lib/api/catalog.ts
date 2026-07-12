@@ -133,17 +133,28 @@ function defaultVendor(api: ApiOffer): Vendor {
     o.commissionPct ?? o.commission_pct,
   );
   const deposit = toPct(o.depositPct ?? o.deposit_pct ?? commission);
+  // Backend now embeds partner mini fields directly on each offer.
+  const p: any = o.partner ?? {};
+  const nameAr = o.vendorNameAr ?? o.vendorName ?? p.vendorNameAr ?? p.nameAr ?? "";
+  const nameEn = o.vendorNameEn ?? p.vendorNameEn ?? p.nameEn ?? nameAr;
+  const address = o.displayAddress ?? o.vendorAddress ?? p.vendorAddress ?? p.addressAr ?? p.address ?? "";
+  const city = o.vendorCity ?? p.city ?? "";
+  const logo = o.vendorLogo ?? p.logo ?? null;
+  const rating = Number(o.rating ?? p.rating ?? 0) || 0;
+  const reviewsCount = Number(o.reviewsCount ?? p.reviewsCount ?? 0) || 0;
   return {
-    id: api.partnerId || "—",
-    name: "",
-    city: "",
-    address: "",
-    rating: 0,
-    reviewsCount: 0,
+    id: api.partnerId || p.id || "—",
+    name: nameAr || nameEn || "",
+    nameEn: nameEn || nameAr || "",
+    city,
+    address,
+    rating,
+    reviewsCount,
     verified: true,
+    logo,
     commissionPct: commission,
     depositPct: deposit,
-  };
+  } as Vendor;
 }
 
 /**
@@ -242,6 +253,11 @@ export function normalizeOffer(
     termsEn: toArr(api.termsEn),
     featured: Boolean(api.isFeatured),
     featuredRank: api.featuredSort ?? null,
+    displayAddress: (api as any).displayAddress ?? undefined,
+    displayBranchName: (api as any).displayBranchName ?? undefined,
+    hasMultipleBranches: Boolean((api as any).hasMultipleBranches),
+    branchesCount: Number((api as any).branchesCount ?? 0) || 0,
+    branch: (api as any).branch ?? null,
   } as Offer;
 }
 

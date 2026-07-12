@@ -1,11 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { MapPin, Star, Heart, Store } from "lucide-react";
 import type { Offer } from "@/data/offers";
-import { usePartner } from "@/hooks/useCatalog";
 import { useFavorite } from "@/hooks/useFavorite";
-import { useQuery } from "@tanstack/react-query";
-import { reviews as reviewsApi } from "@/lib/api/services";
-import { publicApi } from "@/lib/api/public";
 import { useLang } from "@/i18n/LanguageProvider";
 import { SarIcon } from "@/components/ui/SarIcon";
 
@@ -14,53 +10,22 @@ export function OfferCard({ offer }: { offer: Offer }) {
   const L = (a: string, e: string) => (lang === "en" ? e : a);
   const { fav: saved, toggle } = useFavorite(String(offer.id));
 
-  const hasVendorId = Boolean(offer.vendor?.id) && offer.vendor.id !== "—";
-  const cityMissing = !offer.vendor?.city;
-
-  // The slider endpoint returns partnerName* but no partnerId/partnerCity.
-  // When city is missing and we don't have a partnerId, fetch full offer details to get them.
-  const needsOfferDetail = cityMissing && !hasVendorId && Boolean(offer.id);
-  const { data: offerDetail } = useQuery({
-    queryKey: ["offer-detail-for-card", String(offer.id)],
-    queryFn: () => publicApi.getOffer(String(offer.id)),
-    enabled: needsOfferDetail,
-    staleTime: 5 * 60 * 1000,
-  });
-  const detailPartnerId = (offerDetail as any)?.partnerId as string | undefined;
-
-  const partnerIdToFetch = hasVendorId ? offer.vendor.id : detailPartnerId;
-  const needsPartner = cityMissing && Boolean(partnerIdToFetch);
-  const { data: partner } = usePartner(needsPartner ? partnerIdToFetch : undefined);
-
-  const vendorName = offer.vendor?.name
-    || (lang === "en" ? ((partner as any)?.vendorNameEn || (partner as any)?.vendorNameAr) : ((partner as any)?.vendorNameAr || (partner as any)?.vendorNameEn))
-    || "";
-  const vendorCity = offer.vendor?.city || (partner as any)?.city || (partner as any)?.addressAr || (partner as any)?.address || "";
-  const baseRating = offer.vendor?.rating || Number((partner as any)?.rating || 0);
-  const baseReviews = offer.vendor?.reviewsCount || Number((partner as any)?.reviewsCount || 0);
-
-  const { data: reviewStats } = useQuery({
-    queryKey: ["offer-reviews", String(offer.id)],
-    queryFn: async () => {
-      const res: any = await reviewsApi.list({ offerId: String(offer.id), limit: 1 });
-      const data = res?.data ?? res;
-      const total = Number(data?.total ?? (Array.isArray(data?.items) ? data.items.length : 0)) || 0;
-      const avg = Number(data?.average ?? 0) || 0;
-      return { total, average: Math.round(avg * 10) / 10 };
-    },
-    enabled: Boolean(offer.id) && baseReviews === 0,
-    staleTime: 60_000,
-  });
-  const liveStats =
-    reviewStats && reviewStats.total > 0
-      ? { avg: reviewStats.average, count: reviewStats.total }
-      : null;
-  const vendorRating = liveStats?.avg ?? baseRating;
-  const vendorReviews = liveStats?.count ?? baseReviews;
+  // Backend now embeds vendor mini fields on every offer response
+  // (vendorName/vendorAddress/rating/reviewsCount + displayAddress/branch/hasMultipleBranches).
+  // We rely only on those — no per-card GET /partners/:id or GET /reviews calls.
+  const vendorName = offer.vendor?.name || "";
+  const displayAddress =
+    (offer as any).displayAddress ||
+    offer.vendor?.address ||
+    offer.vendor?.city ||
+    "";
+  const hasMultipleBranches = Boolean((offer as any).hasMultipleBranches);
+  const branchesCount = Number((offer as any).branchesCount || 0);
+  const vendorRating = Number(offer.vendor?.rating || 0);
+  const vendorReviews = Number(offer.vendor?.reviewsCount || 0);
 
   const offerTitle = lang === "en" ? ((offer as any).titleEn || offer.title) : (offer.title || (offer as any).titleEn || "");
   const currency = L("ر.س", "SAR");
-  
 
   return (
     <Link
@@ -135,10 +100,17 @@ export function OfferCard({ offer }: { offer: Offer }) {
           </div>
         )}
 
-        {vendorCity && (
-          <div className="mt-1.5 flex items-center gap-1 text-xs text-muted-foreground" dir={dir}>
+        {displayAddress && (
+          <div className="mt-1.5 flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground" dir={dir}>
             <MapPin className="h-4 w-4 text-[#E0254D]" />
-            <span className="font-semibold">{vendorCity}</span>
+            <span className="font-semibold">{displayAddress}</span>
+            {hasMultipleBranches && (
+              <span className="inline-flex items-center rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-extrabold text-primary">
+                {branchesCount > 1
+                  ? L(`+ ${branchesCount - 1} فروع أخرى`, `+ ${branchesCount - 1} more branches`)
+                  : L("متاح في عدة فروع", "Multiple branches")}
+              </span>
+            )}
           </div>
         )}
 

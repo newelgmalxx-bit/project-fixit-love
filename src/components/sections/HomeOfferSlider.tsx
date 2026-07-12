@@ -143,9 +143,9 @@ export function HomeOfferSliders() {
 }
 
 export function useHasHomeSliders() {
-  const { data } = useHomeData();
-  const s1: any[] = (data as any)?.homeSlider1 ?? [];
-  const s2: any[] = (data as any)?.homeSlider2 ?? [];
+  const { data } = useHomeSliders();
+  const s1: any[] = (data as any)?.slider_1 ?? [];
+  const s2: any[] = (data as any)?.slider_2 ?? [];
   return s1.length > 0 || s2.length > 0;
 }
 

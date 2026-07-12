@@ -170,10 +170,15 @@ function BookingConfirmation() {
           vendorPhone: row.partner_phone ?? row.vendorPhone,
           vendorMapsUrl: row.partner_maps_url ?? row.vendorMapsUrl,
           branchId: row.branch_id ?? row.branchId ?? row.branch?.id,
-          branchName: row.branch_name ?? row.branchName ?? row.branch?.name_ar ?? row.branch?.nameAr,
-          branchAddress: row.branch_address ?? row.branchAddress ?? row.branch?.address,
-          branchPhone: row.branch_phone ?? row.branchPhone ?? row.branch?.phone,
-          branchMapsUrl: row.branch_maps_url ?? row.branchMapsUrl ?? row.branch?.maps_url ?? row.branch?.mapsUrl,
+          branchName: (() => {
+            const ar = row.branchNameAr ?? row.branch_name_ar ?? row.branch?.name_ar ?? row.branch?.nameAr;
+            const en = row.branchNameEn ?? row.branch_name_en ?? row.branch?.name_en ?? row.branch?.nameEn;
+            const explicit = row.branch_name ?? row.branchName;
+            return explicit ?? (lang === "en" ? (en ?? ar) : (ar ?? en));
+          })(),
+          branchAddress: row.branchAddress ?? row.branch_address ?? row.branch?.address,
+          branchPhone: row.branchPhone ?? row.branch_phone ?? row.branch?.phone,
+          branchMapsUrl: row.branchMapsUrl ?? row.branch_maps_url ?? row.branch?.maps_url ?? row.branch?.mapsUrl,
           priceAfter: row.price_after != null ? Number(row.price_after) : undefined,
           date: String(row.booking_date ?? row.bookingDate ?? row.date ?? ""),
           time: String(row.booking_time ?? row.bookingTime ?? row.time ?? ""),

@@ -20,7 +20,13 @@ type StoredBooking = {
   offerTitle?: string;
   vendorName?: string;
   vendorCity?: string;
+  vendorAddress?: string;
+  vendorPhone?: string;
+  branchId?: string;
   branchName?: string;
+  branchAddress?: string;
+  branchPhone?: string;
+  branchMapsUrl?: string;
 
   date: string;
   time: string;
@@ -36,9 +42,15 @@ type StoredBooking = {
   paymentStatus?: string;
 };
 
-function normalizeRow(r: any): StoredBooking {
+function normalizeRow(r: any, lang: "ar" | "en" = "ar"): StoredBooking {
   const ref = String(r.booking_number ?? r.bookingNumber ?? r.id ?? "");
   const display = String(r.qr_code ?? r.qrCode ?? ref);
+  const branchNameAr = r.branchNameAr ?? r.branch_name_ar ?? r.branch?.name_ar ?? r.branch?.nameAr;
+  const branchNameEn = r.branchNameEn ?? r.branch_name_en ?? r.branch?.name_en ?? r.branch?.nameEn;
+  const branchName =
+    r.branch_name ?? r.branchName ??
+    (lang === "en" ? (branchNameEn ?? branchNameAr) : (branchNameAr ?? branchNameEn)) ??
+    undefined;
   return {
     bookingId: display,
     bookingRef: ref || display,
@@ -47,7 +59,13 @@ function normalizeRow(r: any): StoredBooking {
     offerTitle: r.offer_title ?? r.offerTitle ?? undefined,
     vendorName: r.partner_name ?? r.vendorName ?? undefined,
     vendorCity: r.partner_city ?? r.vendorCity ?? undefined,
-    branchName: r.branch_name ?? r.branchName ?? r.branch?.name_ar ?? r.branch?.nameAr ?? r.branch?.name_en ?? r.branch?.nameEn ?? undefined,
+    vendorAddress: r.partner_address ?? r.vendorAddress ?? undefined,
+    vendorPhone: r.partner_phone ?? r.vendorPhone ?? undefined,
+    branchId: r.branch_id ?? r.branchId ?? r.branch?.id ?? undefined,
+    branchName,
+    branchAddress: r.branchAddress ?? r.branch_address ?? r.branch?.address ?? undefined,
+    branchPhone: r.branchPhone ?? r.branch_phone ?? r.branch?.phone ?? undefined,
+    branchMapsUrl: r.branchMapsUrl ?? r.branch_maps_url ?? r.branch?.maps_url ?? r.branch?.mapsUrl ?? undefined,
 
     date: String(r.booking_date ?? r.bookingDate ?? r.date ?? ""),
     time: String(r.booking_time ?? r.bookingTime ?? r.time ?? ""),
@@ -86,7 +104,7 @@ function MyBookings() {
     try {
       const r: any = await account.bookings({ limit: 100 });
       const raw = r?.data?.items ?? r?.items ?? r?.data ?? [];
-      const list: StoredBooking[] = Array.isArray(raw) ? raw.map(normalizeRow) : [];
+      const list: StoredBooking[] = Array.isArray(raw) ? raw.map((row: any) => normalizeRow(row, lang)) : [];
       // Server is the source of truth. Drop any stale local cache from old flows.
       try { localStorage.removeItem("myBookings"); } catch {}
       setItems(list.sort((a, b) => (b.createdAt || "").localeCompare(a.createdAt || "")));
@@ -184,6 +202,11 @@ function MyBookings() {
                     {venue && (
                       <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                         <MapPin className="h-3.5 w-3.5" /> {venue}
+                      </div>
+                    )}
+                    {(b.branchAddress || (!b.branchId && b.vendorAddress)) && (
+                      <div className="text-xs text-muted-foreground ps-5">
+                        {b.branchAddress || b.vendorAddress}
                       </div>
                     )}
                     <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">

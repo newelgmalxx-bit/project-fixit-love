@@ -101,6 +101,7 @@ function BranchesPage() {
         mapsUrl: (editing.mapsUrl || "").trim() || null,
         isDefault: !!editing.isDefault,
         status: editing.status || "active",
+        workingHours: editing.workingHours || defaultWorkingHours(),
       };
       if (editingId) await adminBranchesApi.update(editingId, payload);
       else await adminBranchesApi.create(payload);

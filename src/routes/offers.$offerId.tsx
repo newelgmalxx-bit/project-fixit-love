@@ -215,6 +215,14 @@ function OfferDetailPage() {
       setAvailableSlots(FALLBACK_SLOTS);
       return;
     }
+    // Multi-branch offer: backend requires branchId (422 otherwise). Wait
+    // until the user picks a branch before hitting availability.
+    if (branches.length > 1 && !selectedBranchId) {
+      setBlockedSlots([]); setDayOff(false);
+      setAvailableSlots(FALLBACK_SLOTS);
+      return;
+    }
+
     let cancelled = false;
     (async () => {
       try {

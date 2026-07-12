@@ -535,7 +535,7 @@ function OfferDialog({
             <label className="text-xs font-bold">{L("الشريك", "Partner")}</label>
             <PartnerSelect
               value={form.partnerId}
-              onChange={(id) => setForm({ ...form, partnerId: id, branchId: null })}
+              onChange={(id) => setForm({ ...form, partnerId: id, branchIds: [] })}
             />
           </div>
           <div>

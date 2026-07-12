@@ -251,6 +251,18 @@ function CheckoutPage() {
       setStep(2);
       return;
     }
+    if (hasMissingBranch) {
+      const titles = missingBranchItems.map((it) => it.serviceTitle).join("، ");
+      setError(
+        lang === "ar"
+          ? `يجب اختيار الفرع أولاً للعروض التالية: ${titles}. ارجع إلى السلة لاختيار الفرع.`
+          : `Please choose a branch for these items before continuing: ${titles}. Return to the cart to pick a branch.`,
+      );
+      toast.error(lang === "ar" ? "الفرع مطلوب" : "Branch required");
+      navigate({ to: "/cart" as any });
+      return;
+    }
+
     setSubmitting(true);
     let keepRedirectScreen = false;
     try {

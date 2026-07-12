@@ -257,7 +257,9 @@ function OfferDetailPage() {
     const from = iso(today);
     const end = new Date(today); end.setDate(today.getDate() + 13);
     const to = iso(end);
+    if (branches.length > 1 && !selectedBranchId) { setBlockedDaysList([]); return; }
     let cancelled = false;
+
     (async () => {
       try {
         const arr: any[] = await publicApi.getOfferAvailabilityRange(offer.id, from, to, selectedBranchId);

@@ -253,6 +253,11 @@ export function normalizeOffer(
     termsEn: toArr(api.termsEn),
     featured: Boolean(api.isFeatured),
     featuredRank: api.featuredSort ?? null,
+    displayAddress: (api as any).displayAddress ?? undefined,
+    displayBranchName: (api as any).displayBranchName ?? undefined,
+    hasMultipleBranches: Boolean((api as any).hasMultipleBranches),
+    branchesCount: Number((api as any).branchesCount ?? 0) || 0,
+    branch: (api as any).branch ?? null,
   } as Offer;
 }
 

@@ -23,7 +23,7 @@ import {
 
 import { PartnerGuard } from "@/components/auth/PartnerGuard";
 import { useLang } from "@/i18n/LanguageProvider";
-import { BranchHoursEditor, defaultWorkingHours, parseWorkingHours } from "@/components/branches/BranchHoursEditor";
+import { BranchHoursEditor, defaultWorkingHours as branchDefaultHours, parseWorkingHours as branchParseHours } from "@/components/branches/BranchHoursEditor";
 
 export const Route = createFileRoute("/partner-dashboard")({
   head: () => ({ meta: [{ title: "Partner Dashboard | Koswmat" }] }),

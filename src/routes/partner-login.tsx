@@ -81,7 +81,26 @@ function PartnerLoginPage() {
       toast.success(lang === "ar" ? "مرحباً بك مجدداً" : "Welcome back");
       navigate({ to: "/partner-dashboard" as any });
     } catch (err: any) {
-      setError(err?.message || (lang === "ar" ? "البريد أو كلمة المرور غير صحيحة" : "Invalid email or password"));
+      const status = err?.status;
+      const errs = err?.errors;
+      const fieldMsg =
+        errs && typeof errs === "object"
+          ? Object.values(errs)
+              .flatMap((v) => (Array.isArray(v) ? v : v ? [v] : []))
+              .map(String)
+              .join(" — ")
+          : "";
+      let msg = err?.message;
+      if (status === 409) {
+        msg = err?.message || (lang === "ar"
+          ? "يوجد أكثر من حساب مرتبط بهذا البريد/الجوال، تواصل مع الدعم لدمج الحسابات"
+          : "Multiple accounts are linked to this email/phone. Please contact support to merge them.");
+      } else if (status === 401 && fieldMsg) {
+        msg = fieldMsg;
+      } else if (!msg && fieldMsg) {
+        msg = fieldMsg;
+      }
+      setError(msg || (lang === "ar" ? "البريد أو كلمة المرور غير صحيحة" : "Invalid email or password"));
     } finally {
       setSubmitting(false);
     }

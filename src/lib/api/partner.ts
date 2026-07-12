@@ -252,10 +252,13 @@ function normalizeOffer(o: any): any {
     branch_id: o.branchId ?? o.branch_id ?? o.branch?.id ?? null,
     branch: o.branch ?? null,
     branches: Array.isArray(o.branches) ? o.branches : [],
+    branchesCount: o.branchesCount ?? o.branches_count ?? (Array.isArray(o.branches) ? o.branches.length : 0),
     branch_ids: Array.isArray(o.branchIds)
-      ? o.branchIds
+      ? o.branchIds.map((v: any) => (typeof v === "object" ? v?.id : v)).filter(Boolean)
+      : Array.isArray(o.branch_ids)
+      ? o.branch_ids.map((v: any) => (typeof v === "object" ? v?.id : v)).filter(Boolean)
       : Array.isArray(o.branches)
-      ? o.branches.map((b: any) => b?.id).filter(Boolean)
+      ? o.branches.map((b: any) => (typeof b === "object" ? (b?.id ?? b?.branch_id ?? b?.branchId) : b)).filter(Boolean)
       : [],
     title: o.titleAr ?? o.title_ar ?? o.title ?? "",
     title_en: o.titleEn ?? o.title_en ?? null,
@@ -782,9 +785,29 @@ export const partnerApi = {
   // Branches (partner-scoped CRUD)
   // =========================================
   listBranches: () =>
-    unwrap<{ items: any[] }>(request(`/partner/branches`)).then((d: any) => ({
-      items: (d?.items || d?.branches || d || []) as any[],
-    })),
+    unwrap<{ items: any[] }>(request(`/partner/branches`)).then((d: any) => {
+      const raw = (d?.items || d?.branches || d || []) as any[];
+      const parseWH = (v: any) => {
+        if (v == null) return null;
+        if (typeof v === "string") { try { return JSON.parse(v); } catch { return null; } }
+        return v;
+      };
+      const items = raw.map((b: any) => ({
+        // Keep original keys for any legacy callers…
+        ...b,
+        // …and expose the camelCase shape used across the app / offer.branches.
+        id: b.id,
+        nameAr: b.nameAr ?? b.name_ar ?? "",
+        nameEn: b.nameEn ?? b.name_en ?? null,
+        phone: b.phone ?? null,
+        address: b.address ?? null,
+        mapsUrl: b.mapsUrl ?? b.maps_url ?? null,
+        workingHours: parseWH(b.workingHours ?? b.working_hours),
+        isDefault: !!(b.isDefault ?? b.is_default),
+        status: b.status ?? "active",
+      }));
+      return { items };
+    }),
   createBranch: (body: {
     nameAr: string;
     nameEn?: string | null;

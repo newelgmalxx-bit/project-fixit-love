@@ -223,7 +223,7 @@ export function buildAgreementHtmlForPartner(
           <tr><td class="k">الاسم التجاري</td><td class="v">منصة خصومات</td></tr>
           <tr><td class="k">المقر</td><td class="v">الرياض — المملكة العربية السعودية</td></tr>
           <tr><td class="k">السجل التجاري</td><td class="v">1010XXXXXXX</td></tr>
-          <tr><td class="k">البريد الإلكتروني</td><td class="v">support@khasomat.sa</td></tr>
+          <tr><td class="k">البريد الإلكتروني</td><td class="v">info@koswmat.com</td></tr>
           <tr><td class="k">الموقع</td><td class="v">koswmat.com</td></tr>
         </table>
       </div>

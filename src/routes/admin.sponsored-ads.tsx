@@ -137,7 +137,7 @@ function SponsoredAdsAdmin() {
         ) : (
           <div className="grid gap-3">
             {ads.map((a) => (
-              <div key={a.id} className="flex items-center gap-4 rounded-2xl border border-border bg-card p-3 sm:p-4">
+              <div key={a.id} className="flex flex-wrap items-center gap-3 sm:gap-4 rounded-2xl border border-border bg-card p-3 sm:p-4">
                 <div className="h-16 w-24 shrink-0 overflow-hidden rounded-lg bg-muted">
                   {a.image ? (
                     <img src={a.image} alt={a.title} className="h-full w-full object-cover" />
@@ -145,7 +145,7 @@ function SponsoredAdsAdmin() {
                     <div className="flex h-full w-full items-center justify-center text-xs text-muted-foreground">{L("بدون صورة", "No image")}</div>
                   )}
                 </div>
-                <div className="min-w-0 flex-1">
+                <div className="min-w-0 flex-1 basis-0">
                   <div className="flex flex-wrap items-center gap-2">
                     <h3 className="truncate font-bold">{a.title}</h3>
                     <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold ${a.isActive ? "bg-emerald-100 text-emerald-700" : "bg-muted text-muted-foreground"}`}>
@@ -167,10 +167,18 @@ function SponsoredAdsAdmin() {
                     </a>
                   )}
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex shrink-0 items-center gap-2 ms-auto">
                   <Switch checked={a.isActive} onCheckedChange={() => toggle(a)} />
-                  <Button variant="outline" size="icon" onClick={() => openEdit(a)}><Pencil className="h-4 w-4" /></Button>
-                  <Button variant="outline" size="icon" onClick={() => remove(a.id)}><Trash2 className="h-4 w-4 text-rose-500" /></Button>
+                  <Button variant="outline" size="icon" onClick={() => openEdit(a)} aria-label={L("تعديل", "Edit")}><Pencil className="h-4 w-4" /></Button>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => remove(a.id)}
+                    aria-label={L("حذف", "Delete")}
+                    className="border-rose-200 bg-rose-50 text-rose-600 hover:bg-rose-100 hover:text-rose-700 dark:border-rose-900/40 dark:bg-rose-950/30 dark:text-rose-400"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
                 </div>
               </div>
             ))}
